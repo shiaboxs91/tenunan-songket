@@ -9,6 +9,7 @@ import { getPopularProducts, getLatestProducts } from "@/lib/products";
 import { Product } from "@/lib/types";
 import snapshotData from "@/data/products.snapshot.json";
 import categoryImagesData from "@/data/category-images.json";
+import { getTranslations } from "next-intl/server";
 
 // Simple Section Divider - optimized for performance
 const SectionDivider = () => (
@@ -37,6 +38,8 @@ async function getHomeData() {
 
 export default async function HomePage() {
   const { popularProducts, latestProducts } = await getHomeData();
+  const t = await getTranslations("home");
+  const tCommon = await getTranslations("common");
 
   return (
     <div className="flex flex-col">
@@ -63,12 +66,12 @@ export default async function HomePage() {
               {/* Heritage Badge */}
               <div className="inline-flex items-center gap-2 mb-4 md:mb-5 px-4 py-2 rounded-full bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 border border-amber-300/60 shadow-sm">
                 <Sparkles className="w-4 h-4 text-amber-600" />
-                <span className="text-amber-800 text-sm font-semibold">Warisan Budaya Melayu</span>
+                <span className="text-amber-800 text-sm font-semibold">{t("heritageBadge")}</span>
               </div>
 
               {/* Main Heading */}
               <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight mb-4 md:mb-5">
-                <span className="inline-block text-slate-800">Keindahan</span>
+                <span className="inline-block text-slate-800">{t("beautyOf")}</span>
                 <br />
                 <span 
                   className="inline-block text-transparent bg-clip-text"
@@ -78,7 +81,7 @@ export default async function HomePage() {
                     animation: 'shimmer 8s ease-in-out infinite',
                   }}
                 >
-                  Tenunan Songket
+                  {t("songketWeaving")}
                 </span>
               </h1>
 
@@ -93,21 +96,21 @@ export default async function HomePage() {
               <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
                 <Button asChild size="lg" className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-700 hover:via-amber-600 hover:to-amber-700 text-white shadow-lg shadow-amber-500/30 h-12 md:h-11 text-base">
                   <Link href="/products">
-                    Belanja Sekarang
+                    {tCommon("shopNow")}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="border-2 border-amber-400 text-amber-700 hover:bg-amber-50 h-12 md:h-11 text-base">
-                  <Link href="#jenis-corak">Lihat Kategori</Link>
+                  <Link href="#jenis-corak">{tCommon("viewCategories")}</Link>
                 </Button>
               </div>
 
               {/* Trust indicators - hidden on mobile for cleaner look */}
               <div className="hidden md:flex flex-wrap items-center gap-4 mt-8 pt-6 border-t border-amber-200/60">
                 {[
-                  { icon: "M5 13l4 4L19 7", label: "100% Handmade" },
-                  { icon: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z", label: "Benang Emas Asli" },
-                  { icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z", label: "Kualiti Terjamin" },
+                  { icon: "M5 13l4 4L19 7", labelKey: "handmade" },
+                  { icon: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z", labelKey: "realGoldThread" },
+                  { icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z", labelKey: "qualityGuaranteed" },
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 border border-amber-200/50 shadow-sm">
                     <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center">
@@ -115,7 +118,7 @@ export default async function HomePage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                       </svg>
                     </div>
-                    <span className="text-slate-700 text-sm font-medium">{item.label}</span>
+                    <span className="text-slate-700 text-sm font-medium">{t(item.labelKey)}</span>
                   </div>
                 ))}
               </div>
@@ -142,8 +145,8 @@ export default async function HomePage() {
               <div className="w-1.5 h-1.5 rotate-45 bg-amber-500" />
               <div className="h-px w-12 bg-gradient-to-l from-transparent to-amber-400" />
             </div>
-            <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-800">Jenis Corak Kain</h2>
-            <p className="text-slate-500 text-sm mt-2">Pilih corak tradisional kegemaran anda</p>
+            <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-800">{t("fabricPatterns")}</h2>
+            <p className="text-slate-500 text-sm mt-2">{t("fabricPatternsDesc")}</p>
           </div>
 
           <div className="flex flex-wrap justify-center gap-4 md:gap-6 lg:gap-10">
@@ -153,7 +156,7 @@ export default async function HomePage() {
                   <Image src={corak.image} alt={corak.name} fill className="object-cover group-hover:scale-110 transition-transform duration-300" sizes="96px" />
                 </div>
                 <span className="text-xs md:text-sm font-medium text-slate-700 group-hover:text-amber-700 transition-colors">{corak.name}</span>
-                <span className="text-xs text-slate-400">{corak.items} items</span>
+                <span className="text-xs text-slate-400">{corak.items} {t("items")}</span>
               </Link>
             ))}
           </div>
@@ -168,13 +171,13 @@ export default async function HomePage() {
             <div>
               <div className="flex items-center gap-2 mb-1 md:mb-2">
                 <span className="w-1 h-4 md:h-5 bg-amber-500 rounded-full" />
-                <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-800">Produk Populer</h2>
+                <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-800">{t("popularProducts")}</h2>
               </div>
-              <p className="text-slate-500 text-sm">Pilihan favorit pelanggan kami</p>
+              <p className="text-slate-500 text-sm">{t("popularDesc")}</p>
             </div>
             <Button asChild variant="ghost" size="sm" className="text-amber-700 hover:text-amber-800 hover:bg-amber-50">
               <Link href="/products?sort=bestselling">
-                Lihat Semua
+                {tCommon("viewAll")}
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>
@@ -191,13 +194,13 @@ export default async function HomePage() {
             <div>
               <div className="flex items-center gap-2 mb-1 md:mb-2">
                 <span className="w-1 h-4 md:h-5 bg-amber-500 rounded-full" />
-                <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-800">Produk Terbaru</h2>
+                <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-800">{t("latestProducts")}</h2>
               </div>
-              <p className="text-slate-500 text-sm">Koleksi terbaru yang baru saja hadir</p>
+              <p className="text-slate-500 text-sm">{t("latestDesc")}</p>
             </div>
             <Button asChild variant="ghost" size="sm" className="text-amber-700 hover:text-amber-800 hover:bg-amber-50">
               <Link href="/products?sort=newest">
-                Lihat Semua
+                {tCommon("viewAll")}
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>
@@ -212,9 +215,9 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-12">
             {[
-              { icon: "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z", title: "Handmade dengan Cinta", desc: "Setiap kain ditenun dengan tangan oleh pengrajin berpengalaman menggunakan teknik tradisional turun-temurun." },
-              { icon: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z", title: "Kualitas Premium", desc: "Menggunakan bahan berkualitas tinggi termasuk benang emas dan sutra asli untuk hasil yang mewah dan tahan lama." },
-              { icon: "M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7", title: "Warisan Budaya", desc: "Melestarikan warisan budaya Melayu dengan mendukung pengrajin lokal dan menjaga tradisi tenun nusantara." },
+              { icon: "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z", titleKey: "handmadeWithLove", descKey: "handmadeWithLoveDesc" },
+              { icon: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z", titleKey: "premiumQuality", descKey: "premiumQualityDesc" },
+              { icon: "M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7", titleKey: "culturalHeritage", descKey: "culturalHeritageDesc" },
             ].map((item, i) => (
               <div key={i} className="text-center">
                 <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center">
@@ -222,8 +225,8 @@ export default async function HomePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={item.icon} />
                   </svg>
                 </div>
-                <h3 className="font-semibold text-lg mb-2 text-slate-800">{item.title}</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">{item.desc}</p>
+                <h3 className="font-semibold text-lg mb-2 text-slate-800">{t(item.titleKey)}</h3>
+                <p className="text-slate-500 text-sm leading-relaxed">{t(item.descKey)}</p>
               </div>
             ))}
           </div>

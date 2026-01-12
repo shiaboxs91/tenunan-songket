@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronDown, Mail } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 // Social icons as simple SVG components (lucide deprecated these)
 const InstagramIcon = ({ className }: { className?: string }) => (
@@ -26,26 +27,6 @@ const TwitterIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 import { cn } from "@/lib/utils";
-
-const footerLinks = {
-  shop: [
-    { name: "Semua Produk", href: "/products" },
-    { name: "Beragi", href: "/products?category=Beragi" },
-    { name: "Arap Gegati", href: "/products?category=Arap%20Gegati" },
-    { name: "Bertabur", href: "/products?category=Bertabur" },
-    { name: "Jongsarat", href: "/products?category=Jongsarat" },
-  ],
-  info: [
-    { name: "Cara Order", href: "/cara-order" },
-    { name: "Tentang Kami", href: "/tentang-kami" },
-    { name: "FAQ", href: "/faq" },
-  ],
-  social: [
-    { name: "Instagram", href: "https://instagram.com/tenunansongkett", icon: InstagramIcon },
-    { name: "Facebook", href: "#", icon: FacebookIcon },
-    { name: "Twitter", href: "#", icon: TwitterIcon },
-  ],
-};
 
 // Collapsible section for mobile
 function CollapsibleSection({ 
@@ -94,6 +75,30 @@ function CollapsibleSection({
 }
 
 export function Footer() {
+  const t = useTranslations("footer");
+  const tCommon = useTranslations("common");
+  const tNav = useTranslations("nav");
+
+  const footerLinks = {
+    shop: [
+      { nameKey: "allProducts", name: "", href: "/products" },
+      { nameKey: "", name: "Beragi", href: "/products?category=Beragi" },
+      { nameKey: "", name: "Arap Gegati", href: "/products?category=Arap%20Gegati" },
+      { nameKey: "", name: "Bertabur", href: "/products?category=Bertabur" },
+      { nameKey: "", name: "Jongsarat", href: "/products?category=Jongsarat" },
+    ],
+    info: [
+      { nameKey: "howToOrder", name: "", href: "/cara-order" },
+      { nameKey: "about", name: "", href: "/tentang-kami" },
+      { nameKey: "faq", name: "", href: "/faq" },
+    ],
+    social: [
+      { name: "Instagram", href: "https://instagram.com/tenunansongkett", icon: InstagramIcon },
+      { name: "Facebook", href: "#", icon: FacebookIcon },
+      { name: "Twitter", href: "#", icon: TwitterIcon },
+    ],
+  };
+
   return (
     <footer className="relative bg-gradient-to-b from-slate-50 to-slate-100 pb-20 md:pb-0">
       {/* Top gold ornament line */}
@@ -138,30 +143,30 @@ export function Footer() {
           </div>
 
           {/* Collapsible Sections */}
-          <CollapsibleSection title="Belanja">
+          <CollapsibleSection title={t("quickLinks")}>
             <ul className="space-y-2 pl-3">
               {footerLinks.shop.map((link) => (
-                <li key={link.name}>
+                <li key={link.href}>
                   <Link
                     href={link.href}
                     className="text-sm text-slate-600 hover:text-amber-700 transition-colors"
                   >
-                    {link.name}
+                    {link.nameKey ? tNav(link.nameKey) : link.name}
                   </Link>
                 </li>
               ))}
             </ul>
           </CollapsibleSection>
 
-          <CollapsibleSection title="Informasi">
+          <CollapsibleSection title={t("customerService")}>
             <ul className="space-y-2 pl-3">
               {footerLinks.info.map((link) => (
-                <li key={link.name}>
+                <li key={link.href}>
                   <Link
                     href={link.href}
                     className="text-sm text-slate-600 hover:text-amber-700 transition-colors"
                   >
-                    {link.name}
+                    {link.nameKey ? tCommon(link.nameKey) : link.name}
                   </Link>
                 </li>
               ))}
@@ -183,7 +188,7 @@ export function Footer() {
               />
             </Link>
             <p className="text-sm text-slate-600 leading-relaxed">
-              Melestarikan warisan budaya Melayu melalui kain tenun dan songket berkualitas tinggi.
+              {t("aboutUs")}
             </p>
             <div className="flex items-center gap-2 mt-4">
               <div className="h-px w-8 bg-gradient-to-r from-amber-400 to-transparent" />
@@ -196,16 +201,16 @@ export function Footer() {
           <div>
             <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
               <span className="w-1 h-4 bg-amber-400 rounded-full" />
-              Belanja
+              {t("quickLinks")}
             </h3>
             <ul className="space-y-2.5">
               {footerLinks.shop.map((link) => (
-                <li key={link.name}>
+                <li key={link.href}>
                   <Link
                     href={link.href}
                     className="text-sm text-slate-600 hover:text-amber-700 transition-colors"
                   >
-                    {link.name}
+                    {link.nameKey ? tNav(link.nameKey) : link.name}
                   </Link>
                 </li>
               ))}
@@ -216,16 +221,16 @@ export function Footer() {
           <div>
             <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
               <span className="w-1 h-4 bg-amber-400 rounded-full" />
-              Informasi
+              {t("customerService")}
             </h3>
             <ul className="space-y-2.5">
               {footerLinks.info.map((link) => (
-                <li key={link.name}>
+                <li key={link.href}>
                   <Link
                     href={link.href}
                     className="text-sm text-slate-600 hover:text-amber-700 transition-colors"
                   >
-                    {link.name}
+                    {link.nameKey ? tCommon(link.nameKey) : link.name}
                   </Link>
                 </li>
               ))}
@@ -236,7 +241,7 @@ export function Footer() {
           <div>
             <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
               <span className="w-1 h-4 bg-amber-400 rounded-full" />
-              Ikuti Kami
+              {t("followUs")}
             </h3>
             <div className="flex space-x-3 mb-6">
               {footerLinks.social.map((social) => (
@@ -267,7 +272,7 @@ export function Footer() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-2">
             <p className="text-xs md:text-sm text-slate-600 text-center md:text-left">
-              © {new Date().getFullYear()} TenunanSongket
+              © {new Date().getFullYear()} TenunanSongket. {t("copyright")}
             </p>
             <p className="text-[10px] md:text-xs text-slate-400">
               Demo frontend - Transaksi simulasi

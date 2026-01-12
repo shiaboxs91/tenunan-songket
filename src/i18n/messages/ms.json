@@ -47,7 +47,9 @@
     "apply": "Gunakan",
     "noResults": "Tiada hasil ditemui",
     "seeMore": "Lihat Lagi",
-    "seeLess": "Lihat Kurang"
+    "seeLess": "Lihat Kurang",
+    "shopNow": "Belanja Sekarang",
+    "viewCategories": "Lihat Kategori"
   },
   "nav": {
     "allProducts": "Semua Produk",
@@ -58,11 +60,30 @@
   "home": {
     "heroTitle": "Tenunan Songket Asli Brunei",
     "heroSubtitle": "Warisan budaya Melayu yang ditenun dengan penuh ketelitian",
+    "heritageBadge": "Warisan Budaya Melayu",
+    "beautyOf": "Keindahan",
+    "songketWeaving": "Tenunan Songket",
     "featuredProducts": "Produk Pilihan",
     "newArrivals": "Produk Terbaru",
+    "popularProducts": "Produk Populer",
+    "popularDesc": "Pilihan favorit pelanggan kami",
+    "latestProducts": "Produk Terbaru",
+    "latestDesc": "Koleksi terbaru yang baru saja hadir",
     "shopByCategory": "Beli Mengikut Kategori",
+    "fabricPatterns": "Jenis Corak Kain",
+    "fabricPatternsDesc": "Pilih corak tradisional kegemaran anda",
     "whyChooseUs": "Kenapa Pilih Kami",
-    "testimonials": "Testimoni Pelanggan"
+    "testimonials": "Testimoni Pelanggan",
+    "handmade": "100% Handmade",
+    "realGoldThread": "Benang Emas Asli",
+    "qualityGuaranteed": "Kualiti Terjamin",
+    "handmadeWithLove": "Handmade dengan Cinta",
+    "handmadeWithLoveDesc": "Setiap kain ditenun dengan tangan oleh pengrajin berpengalaman menggunakan teknik tradisional turun-temurun.",
+    "premiumQuality": "Kualitas Premium",
+    "premiumQualityDesc": "Menggunakan bahan berkualitas tinggi termasuk benang emas dan sutra asli untuk hasil yang mewah dan tahan lama.",
+    "culturalHeritage": "Warisan Budaya",
+    "culturalHeritageDesc": "Melestarikan warisan budaya Melayu dengan mendukung pengrajin lokal dan menjaga tradisi tenun nusantara.",
+    "items": "items"
   },
   "product": {
     "description": "Penerangan",
@@ -147,7 +168,7 @@
     "phone": "Nombor Telefon"
   },
   "footer": {
-    "aboutUs": "Tentang Kami",
+    "aboutUs": "Melestarikan warisan budaya Melayu melalui kain tenun dan songket berkualitas tinggi.",
     "customerService": "Khidmat Pelanggan",
     "quickLinks": "Pautan Pantas",
     "followUs": "Ikuti Kami",

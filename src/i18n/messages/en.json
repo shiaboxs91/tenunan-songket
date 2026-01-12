@@ -47,7 +47,9 @@
     "apply": "Apply",
     "noResults": "No results found",
     "seeMore": "See More",
-    "seeLess": "See Less"
+    "seeLess": "See Less",
+    "shopNow": "Shop Now",
+    "viewCategories": "View Categories"
   },
   "nav": {
     "allProducts": "All Products",
@@ -58,11 +60,30 @@
   "home": {
     "heroTitle": "Authentic Brunei Songket Weaving",
     "heroSubtitle": "Malay cultural heritage woven with meticulous craftsmanship",
+    "heritageBadge": "Malay Cultural Heritage",
+    "beautyOf": "The Beauty of",
+    "songketWeaving": "Songket Weaving",
     "featuredProducts": "Featured Products",
     "newArrivals": "New Arrivals",
+    "popularProducts": "Popular Products",
+    "popularDesc": "Customer favorites",
+    "latestProducts": "Latest Products",
+    "latestDesc": "Newly arrived collections",
     "shopByCategory": "Shop by Category",
+    "fabricPatterns": "Fabric Patterns",
+    "fabricPatternsDesc": "Choose your favorite traditional pattern",
     "whyChooseUs": "Why Choose Us",
-    "testimonials": "Customer Testimonials"
+    "testimonials": "Customer Testimonials",
+    "handmade": "100% Handmade",
+    "realGoldThread": "Real Gold Thread",
+    "qualityGuaranteed": "Quality Guaranteed",
+    "handmadeWithLove": "Handmade with Love",
+    "handmadeWithLoveDesc": "Each fabric is hand-woven by experienced artisans using traditional techniques passed down through generations.",
+    "premiumQuality": "Premium Quality",
+    "premiumQualityDesc": "Using high-quality materials including real gold thread and silk for luxurious and durable results.",
+    "culturalHeritage": "Cultural Heritage",
+    "culturalHeritageDesc": "Preserving Malay cultural heritage by supporting local artisans and maintaining the weaving traditions of the archipelago.",
+    "items": "items"
   },
   "product": {
     "description": "Description",
@@ -147,7 +168,7 @@
     "phone": "Phone Number"
   },
   "footer": {
-    "aboutUs": "About Us",
+    "aboutUs": "Preserving Malay cultural heritage through high-quality woven fabrics and songket.",
     "customerService": "Customer Service",
     "quickLinks": "Quick Links",
     "followUs": "Follow Us",

@@ -7,9 +7,10 @@ import { Home, Grid3X3, ShoppingCart, User, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/components/cart/CartProvider";
 import { CategorySheet } from "./CategorySheet";
+import { useTranslations } from "next-intl";
 
 type NavItem = {
-  name: string;
+  nameKey: string;
   href?: string;
   icon: typeof Home;
   showBadge?: boolean;
@@ -18,17 +19,18 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { name: "Beranda", href: "/", icon: Home },
-  { name: "Kategori", icon: LayoutGrid, isCategory: true },
-  { name: "Produk", href: "/products", icon: Grid3X3, isFab: true },
-  { name: "Keranjang", href: "/cart", icon: ShoppingCart, showBadge: true },
-  { name: "Akun", href: "/account", icon: User },
+  { nameKey: "home", href: "/", icon: Home },
+  { nameKey: "categories", icon: LayoutGrid, isCategory: true },
+  { nameKey: "products", href: "/products", icon: Grid3X3, isFab: true },
+  { nameKey: "cart", href: "/cart", icon: ShoppingCart, showBadge: true },
+  { nameKey: "account", href: "/account", icon: User },
 ];
 
 export function MobileBottomNav() {
   const pathname = usePathname();
   const { totalItems } = useCart();
   const [categorySheetOpen, setCategorySheetOpen] = useState(false);
+  const t = useTranslations("common");
 
   return (
     <>
@@ -64,6 +66,7 @@ export function MobileBottomNav() {
           <div className="relative flex items-end justify-around h-20 px-2 pb-2">
             {navItems.map((item) => {
               const Icon = item.icon;
+              const name = t(item.nameKey);
               const isActive = item.href 
                 ? pathname === item.href || 
                   (item.href === "/products" && pathname.startsWith("/products"))
@@ -73,10 +76,10 @@ export function MobileBottomNav() {
               if (item.isFab) {
                 return (
                   <Link
-                    key={item.name}
+                    key={item.nameKey}
                     href={item.href!}
                     className="relative -mt-6 z-10"
-                    aria-label={item.name}
+                    aria-label={name}
                   >
                     {/* Outer glow ring */}
                     <div className={cn(
@@ -99,7 +102,7 @@ export function MobileBottomNav() {
                     
                     {/* Label */}
                     <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-amber-700 whitespace-nowrap">
-                      {item.name}
+                      {name}
                     </span>
                   </Link>
                 );
@@ -109,13 +112,13 @@ export function MobileBottomNav() {
               if (item.isCategory) {
                 return (
                   <button
-                    key={item.name}
+                    key={item.nameKey}
                     onClick={() => setCategorySheetOpen(true)}
                     className={cn(
                       "flex flex-col items-center justify-center w-16 h-14 relative transition-all duration-200",
                       categorySheetOpen ? "text-amber-600" : "text-slate-400 hover:text-amber-500"
                     )}
-                    aria-label={item.name}
+                    aria-label={name}
                   >
                     {/* Icon container */}
                     <div className={cn(
@@ -133,7 +136,7 @@ export function MobileBottomNav() {
                       "text-[10px] font-medium transition-all duration-200",
                       categorySheetOpen ? "text-amber-700 font-semibold" : "text-slate-500"
                     )}>
-                      {item.name}
+                      {name}
                     </span>
                     
                     {/* Active indicator dot */}
@@ -147,13 +150,13 @@ export function MobileBottomNav() {
               // Regular nav items
               return (
                 <Link
-                  key={item.name}
+                  key={item.nameKey}
                   href={item.href!}
                   className={cn(
                     "flex flex-col items-center justify-center w-16 h-14 relative transition-all duration-200",
                     isActive ? "text-amber-600" : "text-slate-400 hover:text-amber-500"
                   )}
-                  aria-label={`${item.name}${item.showBadge && totalItems > 0 ? `, ${totalItems} item` : ''}`}
+                  aria-label={`${name}${item.showBadge && totalItems > 0 ? `, ${totalItems} item` : ''}`}
                   aria-current={isActive ? "page" : undefined}
                 >
                   {/* Icon container */}
@@ -179,7 +182,7 @@ export function MobileBottomNav() {
                     "text-[10px] font-medium transition-all duration-200",
                     isActive ? "text-amber-700 font-semibold" : "text-slate-500"
                   )}>
-                    {item.name}
+                    {name}
                   </span>
                   
                   {/* Active indicator dot */}

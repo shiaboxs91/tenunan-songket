@@ -45,22 +45,22 @@ export function WhatsAppButton({
       aria-label="Chat via WhatsApp"
     >
       {/* Pulse animation ring */}
-      <div className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-30" />
+      <div className="absolute inset-0 w-14 h-14 rounded-full bg-green-500 animate-ping opacity-30" />
       
       {/* Button */}
       <div className={cn(
-        "relative flex items-center gap-2 rounded-full shadow-lg transition-all duration-300",
+        "relative flex items-center justify-center rounded-full shadow-lg transition-all duration-300",
         "bg-gradient-to-r from-green-500 to-green-600",
         "hover:from-green-600 hover:to-green-700",
         "active:scale-95",
-        isHovered ? "pl-4 pr-5 py-3" : "p-3.5"
+        isHovered ? "pl-4 pr-5 py-3" : "w-14 h-14"
       )}>
-        <WhatsAppIcon className="h-6 w-6 text-white" />
+        <WhatsAppIcon className="w-7 h-7 text-white flex-shrink-0" />
         
         {/* Expandable text */}
         <span className={cn(
           "text-white text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300",
-          isHovered ? "max-w-32 opacity-100" : "max-w-0 opacity-0"
+          isHovered ? "max-w-32 opacity-100 ml-2" : "max-w-0 opacity-0"
         )}>
           Chat Kami
         </span>

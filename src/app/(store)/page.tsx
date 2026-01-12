@@ -36,72 +36,116 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col">
-      {/* Hero Section - Elegant Light Theme with Cultural Touch */}
-      <section className="relative min-h-[60vh] md:min-h-[70vh] overflow-hidden bg-gradient-to-br from-amber-50 via-white to-slate-50">
-        {/* Subtle Songket Pattern Overlay */}
+      {/* Hero Section - Royal Palace Malay Style */}
+      <section className="relative min-h-[55vh] md:min-h-[65vh] overflow-hidden">
+        {/* Animated gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-white to-amber-50/30" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-100/40 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-amber-100/30 via-transparent to-transparent" />
+        
+        {/* Elegant Songket Pattern */}
         <div 
-          className="absolute inset-0 opacity-[0.04]"
+          className="absolute inset-0 opacity-[0.03]"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23B8860B' fill-opacity='1'%3E%3Cpath d='M30 0L33 3L30 6L27 3L30 0zM15 15L18 18L15 21L12 18L15 15zM45 15L48 18L45 21L42 18L45 15zM30 30L33 33L30 36L27 33L30 30zM15 45L18 48L15 51L12 48L15 45zM45 45L48 48L45 51L42 48L45 45z'/%3E%3C/g%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23B8860B'%3E%3Cpath d='M40 0L44 4L40 8L36 4L40 0zM20 20L24 24L20 28L16 24L20 20zM60 20L64 24L60 28L56 24L60 20zM40 40L44 44L40 48L36 44L40 40zM20 60L24 64L20 68L16 64L20 60zM60 60L64 64L60 68L56 64L60 60zM0 40L4 44L0 48L-4 44L0 40zM80 40L84 44L80 48L76 44L80 40z'/%3E%3Crect x='38' y='18' width='4' height='4' rx='1'/%3E%3Crect x='18' y='38' width='4' height='4' rx='1'/%3E%3Crect x='58' y='38' width='4' height='4' rx='1'/%3E%3Crect x='38' y='58' width='4' height='4' rx='1'/%3E%3C/g%3E%3C/svg%3E")`,
           }}
         />
 
-        {/* Decorative Corner Ornaments - Gold */}
-        <div className="absolute top-0 left-0 w-24 h-24 md:w-32 md:h-32">
-          <svg viewBox="0 0 100 100" className="w-full h-full text-amber-400/30">
-            <path d="M0 0 L60 0 L60 8 L8 8 L8 60 L0 60 Z" fill="currentColor"/>
-            <circle cx="20" cy="20" r="2" fill="currentColor"/>
+        {/* Royal Gold Frame - Top Left */}
+        <div className="absolute top-4 left-4 md:top-8 md:left-8 w-20 h-20 md:w-28 md:h-28">
+          <svg viewBox="0 0 100 100" className="w-full h-full">
+            <defs>
+              <linearGradient id="goldGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.6"/>
+                <stop offset="50%" stopColor="#FFD700" stopOpacity="0.8"/>
+                <stop offset="100%" stopColor="#B8860B" stopOpacity="0.6"/>
+              </linearGradient>
+            </defs>
+            <path d="M0 0 L70 0 L70 6 L6 6 L6 70 L0 70 Z" fill="url(#goldGrad1)"/>
+            <path d="M12 0 L12 12 L0 12" fill="none" stroke="url(#goldGrad1)" strokeWidth="2"/>
+            <circle cx="18" cy="18" r="3" fill="url(#goldGrad1)"/>
+            <path d="M24 6 L24 24 L6 24" fill="none" stroke="url(#goldGrad1)" strokeWidth="1" opacity="0.5"/>
           </svg>
         </div>
-        <div className="absolute top-0 right-0 w-24 h-24 md:w-32 md:h-32 rotate-90">
-          <svg viewBox="0 0 100 100" className="w-full h-full text-amber-400/30">
-            <path d="M0 0 L60 0 L60 8 L8 8 L8 60 L0 60 Z" fill="currentColor"/>
-            <circle cx="20" cy="20" r="2" fill="currentColor"/>
+        
+        {/* Royal Gold Frame - Top Right */}
+        <div className="absolute top-4 right-4 md:top-8 md:right-8 w-20 h-20 md:w-28 md:h-28 rotate-90">
+          <svg viewBox="0 0 100 100" className="w-full h-full">
+            <defs>
+              <linearGradient id="goldGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#B8860B" stopOpacity="0.6"/>
+                <stop offset="50%" stopColor="#FFD700" stopOpacity="0.8"/>
+                <stop offset="100%" stopColor="#D4AF37" stopOpacity="0.6"/>
+              </linearGradient>
+            </defs>
+            <path d="M0 0 L70 0 L70 6 L6 6 L6 70 L0 70 Z" fill="url(#goldGrad2)"/>
+            <path d="M12 0 L12 12 L0 12" fill="none" stroke="url(#goldGrad2)" strokeWidth="2"/>
+            <circle cx="18" cy="18" r="3" fill="url(#goldGrad2)"/>
           </svg>
         </div>
+        
+        {/* Royal Gold Frame - Bottom Left */}
+        <div className="absolute bottom-4 left-4 md:bottom-8 md:left-8 w-20 h-20 md:w-28 md:h-28 -rotate-90">
+          <svg viewBox="0 0 100 100" className="w-full h-full">
+            <path d="M0 0 L70 0 L70 6 L6 6 L6 70 L0 70 Z" fill="url(#goldGrad1)"/>
+            <path d="M12 0 L12 12 L0 12" fill="none" stroke="url(#goldGrad1)" strokeWidth="2"/>
+            <circle cx="18" cy="18" r="3" fill="url(#goldGrad1)"/>
+          </svg>
+        </div>
+        
+        {/* Royal Gold Frame - Bottom Right */}
+        <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 w-20 h-20 md:w-28 md:h-28 rotate-180">
+          <svg viewBox="0 0 100 100" className="w-full h-full">
+            <path d="M0 0 L70 0 L70 6 L6 6 L6 70 L0 70 Z" fill="url(#goldGrad2)"/>
+            <path d="M12 0 L12 12 L0 12" fill="none" stroke="url(#goldGrad2)" strokeWidth="2"/>
+            <circle cx="18" cy="18" r="3" fill="url(#goldGrad2)"/>
+          </svg>
+        </div>
+
+        {/* Decorative gold lines on sides */}
+        <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-gradient-to-b from-transparent via-amber-400/40 to-transparent" />
+        <div className="absolute right-0 top-1/4 bottom-1/4 w-1 bg-gradient-to-b from-transparent via-amber-400/40 to-transparent" />
 
         {/* Main Content */}
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 md:py-24 flex flex-col justify-center min-h-[60vh] md:min-h-[70vh]">
-          <div className="max-w-2xl">
-            {/* Heritage Badge */}
-            <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-gradient-to-r from-amber-100 to-amber-50 border border-amber-300/50">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 md:py-20 flex flex-col justify-center min-h-[55vh] md:min-h-[65vh]">
+          <div className="max-w-2xl mx-auto md:mx-0 text-center md:text-left">
+            {/* Heritage Badge with shimmer */}
+            <div className="inline-flex items-center gap-2 mb-5 px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 border border-amber-300/60 shadow-sm shadow-amber-200/50">
               <Sparkles className="w-4 h-4 text-amber-600" />
-              <span className="text-amber-800 text-sm font-medium tracking-wide">
+              <span className="text-amber-800 text-sm font-semibold tracking-wide">
                 Warisan Budaya Melayu
               </span>
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+              <div className="w-2 h-2 rounded-full bg-gradient-to-br from-amber-400 to-amber-600" />
             </div>
 
-            {/* Main Heading */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4">
+            {/* Main Heading with enhanced gradient */}
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-5">
               <span className="text-slate-800">Keindahan</span>
               <br />
-              <span className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-amber-700 via-amber-500 to-amber-700 bg-clip-text text-transparent drop-shadow-sm">
                 Tenunan Songket
               </span>
             </h1>
 
-            {/* Decorative line */}
-            <div className="flex items-center gap-2 mb-6">
-              <div className="h-px w-8 bg-gradient-to-r from-transparent to-amber-400" />
-              <div className="w-1.5 h-1.5 rotate-45 bg-amber-500" />
-              <div className="h-px w-16 bg-amber-400/50" />
-              <div className="w-1.5 h-1.5 rotate-45 bg-amber-500" />
-              <div className="h-px w-8 bg-gradient-to-l from-transparent to-amber-400" />
+            {/* Royal decorative divider */}
+            <div className="flex items-center justify-center md:justify-start gap-2 mb-6">
+              <div className="h-0.5 w-10 bg-gradient-to-r from-transparent via-amber-400 to-amber-500 rounded-full" />
+              <div className="w-2 h-2 rotate-45 bg-gradient-to-br from-amber-400 to-amber-600 shadow-sm" />
+              <div className="h-0.5 w-6 bg-amber-500 rounded-full" />
+              <div className="w-3 h-3 rounded-full border-2 border-amber-500 flex items-center justify-center">
+                <div className="w-1 h-1 rounded-full bg-amber-500" />
+              </div>
+              <div className="h-0.5 w-6 bg-amber-500 rounded-full" />
+              <div className="w-2 h-2 rotate-45 bg-gradient-to-br from-amber-400 to-amber-600 shadow-sm" />
+              <div className="h-0.5 w-10 bg-gradient-to-l from-transparent via-amber-400 to-amber-500 rounded-full" />
             </div>
 
-            {/* Subtitle */}
-            <p className="text-base md:text-lg text-slate-600 mb-8 max-w-xl leading-relaxed">
-              Koleksi eksklusif kain tenun songket Brunei dengan motif tradisional 
-              yang ditenun dengan benang emas asli oleh pengrajin mahir.
-            </p>
-
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
               <Button 
                 asChild 
                 size="lg" 
-                className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-0 shadow-md shadow-amber-500/20 transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/30"
+                className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-700 hover:via-amber-600 hover:to-amber-700 text-white border-0 shadow-lg shadow-amber-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/40 hover:scale-[1.02]"
               >
                 <Link href="/products">
                   Belanja Sekarang
@@ -112,37 +156,37 @@ export default async function HomePage() {
                 asChild 
                 variant="outline" 
                 size="lg"
-                className="border-amber-400 text-amber-700 hover:bg-amber-50 hover:text-amber-800 transition-all duration-300"
+                className="border-2 border-amber-400 text-amber-700 hover:bg-gradient-to-r hover:from-amber-50 hover:to-amber-100 hover:text-amber-800 hover:border-amber-500 transition-all duration-300"
               >
                 <Link href="#jenis-corak">Lihat Kategori</Link>
               </Button>
             </div>
 
-            {/* Trust indicators */}
-            <div className="flex flex-wrap items-center gap-4 md:gap-6 mt-8 pt-6 border-t border-amber-200/50">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            {/* Trust indicators with royal style */}
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 md:gap-6 mt-8 pt-6 border-t border-amber-200/60">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 border border-amber-200/50 shadow-sm">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center">
+                  <svg className="w-3.5 h-3.5 text-amber-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <span className="text-slate-600 text-sm">100% Handmade</span>
+                <span className="text-slate-700 text-sm font-medium">100% Handmade</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 border border-amber-200/50 shadow-sm">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center">
+                  <svg className="w-3.5 h-3.5 text-amber-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                   </svg>
                 </div>
-                <span className="text-slate-600 text-sm">Benang Emas Asli</span>
+                <span className="text-slate-700 text-sm font-medium">Benang Emas Asli</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 border border-amber-200/50 shadow-sm">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center">
+                  <svg className="w-3.5 h-3.5 text-amber-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                 </div>
-                <span className="text-slate-600 text-sm">Kualiti Terjamin</span>
+                <span className="text-slate-700 text-sm font-medium">Kualiti Terjamin</span>
               </div>
             </div>
           </div>

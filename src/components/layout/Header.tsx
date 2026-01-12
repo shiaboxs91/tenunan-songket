@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, Search, ShoppingCart, User, X, Home, Grid3X3, Info, ClipboardList } from "lucide-react";
+import { Menu, Search, ShoppingCart, User, X, Home, Grid3X3, Info, ClipboardList, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,7 @@ const navigation = [
   { name: "Produk", href: "/products", icon: Grid3X3 },
   { name: "Tentang Kami", href: "/tentang-kami", icon: Info },
   { name: "Cara Order", href: "/cara-order", icon: ClipboardList },
+  { name: "FAQ", href: "/faq", icon: HelpCircle },
 ];
 
 export function Header() {
@@ -252,6 +253,94 @@ export function Header() {
             </div>
           )}
         </nav>
+      </div>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Mobile Menu Drawer */}
+      <div 
+        className={cn(
+          "fixed top-0 right-0 z-50 h-full w-72 bg-white shadow-xl transform transition-transform duration-300 ease-in-out md:hidden",
+          mobileMenuOpen ? "translate-x-0" : "translate-x-full"
+        )}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-amber-100">
+          <span className="font-semibold text-amber-800">Menu</span>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-slate-500 hover:text-slate-700"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+
+        {/* Navigation Links */}
+        <nav className="p-4 space-y-1">
+          {navigation.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-lg transition-all",
+                  isActive
+                    ? "text-amber-700 bg-amber-50 font-medium"
+                    : "text-slate-600 hover:text-amber-700 hover:bg-amber-50/50"
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                {item.name}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Divider */}
+        <div className="mx-4 border-t border-amber-100" />
+
+        {/* Account Section */}
+        <div className="p-4 space-y-1">
+          <Link
+            href="/account"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:text-amber-700 hover:bg-amber-50/50 transition-all"
+          >
+            <User className="h-5 w-5" />
+            Akun Saya
+          </Link>
+          <Link
+            href="/cart"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:text-amber-700 hover:bg-amber-50/50 transition-all"
+          >
+            <ShoppingCart className="h-5 w-5" />
+            Keranjang
+            {totalItems > 0 && (
+              <span className="ml-auto px-2 py-0.5 rounded-full bg-amber-500 text-xs text-white font-medium">
+                {totalItems}
+              </span>
+            )}
+          </Link>
+        </div>
+
+        {/* Footer */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-amber-100 bg-amber-50/50">
+          <p className="text-xs text-center text-slate-500">
+            © 2024 Tenunan Songket
+          </p>
+        </div>
       </div>
     </header>
   );

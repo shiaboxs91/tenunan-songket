@@ -9,44 +9,13 @@ import { Product } from "@/lib/types";
 import snapshotData from "@/data/products.snapshot.json";
 import categoryImagesData from "@/data/category-images.json";
 
-// Elegant Wood Carving Section Divider - Malay Royal Style
-const SectionDivider = ({ variant = "default" }: { variant?: "default" | "ornate" }) => (
-  <div className="relative h-8 flex items-center justify-center overflow-hidden">
+// Simple Section Divider - optimized for performance
+const SectionDivider = () => (
+  <div className="relative h-6 flex items-center justify-center overflow-hidden" aria-hidden="true">
     <div className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-amber-300/50 to-transparent" />
     <div className="relative z-10 flex items-center gap-1 bg-white px-4">
-      <svg viewBox="0 0 40 16" className="w-10 h-4 text-amber-400">
-        <defs>
-          <linearGradient id="woodGradL" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="transparent" />
-            <stop offset="30%" stopColor="#D4AF37" />
-            <stop offset="100%" stopColor="#B8860B" />
-          </linearGradient>
-        </defs>
-        <path d="M0 8 Q10 8 15 4 Q20 0 25 4 Q30 8 35 6 L40 8 L35 10 Q30 8 25 12 Q20 16 15 12 Q10 8 0 8" fill="none" stroke="url(#woodGradL)" strokeWidth="1.2"/>
-        <circle cx="38" cy="8" r="1.5" fill="#D4AF37" />
-      </svg>
-      <div className="w-3 h-3 rotate-45 bg-gradient-to-br from-amber-300 via-amber-400 to-amber-600 shadow-sm" />
-      <svg viewBox="0 0 40 16" className="w-10 h-4 text-amber-400" style={{ transform: 'scaleX(-1)' }}>
-        <path d="M0 8 Q10 8 15 4 Q20 0 25 4 Q30 8 35 6 L40 8 L35 10 Q30 8 25 12 Q20 16 15 12 Q10 8 0 8" fill="none" stroke="url(#woodGradL)" strokeWidth="1.2"/>
-        <circle cx="38" cy="8" r="1.5" fill="#D4AF37" />
-      </svg>
+      <div className="w-2 h-2 rotate-45 bg-amber-400" />
     </div>
-    {variant === "ornate" && (
-      <>
-        <div className="absolute left-8 md:left-16 top-1/2 -translate-y-1/2">
-          <svg viewBox="0 0 24 12" className="w-6 h-3 text-amber-300/60">
-            <path d="M0 6 L8 3 L16 6 L8 9 Z" fill="currentColor" />
-            <circle cx="20" cy="6" r="2" fill="currentColor" />
-          </svg>
-        </div>
-        <div className="absolute right-8 md:right-16 top-1/2 -translate-y-1/2">
-          <svg viewBox="0 0 24 12" className="w-6 h-3 text-amber-300/60" style={{ transform: 'scaleX(-1)' }}>
-            <path d="M0 6 L8 3 L16 6 L8 9 Z" fill="currentColor" />
-            <circle cx="20" cy="6" r="2" fill="currentColor" />
-          </svg>
-        </div>
-      </>
-    )}
   </div>
 );
 
@@ -161,7 +130,7 @@ export default async function HomePage() {
 
       {/* Jenis Corak Kain Section */}
       <section id="jenis-corak" className="relative py-10 md:py-16 bg-white">
-        <SectionDivider variant="ornate" />
+        <SectionDivider />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8 md:mb-10">
             <div className="flex items-center justify-center gap-3 mb-3">
@@ -212,7 +181,7 @@ export default async function HomePage() {
 
       {/* Latest Products */}
       <section className="relative py-10 md:py-16 bg-white">
-        <SectionDivider variant="ornate" />
+        <SectionDivider />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-6 md:mb-8">
             <div>
@@ -235,7 +204,7 @@ export default async function HomePage() {
 
       {/* USP Section */}
       <section className="relative py-10 md:py-16 bg-gradient-to-b from-slate-50 to-white">
-        <SectionDivider variant="ornate" />
+        <SectionDivider />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-12">
             {[

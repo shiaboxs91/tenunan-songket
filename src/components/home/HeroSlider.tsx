@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -22,6 +22,35 @@ const SLIDES = [
   },
 ];
 
+// Memoized slide component for better performance
+const Slide = memo(function Slide({ 
+  image, 
+  alt, 
+  priority 
+}: { 
+  image: string; 
+  alt: string; 
+  priority: boolean;
+}) {
+  return (
+    <div className="relative w-full h-full flex-shrink-0">
+      <Image
+        src={image}
+        alt={alt}
+        fill
+        className="object-cover"
+        sizes="(max-width: 768px) 100vw, 50vw"
+        priority={priority}
+        loading={priority ? "eager" : "lazy"}
+        quality={75}
+        placeholder="blur"
+        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAUH/8QAIhAAAgEDAwUBAAAAAAAAAAAAAQIDAAQRBRIhBhMiMUFR/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAZEQACAwEAAAAAAAAAAAAAAAABAgADESH/2gAMAwEAAhEDEEA/AKOm6hqF1YW8txdTSSvGrO7OSzEjJJJ5JNFFKZmY9k1FbKuf/9k="
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+    </div>
+  );
+});
+
 export function HeroSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
@@ -34,11 +63,11 @@ export function HeroSlider() {
     setCurrentSlide((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
   }, []);
 
-  const goToSlide = (index: number) => {
+  const goToSlide = useCallback((index: number) => {
     setCurrentSlide(index);
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 5000);
-  };
+  }, []);
 
   useEffect(() => {
     if (!isAutoPlaying) return;
@@ -52,35 +81,39 @@ export function HeroSlider() {
       <button
         onClick={prevSlide}
         className="flex-shrink-0 w-10 h-10 rounded-full bg-white/90 shadow-lg flex items-center justify-center text-amber-700 hover:bg-white hover:scale-110 transition-all hidden md:flex"
-        aria-label="Previous slide"
+        aria-label="Slide sebelumnya"
+        type="button"
       >
-        <ChevronLeft className="w-5 h-5" />
+        <ChevronLeft className="w-5 h-5" aria-hidden="true" />
       </button>
 
       {/* Slider Container */}
-      <div className="relative flex-1 aspect-[16/9] md:aspect-[4/3] lg:aspect-[4/3] rounded-2xl overflow-hidden shadow-xl shadow-amber-900/10 border border-amber-200/30">
+      <div 
+        className="relative flex-1 aspect-[16/9] md:aspect-[4/3] lg:aspect-[4/3] rounded-2xl overflow-hidden shadow-xl shadow-amber-900/10 border border-amber-200/30"
+        role="region"
+        aria-label="Hero slider"
+        aria-roledescription="carousel"
+      >
         {/* Slides */}
         <div 
-          className="flex h-full transition-transform duration-700 ease-out"
-          style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+          className="flex h-full will-change-transform"
+          style={{ 
+            transform: `translateX(-${currentSlide * 100}%)`,
+            transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}
         >
-          {SLIDES.map((slide) => (
-            <div key={slide.id} className="relative w-full h-full flex-shrink-0">
-              <Image
-                src={slide.image}
-                alt={slide.alt}
-                fill
-                className="object-cover"
-                sizes="100vw"
-                priority={slide.id === 1}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-            </div>
+          {SLIDES.map((slide, index) => (
+            <Slide
+              key={slide.id}
+              image={slide.image}
+              alt={slide.alt}
+              priority={index === 0}
+            />
           ))}
         </div>
 
         {/* Dots Indicator */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2" role="tablist">
           {SLIDES.map((_, index) => (
             <button
               key={index}
@@ -90,24 +123,28 @@ export function HeroSlider() {
                   ? "w-6 bg-white" 
                   : "w-2 bg-white/50 hover:bg-white/70"
               }`}
-              aria-label={`Go to slide ${index + 1}`}
+              aria-label={`Slide ${index + 1}`}
+              aria-selected={index === currentSlide}
+              role="tab"
+              type="button"
             />
           ))}
         </div>
 
         {/* Swipe hint for mobile */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/70 text-xs md:hidden animate-pulse">
+        <p className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/70 text-xs md:hidden animate-pulse">
           ← Geser untuk melihat →
-        </div>
+        </p>
       </div>
 
       {/* Navigation Arrow - Next (Desktop) */}
       <button
         onClick={nextSlide}
         className="flex-shrink-0 w-10 h-10 rounded-full bg-white/90 shadow-lg flex items-center justify-center text-amber-700 hover:bg-white hover:scale-110 transition-all hidden md:flex"
-        aria-label="Next slide"
+        aria-label="Slide berikutnya"
+        type="button"
       >
-        <ChevronRight className="w-5 h-5" />
+        <ChevronRight className="w-5 h-5" aria-hidden="true" />
       </button>
     </div>
   );

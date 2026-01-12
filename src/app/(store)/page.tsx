@@ -1,8 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { getPopularProducts, getLatestProducts } from "@/lib/products";
 import { Product } from "@/lib/types";
@@ -44,37 +43,154 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col">
-      {/* Hero Section - Full width background */}
-      <section className="relative bg-gradient-to-br from-slate-100 via-slate-50 to-white">
-        {/* Subtle songket pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.02] pointer-events-none"
+      {/* Hero Section - Premium Malay Heritage Design */}
+      <section className="relative min-h-[70vh] md:min-h-[80vh] overflow-hidden bg-gradient-to-br from-[#1a0a0f] via-[#2d1520] to-[#1a0a0f]">
+        {/* Animated Gold Particles Background */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-20 left-10 w-2 h-2 bg-amber-400/30 rounded-full animate-pulse" />
+          <div className="absolute top-40 right-20 w-1.5 h-1.5 bg-amber-300/40 rounded-full animate-pulse delay-300" />
+          <div className="absolute bottom-32 left-1/4 w-1 h-1 bg-amber-500/30 rounded-full animate-pulse delay-500" />
+          <div className="absolute top-1/3 right-1/3 w-2 h-2 bg-amber-400/20 rounded-full animate-pulse delay-700" />
+          <div className="absolute bottom-20 right-10 w-1.5 h-1.5 bg-amber-300/30 rounded-full animate-pulse delay-1000" />
+        </div>
+
+        {/* Songket Pattern Overlay - Traditional Geometric */}
+        <div 
+          className="absolute inset-0 opacity-[0.08]"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%237A1F3D' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23D4AF37' fill-opacity='1'%3E%3Cpath d='M40 0L45 5L40 10L35 5L40 0zM20 20L25 25L20 30L15 25L20 20zM60 20L65 25L60 30L55 25L60 20zM40 40L45 45L40 50L35 45L40 40zM0 40L5 45L0 50L-5 45L0 40zM80 40L85 45L80 50L75 45L80 40zM20 60L25 65L20 70L15 65L20 60zM60 60L65 65L60 70L55 65L60 60zM40 80L45 85L40 90L35 85L40 80z'/%3E%3Crect x='38' y='18' width='4' height='4' rx='0.5'/%3E%3Crect x='18' y='38' width='4' height='4' rx='0.5'/%3E%3Crect x='58' y='38' width='4' height='4' rx='0.5'/%3E%3Crect x='38' y='58' width='4' height='4' rx='0.5'/%3E%3C/g%3E%3C/svg%3E")`,
           }}
         />
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 md:py-24 relative">
-          <div className="max-w-2xl">
-            <Badge className="mb-4 bg-amber-500 hover:bg-amber-600 text-white border-0">
-              Warisan Budaya Indonesia
-            </Badge>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-8">
-              Keindahan{" "}
-              <span className="text-primary">Tenunan Songket</span>
+        {/* Decorative Corner Ornaments */}
+        <div className="absolute top-0 left-0 w-32 h-32 md:w-48 md:h-48">
+          <svg viewBox="0 0 100 100" className="w-full h-full text-amber-500/20">
+            <path d="M0 0 L100 0 L100 10 L10 10 L10 100 L0 100 Z" fill="currentColor"/>
+            <path d="M20 0 L20 20 L0 20" fill="none" stroke="currentColor" strokeWidth="1"/>
+            <circle cx="30" cy="30" r="3" fill="currentColor"/>
+          </svg>
+        </div>
+        <div className="absolute top-0 right-0 w-32 h-32 md:w-48 md:h-48 rotate-90">
+          <svg viewBox="0 0 100 100" className="w-full h-full text-amber-500/20">
+            <path d="M0 0 L100 0 L100 10 L10 10 L10 100 L0 100 Z" fill="currentColor"/>
+            <path d="M20 0 L20 20 L0 20" fill="none" stroke="currentColor" strokeWidth="1"/>
+            <circle cx="30" cy="30" r="3" fill="currentColor"/>
+          </svg>
+        </div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 md:w-48 md:h-48 -rotate-90">
+          <svg viewBox="0 0 100 100" className="w-full h-full text-amber-500/20">
+            <path d="M0 0 L100 0 L100 10 L10 10 L10 100 L0 100 Z" fill="currentColor"/>
+            <path d="M20 0 L20 20 L0 20" fill="none" stroke="currentColor" strokeWidth="1"/>
+            <circle cx="30" cy="30" r="3" fill="currentColor"/>
+          </svg>
+        </div>
+        <div className="absolute bottom-0 right-0 w-32 h-32 md:w-48 md:h-48 rotate-180">
+          <svg viewBox="0 0 100 100" className="w-full h-full text-amber-500/20">
+            <path d="M0 0 L100 0 L100 10 L10 10 L10 100 L0 100 Z" fill="currentColor"/>
+            <path d="M20 0 L20 20 L0 20" fill="none" stroke="currentColor" strokeWidth="1"/>
+            <circle cx="30" cy="30" r="3" fill="currentColor"/>
+          </svg>
+        </div>
+
+        {/* Gradient Overlay for depth */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
+
+        {/* Main Content */}
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 md:py-32 flex flex-col justify-center min-h-[70vh] md:min-h-[80vh]">
+          <div className="max-w-3xl">
+            {/* Heritage Badge with shimmer effect */}
+            <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500/20 via-amber-400/30 to-amber-500/20 border border-amber-500/30 backdrop-blur-sm">
+              <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+              <span className="text-amber-300 text-sm font-medium tracking-wide">
+                Warisan Budaya Melayu
+              </span>
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+            </div>
+
+            {/* Main Heading with gradient text */}
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight mb-6">
+              <span className="text-white/90">Keindahan</span>
+              <br />
+              <span className="bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 bg-clip-text text-transparent">
+                Tenunan Songket
+              </span>
             </h1>
+
+            {/* Decorative line */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-px w-12 bg-gradient-to-r from-transparent to-amber-500/50" />
+              <div className="w-2 h-2 rotate-45 bg-amber-500/50" />
+              <div className="h-px w-24 bg-amber-500/30" />
+              <div className="w-2 h-2 rotate-45 bg-amber-500/50" />
+              <div className="h-px w-12 bg-gradient-to-l from-transparent to-amber-500/50" />
+            </div>
+
+            {/* Subtitle */}
+            <p className="text-lg md:text-xl text-white/70 mb-8 max-w-xl leading-relaxed">
+              Koleksi eksklusif kain tenun songket Brunei dengan motif tradisional 
+              yang ditenun dengan benang emas asli oleh pengrajin mahir.
+            </p>
+
+            {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
+              <Button 
+                asChild 
+                size="lg" 
+                className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-0 shadow-lg shadow-amber-500/25 transition-all duration-300 hover:shadow-amber-500/40 hover:scale-105"
+              >
                 <Link href="/products">
                   Belanja Sekarang
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg">
+              <Button 
+                asChild 
+                variant="outline" 
+                size="lg"
+                className="border-amber-500/50 text-amber-300 hover:bg-amber-500/10 hover:text-amber-200 hover:border-amber-400/70 backdrop-blur-sm transition-all duration-300"
+              >
                 <Link href="#jenis-corak">Lihat Kategori</Link>
               </Button>
             </div>
+
+            {/* Trust indicators */}
+            <div className="flex flex-wrap items-center gap-6 mt-10 pt-8 border-t border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span className="text-white/60 text-sm">100% Handmade</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <span className="text-white/60 text-sm">Benang Emas Asli</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <span className="text-white/60 text-sm">Kualiti Terjamin</span>
+              </div>
+            </div>
           </div>
+        </div>
+
+        {/* Bottom decorative wave */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 60" className="w-full h-auto" preserveAspectRatio="none">
+            <path 
+              d="M0,60 L0,30 Q360,0 720,30 T1440,30 L1440,60 Z" 
+              fill="white"
+            />
+          </svg>
         </div>
       </section>
 

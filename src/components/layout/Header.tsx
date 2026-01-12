@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, Search, ShoppingCart, User, X, Home, Grid3X3, Info, Phone } from "lucide-react";
+import { Menu, Search, ShoppingCart, User, X, Home, Grid3X3, Info, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -14,8 +14,8 @@ import { useScrollDirection } from "@/hooks/useScrollDirection";
 const navigation = [
   { name: "Beranda", href: "/", icon: Home },
   { name: "Produk", href: "/products", icon: Grid3X3 },
-  { name: "Tentang", href: "#", icon: Info },
-  { name: "Kontak", href: "#", icon: Phone },
+  { name: "Tentang Kami", href: "/tentang-kami", icon: Info },
+  { name: "Cara Order", href: "/cara-order", icon: ClipboardList },
 ];
 
 export function Header() {

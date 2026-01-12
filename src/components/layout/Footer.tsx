@@ -16,13 +16,12 @@ const footerLinks = {
     { name: "Tajung", href: "/products?category=Tajung" },
   ],
   info: [
-    { name: "Cara Order", href: "#" },
-    { name: "Tentang Kami", href: "#" },
-    { name: "Kontak", href: "#" },
-    { name: "FAQ", href: "#" },
+    { name: "Cara Order", href: "/cara-order" },
+    { name: "Tentang Kami", href: "/tentang-kami" },
+    { name: "FAQ", href: "/faq" },
   ],
   social: [
-    { name: "Instagram", href: "#", icon: Instagram },
+    { name: "Instagram", href: "https://instagram.com/tenunansongkett", icon: Instagram },
     { name: "Facebook", href: "#", icon: Facebook },
     { name: "Twitter", href: "#", icon: Twitter },
   ],

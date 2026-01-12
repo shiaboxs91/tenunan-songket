@@ -118,11 +118,28 @@ export default async function HomePage() {
               <div className="w-2 h-2 rounded-full bg-gradient-to-br from-amber-400 to-amber-600" />
             </div>
 
-            {/* Main Heading with enhanced gradient */}
+            {/* Main Heading with 3D gold metallic effect */}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-5">
-              <span className="text-slate-800">Keindahan</span>
+              <span 
+                className="inline-block text-transparent bg-clip-text"
+                style={{
+                  backgroundImage: 'linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 25%, #1a1a1a 50%, #4a4a4a 75%, #1a1a1a 100%)',
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
+                }}
+              >
+                Keindahan
+              </span>
               <br />
-              <span className="bg-gradient-to-r from-amber-700 via-amber-500 to-amber-700 bg-clip-text text-transparent drop-shadow-sm">
+              <span 
+                className="inline-block text-transparent bg-clip-text relative"
+                style={{
+                  backgroundImage: 'linear-gradient(135deg, #8B6914 0%, #D4AF37 15%, #FFD700 30%, #FFF8DC 45%, #FFD700 55%, #D4AF37 70%, #B8860B 85%, #8B6914 100%)',
+                  backgroundSize: '200% 200%',
+                  animation: 'shimmer 3s ease-in-out infinite',
+                  filter: 'drop-shadow(2px 2px 2px rgba(139, 105, 20, 0.4)) drop-shadow(-1px -1px 1px rgba(255, 248, 220, 0.3))',
+                  WebkitBackgroundClip: 'text',
+                }}
+              >
                 Tenunan Songket
               </span>
             </h1>

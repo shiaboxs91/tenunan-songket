@@ -35,3 +35,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Shimmer animation for 3D gold metallic text effect */
+@keyframes shimmer {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}

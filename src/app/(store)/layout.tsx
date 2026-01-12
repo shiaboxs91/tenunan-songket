@@ -4,6 +4,7 @@ import { CartProvider } from "@/components/cart/CartProvider";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { SkipLink } from "@/components/layout/SkipLink";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 
 export default function StoreLayout({
   children,
@@ -25,6 +26,7 @@ export default function StoreLayout({
         </main>
         <Footer />
         <MobileBottomNav />
+        <InstallPrompt />
       </div>
     </CartProvider>
   );

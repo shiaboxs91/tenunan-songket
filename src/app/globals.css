@@ -36,7 +36,7 @@
   }
 }
 
-/* Shimmer animation for 3D gold metallic text effect */
+/* Shimmer animation for 3D gold metallic text effect - slow elegant movement */
 @keyframes shimmer {
   0%, 100% {
     background-position: 0% 50%;

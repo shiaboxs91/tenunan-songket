@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchRSSProducts } from "@/lib/rss";
 import { filterProducts, sortProducts, paginateProducts } from "@/lib/products";
 import { FilterState, SortOption, ProductsResponse, Product } from "@/lib/types";
 import snapshotData from "@/data/products.snapshot.json";
@@ -37,18 +36,8 @@ export async function GET(request: NextRequest) {
   const page = searchParams.get("page") ? Number(searchParams.get("page")) : 1;
   const pageSize = searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 12;
 
-  let products: Product[];
-  let source: "rss" | "snapshot" = "rss";
-
-  try {
-    // Try to fetch from RSS feed
-    products = await fetchRSSProducts();
-  } catch (error) {
-    console.error("Failed to fetch RSS, using snapshot:", error);
-    // Fallback to snapshot - snapshotData is directly an array
-    products = snapshotData as unknown as Product[];
-    source = "snapshot";
-  }
+  // Use snapshot data directly - single source of truth from data_produk
+  const products: Product[] = snapshotData as unknown as Product[];
 
   // Apply filters (supports multiple categories)
   let filteredProducts = filterProducts(products, filters);
@@ -67,7 +56,7 @@ export async function GET(request: NextRequest) {
     total,
     page,
     pageSize,
-    source,
+    source: "snapshot",
   };
 
   return NextResponse.json(response);

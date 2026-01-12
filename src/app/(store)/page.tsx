@@ -87,8 +87,8 @@ async function getHomeData() {
   const products = snapshotData as unknown as Product[];
   
   return {
-    popularProducts: getPopularProducts(products, 4),
-    latestProducts: getLatestProducts(products, 4),
+    popularProducts: getPopularProducts(products, 5),
+    latestProducts: getLatestProducts(products, 5),
   };
 }
 
@@ -196,7 +196,7 @@ export default async function HomePage() {
                 style={{
                   backgroundImage: 'linear-gradient(135deg, #8B6914 0%, #D4AF37 15%, #FFD700 30%, #FFF8DC 45%, #FFD700 55%, #D4AF37 70%, #B8860B 85%, #8B6914 100%)',
                   backgroundSize: '200% 200%',
-                  animation: 'shimmer 3s ease-in-out infinite',
+                  animation: 'shimmer 8s ease-in-out infinite',
                   filter: 'drop-shadow(2px 2px 2px rgba(139, 105, 20, 0.4)) drop-shadow(-1px -1px 1px rgba(255, 248, 220, 0.3))',
                   WebkitBackgroundClip: 'text',
                 }}

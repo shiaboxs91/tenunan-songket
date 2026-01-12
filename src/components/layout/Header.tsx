@@ -66,7 +66,7 @@ export function Header() {
           className={cn(
             "mx-auto max-w-7xl flex items-center justify-between px-4 sm:px-6 lg:px-8",
             "transition-all duration-300 ease-in-out",
-            isCompact ? "h-12" : "h-16"
+            isCompact ? "h-14" : "h-20"
           )}
           aria-label="Navigasi utama"
         >
@@ -82,11 +82,11 @@ export function Header() {
             <Image
               src="https://tenunansongket.com/wp-content/uploads/2020/08/ts-4.png"
               alt="TenunanSongket Logo"
-              width={isCompact ? 120 : 150}
-              height={isCompact ? 32 : 40}
+              width={isCompact ? 140 : 180}
+              height={isCompact ? 36 : 48}
               className={cn(
                 "object-contain transition-all duration-300",
-                isCompact ? "h-8" : "h-10"
+                isCompact ? "h-9" : "h-12"
               )}
               priority
             />

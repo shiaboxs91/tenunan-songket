@@ -112,60 +112,17 @@ export default async function HomePage() {
           }}
         />
 
-        {/* Royal Gold Frame - Top Left */}
-        <div className="absolute top-4 left-4 md:top-8 md:left-8 w-20 h-20 md:w-28 md:h-28">
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <defs>
-              <linearGradient id="goldGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.6"/>
-                <stop offset="50%" stopColor="#FFD700" stopOpacity="0.8"/>
-                <stop offset="100%" stopColor="#B8860B" stopOpacity="0.6"/>
-              </linearGradient>
-            </defs>
-            <path d="M0 0 L70 0 L70 6 L6 6 L6 70 L0 70 Z" fill="url(#goldGrad1)"/>
-            <path d="M12 0 L12 12 L0 12" fill="none" stroke="url(#goldGrad1)" strokeWidth="2"/>
-            <circle cx="18" cy="18" r="3" fill="url(#goldGrad1)"/>
-            <path d="M24 6 L24 24 L6 24" fill="none" stroke="url(#goldGrad1)" strokeWidth="1" opacity="0.5"/>
-          </svg>
-        </div>
-        
-        {/* Royal Gold Frame - Top Right */}
-        <div className="absolute top-4 right-4 md:top-8 md:right-8 w-20 h-20 md:w-28 md:h-28 rotate-90">
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <defs>
-              <linearGradient id="goldGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#B8860B" stopOpacity="0.6"/>
-                <stop offset="50%" stopColor="#FFD700" stopOpacity="0.8"/>
-                <stop offset="100%" stopColor="#D4AF37" stopOpacity="0.6"/>
-              </linearGradient>
-            </defs>
-            <path d="M0 0 L70 0 L70 6 L6 6 L6 70 L0 70 Z" fill="url(#goldGrad2)"/>
-            <path d="M12 0 L12 12 L0 12" fill="none" stroke="url(#goldGrad2)" strokeWidth="2"/>
-            <circle cx="18" cy="18" r="3" fill="url(#goldGrad2)"/>
-          </svg>
-        </div>
-        
-        {/* Royal Gold Frame - Bottom Left */}
-        <div className="absolute bottom-4 left-4 md:bottom-8 md:left-8 w-20 h-20 md:w-28 md:h-28 -rotate-90">
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <path d="M0 0 L70 0 L70 6 L6 6 L6 70 L0 70 Z" fill="url(#goldGrad1)"/>
-            <path d="M12 0 L12 12 L0 12" fill="none" stroke="url(#goldGrad1)" strokeWidth="2"/>
-            <circle cx="18" cy="18" r="3" fill="url(#goldGrad1)"/>
-          </svg>
-        </div>
-        
-        {/* Royal Gold Frame - Bottom Right */}
-        <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 w-20 h-20 md:w-28 md:h-28 rotate-180">
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <path d="M0 0 L70 0 L70 6 L6 6 L6 70 L0 70 Z" fill="url(#goldGrad2)"/>
-            <path d="M12 0 L12 12 L0 12" fill="none" stroke="url(#goldGrad2)" strokeWidth="2"/>
-            <circle cx="18" cy="18" r="3" fill="url(#goldGrad2)"/>
-          </svg>
-        </div>
+        {/* Subtle floating gold sparkles - elegant decoration */}
+        <div className="absolute top-20 left-[10%] w-2 h-2 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 opacity-40" />
+        <div className="absolute top-32 right-[15%] w-1.5 h-1.5 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 opacity-30" />
+        <div className="absolute bottom-32 left-[20%] w-1 h-1 rounded-full bg-amber-400 opacity-50" />
+        <div className="absolute bottom-20 right-[25%] w-2 h-2 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 opacity-35" />
+        <div className="absolute top-1/2 left-[5%] w-1.5 h-1.5 rounded-full bg-amber-500 opacity-25" />
+        <div className="absolute top-1/3 right-[8%] w-1 h-1 rounded-full bg-amber-400 opacity-40" />
 
-        {/* Decorative gold lines on sides */}
-        <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-gradient-to-b from-transparent via-amber-400/40 to-transparent" />
-        <div className="absolute right-0 top-1/4 bottom-1/4 w-1 bg-gradient-to-b from-transparent via-amber-400/40 to-transparent" />
+        {/* Soft gradient border effect on edges */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/40 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-300/40 to-transparent" />
 
         {/* Main Content */}
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 md:py-20 flex flex-col justify-center min-h-[55vh] md:min-h-[65vh]">

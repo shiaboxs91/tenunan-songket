@@ -1,15 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Grid3X3, ShoppingCart, User, Search } from "lucide-react";
+import { Home, Grid3X3, ShoppingCart, User, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/components/cart/CartProvider";
 import { CategorySheet } from "./CategorySheet";
-import { getCategories } from "@/lib/products";
-import productsData from "@/data/products.snapshot.json";
-import type { Product } from "@/lib/types";
 
 type NavItem = {
   name: string;
@@ -22,7 +19,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { name: "Beranda", href: "/", icon: Home },
-  { name: "Cari", href: "/products", icon: Search },
+  { name: "Kategori", icon: LayoutGrid, isCategory: true },
   { name: "Produk", href: "/products", icon: Grid3X3, isFab: true },
   { name: "Keranjang", href: "/cart", icon: ShoppingCart, showBadge: true },
   { name: "Akun", href: "/account", icon: User },
@@ -32,16 +29,6 @@ export function MobileBottomNav() {
   const pathname = usePathname();
   const { totalItems } = useCart();
   const [categorySheetOpen, setCategorySheetOpen] = useState(false);
-  const [categories, setCategories] = useState<string[]>([]);
-
-  useEffect(() => {
-    const cats = getCategories(productsData as unknown as Product[]);
-    setCategories(cats);
-  }, []);
-
-  const handleCategorySelect = (category: string) => {
-    console.log("Selected category:", category);
-  };
 
   return (
     <>
@@ -75,7 +62,7 @@ export function MobileBottomNav() {
 
           {/* Nav items container */}
           <div className="relative flex items-end justify-around h-20 px-2 pb-2">
-            {navItems.map((item, index) => {
+            {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = item.href 
                 ? pathname === item.href || 
@@ -115,6 +102,45 @@ export function MobileBottomNav() {
                       {item.name}
                     </span>
                   </Link>
+                );
+              }
+
+              // Category button (opens sheet)
+              if (item.isCategory) {
+                return (
+                  <button
+                    key={item.name}
+                    onClick={() => setCategorySheetOpen(true)}
+                    className={cn(
+                      "flex flex-col items-center justify-center w-16 h-14 relative transition-all duration-200",
+                      categorySheetOpen ? "text-amber-600" : "text-slate-400 hover:text-amber-500"
+                    )}
+                    aria-label={item.name}
+                  >
+                    {/* Icon container */}
+                    <div className={cn(
+                      "relative p-2 rounded-xl transition-all duration-200",
+                      categorySheetOpen && "bg-amber-50"
+                    )}>
+                      <Icon className={cn(
+                        "h-5 w-5 transition-all duration-200",
+                        categorySheetOpen && "scale-110"
+                      )} aria-hidden="true" />
+                    </div>
+                    
+                    {/* Label */}
+                    <span className={cn(
+                      "text-[10px] font-medium transition-all duration-200",
+                      categorySheetOpen ? "text-amber-700 font-semibold" : "text-slate-500"
+                    )}>
+                      {item.name}
+                    </span>
+                    
+                    {/* Active indicator dot */}
+                    {categorySheetOpen && (
+                      <div className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-amber-500" />
+                    )}
+                  </button>
                 );
               }
 
@@ -170,11 +196,10 @@ export function MobileBottomNav() {
         <div className="h-safe-area-inset-bottom bg-white" />
       </nav>
 
+      {/* Category Sheet */}
       <CategorySheet
         open={categorySheetOpen}
         onOpenChange={setCategorySheetOpen}
-        categories={categories}
-        onSelectCategory={handleCategorySelect}
       />
     </>
   );

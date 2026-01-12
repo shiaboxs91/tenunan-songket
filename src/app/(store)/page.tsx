@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { getPopularProducts, getLatestProducts } from "@/lib/products";
 import { Product } from "@/lib/types";
-import { fetchRSSProducts } from "@/lib/rss";
 import snapshotData from "@/data/products.snapshot.json";
 import categoryImagesData from "@/data/category-images.json";
 
@@ -22,15 +21,9 @@ const JENIS_CORAK = categoryImagesData.categories.map(cat => {
 });
 
 async function getHomeData() {
-  let products: Product[];
-  
-  try {
-    products = await fetchRSSProducts();
-  } catch (error) {
-    console.error("Failed to fetch RSS, using snapshot:", error);
-    // snapshotData is directly an array, not an object with products property
-    products = snapshotData as unknown as Product[];
-  }
+  // Use snapshot data directly for reliable product display
+  // Snapshot contains real products from tenunansongket.com
+  const products = snapshotData as unknown as Product[];
   
   return {
     popularProducts: getPopularProducts(products, 4),

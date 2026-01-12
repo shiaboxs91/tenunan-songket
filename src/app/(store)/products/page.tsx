@@ -8,6 +8,7 @@ import { ProductFilters } from "@/components/product/ProductFilters";
 // Temporarily disabled due to Radix UI Dialog issue
 // import { MobileFilterSheet } from "@/components/product/MobileFilterSheet";
 import { GridDensityToggle, useGridDensity } from "@/components/product/GridDensityToggle";
+import { HorizontalCategories } from "@/components/mobile/HorizontalCategories";
 import { Button } from "@/components/ui/button";
 import { Product, ProductsResponse, SortOption, PRODUCT_CATEGORIES } from "@/lib/types";
 import { useProductFilters } from "@/hooks/useProductFilters";
@@ -92,7 +93,11 @@ export default function ProductsPage() {
   const totalPages = Math.ceil(total / pageSize);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+    <>
+      {/* Horizontal Categories - Mobile Only */}
+      <HorizontalCategories />
+      
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
       {/* Page Header */}
       <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold">
@@ -214,5 +219,6 @@ export default function ProductsPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

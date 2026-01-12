@@ -4,6 +4,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { HeroSlider } from "@/components/home/HeroSlider";
+import { TrustBadges } from "@/components/mobile/TrustBadges";
 import { getPopularProducts, getLatestProducts } from "@/lib/products";
 import { Product } from "@/lib/types";
 import snapshotData from "@/data/products.snapshot.json";
@@ -127,6 +128,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Trust Badges - Mobile Only */}
+      <TrustBadges />
 
       {/* Jenis Corak Kain Section */}
       <section id="jenis-corak" className="relative py-10 md:py-16 bg-white">

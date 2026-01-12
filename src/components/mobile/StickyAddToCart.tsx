@@ -2,53 +2,41 @@
 
 import { useState, useEffect } from "react";
 import { ShoppingCart, Heart, Minus, Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/CartProvider";
 import { useToast } from "@/components/ui/Toast";
-import { Product } from "@/lib/types";
-import { cn } from "@/lib/utils";
 import { formatPrice } from "@/lib/utils";
+import type { Product } from "@/lib/types";
 
-interface StickyProductCTAProps {
+interface StickyAddToCartProps {
   product: Product;
+  showWhenScrolled?: boolean;
 }
 
-export function StickyProductCTA({ product }: StickyProductCTAProps) {
-  const [isVisible, setIsVisible] = useState(false);
+export function StickyAddToCart({ product, showWhenScrolled = true }: StickyAddToCartProps) {
+  const [isVisible, setIsVisible] = useState(!showWhenScrolled);
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const { addItem } = useCart();
   const { showToast } = useToast();
-  const router = useRouter();
 
   useEffect(() => {
+    if (!showWhenScrolled) return;
+
     const handleScroll = () => {
-      // Show after scrolling 200px
-      setIsVisible(window.scrollY > 200);
+      // Show after scrolling 300px
+      setIsVisible(window.scrollY > 300);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [showWhenScrolled]);
 
   const handleAddToCart = () => {
-    if (product.inStock) {
-      for (let i = 0; i < quantity; i++) {
-        addItem(product, 1);
-      }
-      showToast(`${quantity}x ${product.title} ditambahkan ke keranjang`, "success");
-      setQuantity(1);
-    }
-  };
-
-  const handleBuyNow = () => {
-    if (product.inStock) {
-      for (let i = 0; i < quantity; i++) {
-        addItem(product, 1);
-      }
-      router.push("/checkout");
-    }
+    addItem(product, quantity);
+    showToast(`${quantity}x ${product.title} ditambahkan ke keranjang`, "success");
+    setQuantity(1);
   };
 
   const decreaseQty = () => setQuantity(q => Math.max(1, q - 1));
@@ -69,31 +57,31 @@ export function StickyProductCTA({ product }: StickyProductCTAProps) {
 
       {/* Content */}
       <div className="relative px-4 py-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {/* Price */}
-          <div className="flex-shrink-0 min-w-0">
-            <p className="text-base font-bold text-amber-600 truncate">{formatPrice(product.price * quantity)}</p>
+          <div className="flex-shrink-0">
+            <p className="text-lg font-bold text-amber-600">{formatPrice(product.price * quantity)}</p>
             {quantity > 1 && (
               <p className="text-[10px] text-slate-400">{formatPrice(product.price)}/pcs</p>
             )}
           </div>
 
           {/* Quantity selector */}
-          <div className="flex items-center gap-0.5 bg-slate-100 rounded-lg p-0.5">
+          <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
             <button
               onClick={decreaseQty}
-              className="w-7 h-7 rounded-md flex items-center justify-center text-slate-600 hover:bg-white active:scale-95 transition-all"
+              className="w-8 h-8 rounded-md flex items-center justify-center text-slate-600 hover:bg-white active:scale-95 transition-all"
               aria-label="Kurangi jumlah"
             >
-              <Minus className="w-3.5 h-3.5" />
+              <Minus className="w-4 h-4" />
             </button>
-            <span className="w-6 text-center text-sm font-semibold text-slate-800">{quantity}</span>
+            <span className="w-8 text-center font-semibold text-slate-800">{quantity}</span>
             <button
               onClick={increaseQty}
-              className="w-7 h-7 rounded-md flex items-center justify-center text-slate-600 hover:bg-white active:scale-95 transition-all"
+              className="w-8 h-8 rounded-md flex items-center justify-center text-slate-600 hover:bg-white active:scale-95 transition-all"
               aria-label="Tambah jumlah"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-4 h-4" />
             </button>
           </div>
 
@@ -107,35 +95,24 @@ export function StickyProductCTA({ product }: StickyProductCTAProps) {
               );
             }}
             className={cn(
-              "w-9 h-9 rounded-full flex items-center justify-center border transition-all flex-shrink-0",
+              "w-10 h-10 rounded-full flex items-center justify-center border transition-all",
               isWishlisted 
                 ? "bg-rose-50 border-rose-200 text-rose-500" 
                 : "bg-white border-slate-200 text-slate-400 hover:text-rose-500"
             )}
             aria-label={isWishlisted ? "Hapus dari wishlist" : "Tambah ke wishlist"}
           >
-            <Heart className={cn("w-4 h-4", isWishlisted && "fill-current")} />
+            <Heart className={cn("w-5 h-5", isWishlisted && "fill-current")} />
           </button>
 
           {/* Add to cart button */}
           <Button
             onClick={handleAddToCart}
             disabled={!product.inStock}
-            size="sm"
-            className="h-9 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold shadow-lg shadow-amber-500/25 active:scale-[0.98] transition-all"
+            className="flex-1 h-11 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold shadow-lg shadow-amber-500/25 active:scale-[0.98] transition-all"
           >
-            <ShoppingCart className="w-4 h-4 mr-1" />
-            <span className="hidden xs:inline">Keranjang</span>
-          </Button>
-
-          {/* Buy now button */}
-          <Button
-            onClick={handleBuyNow}
-            disabled={!product.inStock}
-            size="sm"
-            className="h-9 px-3 bg-slate-800 hover:bg-slate-900 text-white font-semibold active:scale-[0.98] transition-all"
-          >
-            Beli
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            {product.inStock ? "Tambah" : "Stok Habis"}
           </Button>
         </div>
       </div>

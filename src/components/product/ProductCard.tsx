@@ -12,6 +12,31 @@ import { useCart } from "@/components/cart/CartProvider";
 import { cn } from "@/lib/utils";
 import { GridDensity } from "./GridDensityToggle";
 
+// Elegant wood carving corner ornament SVG
+const CornerOrnament = ({ className, flip = false }: { className?: string; flip?: boolean }) => (
+  <svg 
+    viewBox="0 0 24 24" 
+    className={cn("w-5 h-5 text-amber-400/70", className)}
+    style={{ transform: flip ? 'scaleX(-1)' : undefined }}
+  >
+    <defs>
+      <linearGradient id="goldOrnament" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#D4AF37" />
+        <stop offset="50%" stopColor="#FFD700" />
+        <stop offset="100%" stopColor="#B8860B" />
+      </linearGradient>
+    </defs>
+    <path 
+      d="M2 2 L8 2 C6 4 4 6 2 8 L2 2 M4 2 Q6 6 2 10 M6 2 Q8 4 8 8 Q4 8 2 6" 
+      fill="none" 
+      stroke="url(#goldOrnament)" 
+      strokeWidth="0.8"
+      strokeLinecap="round"
+    />
+    <circle cx="3" cy="3" r="1" fill="url(#goldOrnament)" />
+  </svg>
+);
+
 interface ProductCardProps {
   product: Product;
   density?: GridDensity;
@@ -36,7 +61,20 @@ export function ProductCard({ product, density = "comfortable", onQuickView }: P
 
   return (
     <Link href={`/products/${product.slug}`}>
-      <Card className="group overflow-hidden h-full hover:shadow-lg transition-shadow duration-300">
+      <Card className="group overflow-hidden h-full hover:shadow-lg transition-shadow duration-300 relative border-amber-200/50 hover:border-amber-300/70">
+        {/* Elegant corner ornaments */}
+        <div className="absolute top-0 left-0 z-10 opacity-60 group-hover:opacity-100 transition-opacity">
+          <CornerOrnament />
+        </div>
+        <div className="absolute top-0 right-0 z-10 opacity-60 group-hover:opacity-100 transition-opacity rotate-90">
+          <CornerOrnament />
+        </div>
+        <div className="absolute bottom-0 left-0 z-10 opacity-60 group-hover:opacity-100 transition-opacity -rotate-90">
+          <CornerOrnament />
+        </div>
+        <div className="absolute bottom-0 right-0 z-10 opacity-60 group-hover:opacity-100 transition-opacity rotate-180">
+          <CornerOrnament />
+        </div>
         {/* Image Container - smaller aspect ratio */}
         <div className="relative aspect-[4/3] overflow-hidden bg-muted">
           <Image

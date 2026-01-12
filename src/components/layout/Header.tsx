@@ -4,20 +4,15 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, Search, ShoppingCart, User, X, Home, Grid3X3, Info, ClipboardList, HelpCircle } from "lucide-react";
+import { Menu, Search, ShoppingCart, User, X, Home, Grid3X3, Info, ClipboardList, HelpCircle, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/components/cart/CartProvider";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
-
-const navigation = [
-  { name: "Beranda", href: "/", icon: Home },
-  { name: "Produk", href: "/products", icon: Grid3X3 },
-  { name: "Tentang Kami", href: "/tentang-kami", icon: Info },
-  { name: "Cara Order", href: "/cara-order", icon: ClipboardList },
-  { name: "FAQ", href: "/faq", icon: HelpCircle },
-];
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useLocale, useTranslations } from "next-intl";
+import type { Locale } from "@/i18n/config";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -29,6 +24,16 @@ export function Header() {
   const { totalItems } = useCart();
   const { scrollDirection, isScrolled } = useScrollDirection({ threshold: 50 });
   const isCompact = scrollDirection === "down" && isScrolled && !mobileSearchExpanded;
+  const locale = useLocale() as Locale;
+  const t = useTranslations();
+
+  const navigation = [
+    { name: t("common.home"), href: "/", icon: Home },
+    { name: t("common.products"), href: "/products", icon: Grid3X3 },
+    { name: t("common.about"), href: "/tentang-kami", icon: Info },
+    { name: t("common.howToOrder"), href: "/cara-order", icon: ClipboardList },
+    { name: t("common.faq"), href: "/faq", icon: HelpCircle },
+  ];
 
   useEffect(() => {
     if (mobileSearchExpanded && mobileSearchInputRef.current) {
@@ -105,7 +110,7 @@ export function Header() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-amber-600/60" />
               <Input
                 type="search"
-                placeholder="Cari produk songket..."
+                placeholder={t("common.search")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 pr-4 border-amber-200 focus:border-amber-400 focus:ring-amber-400/20"
@@ -147,13 +152,16 @@ export function Header() {
               );
             })}
 
+            {/* Language Switcher - Desktop */}
+            <LanguageSwitcher currentLocale={locale} variant="desktop" />
+
             {/* Cart */}
             <Link href="/cart" className="relative">
               <Button 
                 variant="ghost" 
                 size="icon" 
                 className="text-slate-600 hover:text-amber-700 hover:bg-amber-50"
-                aria-label={`Keranjang belanja${totalItems > 0 ? `, ${totalItems} item` : ''}`}
+                aria-label={`${t("common.cart")}${totalItems > 0 ? `, ${totalItems} item` : ''}`}
               >
                 <ShoppingCart className="h-5 w-5" />
                 {totalItems > 0 && (
@@ -170,7 +178,7 @@ export function Header() {
                 variant="ghost" 
                 size="icon" 
                 className="text-slate-600 hover:text-amber-700 hover:bg-amber-50"
-                aria-label="Akun saya"
+                aria-label={t("common.account")}
               >
                 <User className="h-5 w-5" />
               </Button>
@@ -178,7 +186,12 @@ export function Header() {
           </div>
 
           {/* Mobile Menu */}
-          <div className="flex items-center space-x-2 md:hidden">
+          <div className="flex items-center space-x-1 md:hidden">
+            {/* Language Switcher - Mobile (compact) */}
+            {!mobileSearchExpanded && (
+              <LanguageSwitcher currentLocale={locale} variant="mobile" />
+            )}
+
             {!mobileSearchExpanded && (
               <Button 
                 variant="ghost" 
@@ -225,7 +238,7 @@ export function Header() {
                   <Input
                     ref={mobileSearchInputRef}
                     type="search"
-                    placeholder="Cari produk songket..."
+                    placeholder={t("common.search")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 pr-10 w-full border-amber-200"
@@ -247,7 +260,7 @@ export function Header() {
                   onClick={handleMobileSearchClose}
                   className="text-amber-700"
                 >
-                  Batal
+                  {t("common.cancel")}
                 </Button>
               </form>
             </div>
@@ -318,7 +331,7 @@ export function Header() {
             className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:text-amber-700 hover:bg-amber-50/50 transition-all"
           >
             <User className="h-5 w-5" />
-            Akun Saya
+            {t("account.myAccount")}
           </Link>
           <Link
             href="/cart"
@@ -326,13 +339,25 @@ export function Header() {
             className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:text-amber-700 hover:bg-amber-50/50 transition-all"
           >
             <ShoppingCart className="h-5 w-5" />
-            Keranjang
+            {t("common.cart")}
             {totalItems > 0 && (
               <span className="ml-auto px-2 py-0.5 rounded-full bg-amber-500 text-xs text-white font-medium">
                 {totalItems}
               </span>
             )}
           </Link>
+        </div>
+
+        {/* Language Section in Mobile Menu */}
+        <div className="mx-4 border-t border-amber-100" />
+        <div className="p-4">
+          <div className="flex items-center gap-3 px-4 py-2 text-slate-500 text-sm">
+            <Globe className="h-4 w-4" />
+            {t("common.language")}
+          </div>
+          <div className="px-4 py-2">
+            <LanguageSwitcher currentLocale={locale} variant="mobile" />
+          </div>
         </div>
 
         {/* Footer */}

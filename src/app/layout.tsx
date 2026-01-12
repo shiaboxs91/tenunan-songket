@@ -1,5 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { cookies } from "next/headers";
+import { getMessages } from "next-intl/server";
+import { IntlProvider } from "@/components/providers/IntlProvider";
+import { defaultLocale, locales, type Locale } from "@/i18n/config";
 import "./globals.css";
 
 const inter = Inter({ 
@@ -23,7 +27,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "id_ID",
+    locale: "ms_MY",
     url: "https://tenunansongket.com",
     siteName: "Tenunan Songket",
     title: "Tenunan Songket - Warisan Budaya Melayu",
@@ -51,13 +55,21 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Get locale from cookie
+  const cookieStore = await cookies();
+  const localeCookie = cookieStore.get("locale")?.value as Locale | undefined;
+  const locale = localeCookie && locales.includes(localeCookie) ? localeCookie : defaultLocale;
+  
+  // Get messages for the locale
+  const messages = await getMessages();
+
   return (
-    <html lang="id" className={inter.className}>
+    <html lang={locale} className={inter.className}>
       <head>
         {/* Preconnect to external domains for faster loading */}
         <link rel="preconnect" href="https://tenunansongket.com" />
@@ -70,7 +82,9 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="antialiased">
-        {children}
+        <IntlProvider locale={locale} messages={messages as Record<string, unknown>}>
+          {children}
+        </IntlProvider>
         {/* Defer service worker registration */}
         <script
           dangerouslySetInnerHTML={{

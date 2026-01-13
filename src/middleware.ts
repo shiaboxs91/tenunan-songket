@@ -14,6 +14,7 @@ export function middleware(request: NextRequest) {
     "/images",
     "/sw.js",
     "/manifest.json",
+    "/icons",
   ];
 
   // Check if path should be excluded
@@ -25,7 +26,7 @@ export function middleware(request: NextRequest) {
   const maintenanceMode = request.cookies.get("maintenanceMode")?.value === "true";
 
   if (maintenanceMode) {
-    // Redirect to maintenance page
+    // Redirect to maintenance page (now at root level, not in store)
     return NextResponse.redirect(new URL("/maintenance", request.url));
   }
 

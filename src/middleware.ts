@@ -22,11 +22,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check maintenance mode from cookie (set by client-side)
-  const maintenanceMode = request.cookies.get("maintenanceMode")?.value === "true";
+  // Check maintenance mode from environment variable (highest priority)
+  const envMaintenanceMode = process.env.MAINTENANCE_MODE === "true";
+  
+  // Check maintenance mode from cookie (for admin toggle)
+  const cookieMaintenanceMode = request.cookies.get("maintenanceMode")?.value === "true";
 
-  if (maintenanceMode) {
-    // Redirect to maintenance page (now at root level, not in store)
+  // If either is true, redirect to maintenance
+  if (envMaintenanceMode || cookieMaintenanceMode) {
     return NextResponse.redirect(new URL("/maintenance", request.url));
   }
 

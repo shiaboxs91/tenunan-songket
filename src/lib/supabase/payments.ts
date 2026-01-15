@@ -14,7 +14,7 @@ export function getStripe() {
     throw new Error('STRIPE_SECRET_KEY is not configured')
   }
   return new Stripe(secretKey, {
-    apiVersion: '2024-12-18.acacia',
+    apiVersion: '2025-12-15.clover',
   })
 }
 
@@ -235,7 +235,10 @@ export async function processRefund(
         refund_amount: refundAmount,
         refund_reason: reason,
         refunded_at: new Date().toISOString(),
-        gateway_response: { ...payment.gateway_response, refund },
+        gateway_response: { 
+          ...(typeof payment.gateway_response === 'object' && payment.gateway_response ? payment.gateway_response : {}), 
+          refund: JSON.parse(JSON.stringify(refund))
+        },
       })
       .eq('id', paymentId)
 

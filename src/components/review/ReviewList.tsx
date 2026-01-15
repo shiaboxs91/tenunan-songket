@@ -101,7 +101,7 @@ export function ReviewList({ productId, initialReviews }: ReviewListProps) {
                   <div className="flex items-center gap-2 mt-1">
                     <StarRating rating={review.rating} size="sm" />
                     <span className="text-xs text-muted-foreground">
-                      {formatDate(review.created_at)}
+                      {review.created_at ? formatDate(review.created_at) : ''}
                     </span>
                   </div>
                 </div>

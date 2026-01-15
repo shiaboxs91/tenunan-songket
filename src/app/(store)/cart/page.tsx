@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ShoppingBag, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,9 +8,38 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CartItem } from "@/components/cart/CartItem";
 import { CartSummary } from "@/components/cart/CartSummary";
 import { useCart } from "@/components/cart/CartProvider";
+import { createClient } from "@/lib/supabase/client";
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, summary, isLoading, error } = useCart();
+  const [userId, setUserId] = useState<string | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    id: string;
+    code: string;
+    discountAmount: number;
+  } | null>(null);
+
+  // Get user ID
+  useEffect(() => {
+    const getUserId = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setUserId(user?.id || null);
+    };
+    getUserId();
+  }, []);
+
+  const handleCouponApplied = (couponId: string, discountAmount: number, code: string) => {
+    setAppliedCoupon({
+      id: couponId,
+      code,
+      discountAmount
+    });
+  };
+
+  const handleCouponRemoved = () => {
+    setAppliedCoupon(null);
+  };
 
   // Loading state
   if (isLoading) {
@@ -79,7 +109,17 @@ export default function CartPage() {
 
         {/* Order Summary */}
         <div>
-          <CartSummary summary={summary} />
+          <CartSummary 
+            summary={summary}
+            showCoupon={true}
+            userId={userId}
+            appliedCoupon={appliedCoupon ? {
+              code: appliedCoupon.code,
+              discountAmount: appliedCoupon.discountAmount
+            } : undefined}
+            onCouponApplied={handleCouponApplied}
+            onCouponRemoved={handleCouponRemoved}
+          />
         </div>
       </div>
     </div>

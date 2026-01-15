@@ -221,13 +221,13 @@ Implementasi backend e-commerce lengkap menggunakan Supabase untuk Tenunan Songk
 
 ### Phase 8: Coupons & Notifications
 
-- [ ] 23. Implement Coupon System
-  - [ ] 23.1 Create coupon service
+- [-] 23. Implement Coupon System
+  - [x] 23.1 Create coupon service
     - Create `src/lib/supabase/coupons.ts` dengan validateCoupon, applyCoupon
     - Use database function for validation
     - _Requirements: 11.1, 11.3, 11.4_
 
-  - [ ] 23.2 Integrate coupons into cart/checkout
+  - [-] 23.2 Integrate coupons into cart/checkout
     - Add coupon input to cart
     - Apply discount to order total
     - _Requirements: 11.3, 11.6_
@@ -272,7 +272,7 @@ Implementasi backend e-commerce lengkap menggunakan Supabase untuk Tenunan Songk
     - Display sales chart
     - _Requirements: 13.1, 13.2_
 
-- [-] 27. Create Admin Product Management
+- [x] 27. Create Admin Product Management
   - [x] 27.1 Create product list page
     - Create `src/app/admin/products/page.tsx`
     - Implement search, filter, pagination

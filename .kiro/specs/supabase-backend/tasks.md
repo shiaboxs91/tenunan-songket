@@ -260,54 +260,54 @@ Implementasi backend e-commerce lengkap menggunakan Supabase untuk Tenunan Songk
 
 ### Phase 9: Admin Panel
 
-- [ ] 26. Create Admin Dashboard
-  - [ ] 26.1 Create admin layout
+- [x] 26. Create Admin Dashboard
+  - [x] 26.1 Create admin layout
     - Create `src/app/admin/layout.tsx` dengan sidebar navigation
     - Implement admin auth check
     - _Requirements: 13.3_
 
-  - [ ] 26.2 Create dashboard page
+  - [x] 26.2 Create dashboard page
     - Create `src/app/admin/page.tsx`
     - Display stats: total orders, revenue, customers, products
     - Display sales chart
     - _Requirements: 13.1, 13.2_
 
-- [ ] 27. Create Admin Product Management
-  - [ ] 27.1 Create product list page
+- [-] 27. Create Admin Product Management
+  - [x] 27.1 Create product list page
     - Create `src/app/admin/products/page.tsx`
     - Implement search, filter, pagination
     - _Requirements: 13.4_
 
-  - [ ] 27.2 Create product form
+  - [x] 27.2 Create product form
     - Create `src/app/admin/products/new/page.tsx`
     - Create `src/app/admin/products/[id]/edit/page.tsx`
     - Implement image upload
     - _Requirements: 3.2, 3.3, 13.4_
 
-  - [ ] 27.3 Create category management
+  - [x] 27.3 Create category management
     - Create `src/app/admin/categories/page.tsx`
     - Implement CRUD for categories
     - _Requirements: 4.1, 13.4_
 
-- [ ] 28. Create Admin Order Management
-  - [ ] 28.1 Create order list page
+- [x] 28. Create Admin Order Management
+  - [x] 28.1 Create order list page
     - Create `src/app/admin/orders/page.tsx`
     - Implement filters by status, date
     - _Requirements: 13.4_
 
-  - [ ] 28.2 Create order detail page
+  - [x] 28.2 Create order detail page
     - Create `src/app/admin/orders/[id]/page.tsx`
     - Implement status update
     - Implement tracking number input
     - _Requirements: 6.7, 8.4, 13.4_
 
-- [ ] 29. Create Admin User & Coupon Management
-  - [ ] 29.1 Create user list page
+- [x] 29. Create Admin User & Coupon Management
+  - [x] 29.1 Create user list page
     - Create `src/app/admin/users/page.tsx`
     - Display customer list
     - _Requirements: 13.4_
 
-  - [ ] 29.2 Create coupon management
+  - [x] 29.2 Create coupon management
     - Create `src/app/admin/coupons/page.tsx`
     - Implement CRUD for coupons
     - _Requirements: 11.1, 13.4_

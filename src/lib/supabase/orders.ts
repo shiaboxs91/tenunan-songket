@@ -1,5 +1,6 @@
 import { createClient } from './client'
 import type { Tables, Json } from './types'
+import { createNotification } from './notifications'
 
 export type Order = Tables<'orders'>
 export type OrderItem = Tables<'order_items'>
@@ -240,6 +241,15 @@ export async function createOrder(input: CreateOrderInput): Promise<Order | null
       .delete()
       .eq('cart_id', cart.id)
   }
+
+  // Create notification for new order
+  await createNotification(
+    user.id,
+    'order_created',
+    'Pesanan Berhasil Dibuat',
+    `Pesanan ${order.order_number} telah berhasil dibuat. Silakan lakukan pembayaran.`,
+    { order_id: order.id, order_number: order.order_number }
+  )
 
   return order
 }

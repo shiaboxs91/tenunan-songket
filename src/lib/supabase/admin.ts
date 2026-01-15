@@ -1,4 +1,5 @@
 import { createClient } from './client'
+import { createOrderStatusNotification } from './notifications'
 
 export interface DashboardStats {
   totalOrders: number
@@ -366,6 +367,17 @@ export async function updateOrderStatus(
   const supabase = createClient()
 
   try {
+    // Get order details first
+    const { data: orderData } = await supabase
+      .from('orders')
+      .select('user_id, order_number')
+      .eq('id', orderId)
+      .single()
+
+    if (!orderData) {
+      return false
+    }
+
     const updateData: any = { status }
     // Note: tracking_number column doesn't exist yet in database
     // Will be added in future migration
@@ -375,7 +387,19 @@ export async function updateOrderStatus(
       .update(updateData)
       .eq('id', orderId)
 
-    return !error
+    if (error) {
+      return false
+    }
+
+    // Create notification for order status change
+    await createOrderStatusNotification(
+      orderData.user_id,
+      orderId,
+      orderData.order_number,
+      status
+    )
+
+    return true
   } catch (error) {
     console.error('Error updating order status:', error)
     return false

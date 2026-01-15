@@ -4,9 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { getCategories } from "@/lib/products";
-import productsData from "@/data/products.snapshot.json";
-import type { Product } from "@/lib/types";
+import { createClient } from "@/lib/supabase/client";
 
 export function HorizontalCategories() {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -15,8 +13,25 @@ export function HorizontalCategories() {
   const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
-    const cats = getCategories(productsData as unknown as Product[]);
-    setCategories(cats);
+    async function fetchCategories() {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from('categories')
+          .select('name')
+          .eq('is_active', true)
+          .order('display_order', { ascending: true });
+
+        if (error) throw error;
+        setCategories(data?.map(c => c.name) || []);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        // Fallback to empty array
+        setCategories([]);
+      }
+    }
+
+    fetchCategories();
   }, []);
 
   // Scroll active category into view

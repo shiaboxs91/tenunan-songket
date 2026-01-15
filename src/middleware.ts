@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { handleAuth, isProtectedRoute, isAdminRoute, isAuthRoute } from "./lib/supabase/middleware";
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // Skip middleware for these paths
+  // Skip middleware for these paths (static assets, API routes, etc.)
   const excludedPaths = [
     "/maintenance",
     "/atur-server",
@@ -15,6 +16,7 @@ export function middleware(request: NextRequest) {
     "/sw.js",
     "/manifest.json",
     "/icons",
+    "/auth/callback", // OAuth callback route
   ];
 
   // Check if path should be excluded
@@ -33,7 +35,25 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/maintenance", request.url));
   }
 
-  return NextResponse.next();
+  // Handle authentication for protected, admin, and auth routes
+  const requiresAuthHandling = 
+    isProtectedRoute(pathname) || 
+    isAdminRoute(pathname) || 
+    isAuthRoute(pathname);
+
+  if (requiresAuthHandling) {
+    return handleAuth(request);
+  }
+
+  // For all other routes, still refresh the session if user is logged in
+  // This ensures the session stays alive across the site
+  try {
+    const authResponse = await handleAuth(request);
+    return authResponse;
+  } catch {
+    // If auth handling fails, continue without auth
+    return NextResponse.next();
+  }
 }
 
 export const config = {

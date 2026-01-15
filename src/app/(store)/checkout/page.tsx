@@ -1,38 +1,139 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
-import { ArrowLeft, Check, Truck } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckoutStepper } from "@/components/checkout/CheckoutStepper";
-import { AddressForm } from "@/components/checkout/AddressForm";
+import { AddressSelector, ShippingSelector, OrderSummary } from "@/components/checkout";
 import { useCart } from "@/components/cart/CartProvider";
-import { formatPrice } from "@/lib/utils";
-import { ShippingAddress, ShippingOption } from "@/lib/types";
-
-// Demo shipping options
-const SHIPPING_OPTIONS: ShippingOption[] = [
-  { id: "regular", name: "Reguler", price: 30000, estimatedDays: "3-5 hari" },
-  { id: "express", name: "Express", price: 50000, estimatedDays: "1-2 hari" },
-  { id: "same-day", name: "Same Day", price: 100000, estimatedDays: "Hari ini" },
-];
-
-const TAX_RATE = 0.11;
+import { createClient } from "@/lib/supabase/client";
+import { createOrder } from "@/lib/supabase/orders";
+import type { Address } from "@/lib/supabase/addresses";
+import type { ShippingOption, ShippingAddress } from "@/lib/supabase/shipping";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, subtotal, clearCart } = useCart();
+  const { items, summary, clearCart, isLoading: cartLoading } = useCart();
 
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
-  const [shippingAddress, setShippingAddress] = useState<ShippingAddress | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [selectedShipping, setSelectedShipping] = useState<ShippingOption | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
-  const shipping = selectedShipping?.price || 0;
-  const tax = Math.round(subtotal * TAX_RATE);
-  const total = subtotal + shipping + tax;
+  // Check authentication
+  useEffect(() => {
+    async function checkAuth() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+      
+      if (!user) {
+        router.push("/login?redirect=/checkout");
+      }
+    }
+    checkAuth();
+  }, [router]);
+
+  // Calculate total weight from cart items
+  const totalWeight = items.reduce((acc, item) => {
+    const weight = item.product?.weight || 0.5; // Default 0.5kg per item
+    return acc + (weight * item.quantity);
+  }, 0);
+
+  // Convert Address to ShippingAddress format
+  const getShippingAddress = (address: Address): ShippingAddress => ({
+    recipientName: address.recipient_name,
+    phone: address.phone,
+    addressLine1: address.address_line1,
+    addressLine2: address.address_line2 || undefined,
+    city: address.city,
+    state: address.state,
+    postalCode: address.postal_code,
+    country: address.country,
+  });
+
+  const handleAddressSelect = (address: Address) => {
+    setSelectedAddress(address);
+    setSelectedShipping(null); // Reset shipping when address changes
+  };
+
+  const handleShippingSelect = (option: ShippingOption) => {
+    setSelectedShipping(option);
+  };
+
+  const handleContinueToShipping = () => {
+    if (selectedAddress) {
+      setCurrentStep(2);
+    }
+  };
+
+  const handleContinueToSummary = () => {
+    if (selectedShipping) {
+      setCurrentStep(3);
+    }
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!selectedAddress || !selectedShipping) return;
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const orderItems = items.map(item => ({
+        product_id: item.product_id,
+        product_title: item.product?.title || 'Produk',
+        product_image: item.product?.images?.find(img => img.is_primary)?.url || 
+                       item.product?.images?.[0]?.url || null,
+        price: item.product?.sale_price || item.product?.price || 0,
+        quantity: item.quantity,
+      }));
+
+      const order = await createOrder({
+        items: orderItems,
+        shipping_address: {
+          recipient_name: selectedAddress.recipient_name,
+          phone: selectedAddress.phone,
+          address_line1: selectedAddress.address_line1,
+          address_line2: selectedAddress.address_line2,
+          city: selectedAddress.city,
+          state: selectedAddress.state,
+          postal_code: selectedAddress.postal_code,
+          country: selectedAddress.country,
+        },
+        shipping_cost: selectedShipping.cost,
+        shipping_courier: selectedShipping.courier,
+        shipping_service: selectedShipping.service,
+        notes: '',
+      });
+
+      if (order) {
+        await clearCart();
+        router.push(`/checkout/success?order=${order.order_number}`);
+      } else {
+        setError("Gagal membuat pesanan. Silakan coba lagi.");
+      }
+    } catch (err) {
+      console.error('Order error:', err);
+      setError("Terjadi kesalahan. Silakan coba lagi.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Loading state
+  if (isAuthenticated === null || cartLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   // Redirect if cart is empty
   if (items.length === 0) {
@@ -49,31 +150,8 @@ export default function CheckoutPage() {
     );
   }
 
-  const handleAddressSubmit = (address: ShippingAddress) => {
-    setShippingAddress(address);
-    setCurrentStep(2);
-  };
-
-  const handleShippingSelect = (option: ShippingOption) => {
-    setSelectedShipping(option);
-  };
-
-  const handleShippingContinue = () => {
-    if (selectedShipping) {
-      setCurrentStep(3);
-    }
-  };
-
-  const handlePlaceOrder = () => {
-    // Generate dummy order number
-    const orderNumber = `TS${Date.now().toString().slice(-8)}`;
-    
-    // Clear cart
-    clearCart();
-    
-    // Redirect to success page
-    router.push(`/checkout/success?order=${orderNumber}`);
-  };
+  const shippingCost = selectedShipping?.cost || 0;
+  const total = summary.subtotal + shippingCost;
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
@@ -90,6 +168,12 @@ export default function CheckoutPage() {
       {/* Stepper */}
       <CheckoutStepper currentStep={currentStep} />
 
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
+          {error}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2">
@@ -97,13 +181,23 @@ export default function CheckoutPage() {
           {currentStep === 1 && (
             <Card>
               <CardHeader>
-                <CardTitle>Alamat Pengiriman</CardTitle>
+                <CardTitle>Pilih Alamat Pengiriman</CardTitle>
               </CardHeader>
               <CardContent>
-                <AddressForm
-                  initialData={shippingAddress || undefined}
-                  onSubmit={handleAddressSubmit}
+                <AddressSelector
+                  selectedAddressId={selectedAddress?.id}
+                  onSelect={handleAddressSelect}
                 />
+                
+                <div className="mt-6 pt-4 border-t">
+                  <Button
+                    onClick={handleContinueToShipping}
+                    disabled={!selectedAddress}
+                    className="w-full sm:w-auto"
+                  >
+                    Lanjutkan ke Pengiriman
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -112,47 +206,22 @@ export default function CheckoutPage() {
           {currentStep === 2 && (
             <Card>
               <CardHeader>
-                <CardTitle>Pilih Pengiriman</CardTitle>
+                <CardTitle>Pilih Metode Pengiriman</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {SHIPPING_OPTIONS.map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => handleShippingSelect(option)}
-                    className={`w-full p-4 border rounded-lg text-left transition-colors ${
-                      selectedShipping?.id === option.id
-                        ? "border-primary bg-primary/5"
-                        : "hover:border-muted-foreground/50"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Truck className="h-5 w-5 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">{option.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Estimasi: {option.estimatedDays}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-semibold">
-                          {formatPrice(option.price)}
-                        </span>
-                        {selectedShipping?.id === option.id && (
-                          <Check className="h-5 w-5 text-primary" />
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                ))}
+              <CardContent>
+                <ShippingSelector
+                  address={selectedAddress ? getShippingAddress(selectedAddress) : null}
+                  totalWeight={totalWeight}
+                  selectedOption={selectedShipping || undefined}
+                  onSelect={handleShippingSelect}
+                />
 
-                <div className="flex gap-4 pt-4">
+                <div className="flex gap-4 mt-6 pt-4 border-t">
                   <Button variant="outline" onClick={() => setCurrentStep(1)}>
                     Kembali
                   </Button>
                   <Button
-                    onClick={handleShippingContinue}
+                    onClick={handleContinueToSummary}
                     disabled={!selectedShipping}
                   >
                     Lanjutkan
@@ -166,70 +235,60 @@ export default function CheckoutPage() {
           {currentStep === 3 && (
             <Card>
               <CardHeader>
-                <CardTitle>Ringkasan Pesanan</CardTitle>
+                <CardTitle>Konfirmasi Pesanan</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Address Summary */}
-                <div>
-                  <h4 className="font-medium mb-2">Alamat Pengiriman</h4>
-                  <div className="text-sm text-muted-foreground">
-                    <p className="font-medium text-foreground">
-                      {shippingAddress?.fullName}
-                    </p>
-                    <p>{shippingAddress?.phone}</p>
-                    <p>{shippingAddress?.address}</p>
-                    <p>
-                      {shippingAddress?.city}, {shippingAddress?.province}{" "}
-                      {shippingAddress?.postalCode}
-                    </p>
+                {selectedAddress && (
+                  <div>
+                    <h4 className="font-medium mb-2">Alamat Pengiriman</h4>
+                    <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                      <p className="font-medium text-foreground">
+                        {selectedAddress.recipient_name}
+                      </p>
+                      <p>{selectedAddress.phone}</p>
+                      <p>{selectedAddress.address_line1}</p>
+                      {selectedAddress.address_line2 && (
+                        <p>{selectedAddress.address_line2}</p>
+                      )}
+                      <p>
+                        {selectedAddress.city}, {selectedAddress.state} {selectedAddress.postal_code}
+                      </p>
+                      <p>{selectedAddress.country}</p>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Shipping Summary */}
-                <div>
-                  <h4 className="font-medium mb-2">Metode Pengiriman</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedShipping?.name} - {selectedShipping?.estimatedDays}
-                  </p>
-                </div>
-
-                {/* Items Summary */}
-                <div>
-                  <h4 className="font-medium mb-2">Produk ({items.length})</h4>
-                  <div className="space-y-3">
-                    {items.map((item) => (
-                      <div key={item.product.id} className="flex gap-3">
-                        <div className="relative h-16 w-16 rounded overflow-hidden bg-muted flex-shrink-0">
-                          <Image
-                            src={item.product.image || "/images/placeholder-product.jpg"}
-                            alt={item.product.title}
-                            fill
-                            className="object-cover"
-                            sizes="64px"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {item.product.title}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {item.quantity} × {formatPrice(item.product.price)}
-                          </p>
-                        </div>
-                        <p className="text-sm font-medium">
-                          {formatPrice(item.product.price * item.quantity)}
-                        </p>
-                      </div>
-                    ))}
+                {selectedShipping && (
+                  <div>
+                    <h4 className="font-medium mb-2">Metode Pengiriman</h4>
+                    <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                      <p className="font-medium text-foreground">
+                        {selectedShipping.service}
+                      </p>
+                      <p>Estimasi: {selectedShipping.estimatedDays}</p>
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <div className="flex gap-4 pt-4">
+                <div className="flex gap-4 pt-4 border-t">
                   <Button variant="outline" onClick={() => setCurrentStep(2)}>
                     Kembali
                   </Button>
-                  <Button onClick={handlePlaceOrder} className="flex-1">
-                    Bayar Sekarang
+                  <Button
+                    onClick={handlePlaceOrder}
+                    disabled={isSubmitting}
+                    className="flex-1"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Memproses...
+                      </>
+                    ) : (
+                      "Buat Pesanan"
+                    )}
                   </Button>
                 </div>
               </CardContent>
@@ -241,33 +300,14 @@ export default function CheckoutPage() {
         <div>
           <Card className="sticky top-24">
             <CardHeader>
-              <CardTitle className="text-lg">Total Pembayaran</CardTitle>
+              <CardTitle className="text-lg">Ringkasan Pesanan</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  Subtotal ({items.length} produk)
-                </span>
-                <span>{formatPrice(subtotal)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Ongkos Kirim</span>
-                <span>
-                  {selectedShipping ? formatPrice(shipping) : "-"}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Pajak (PPN 11%)</span>
-                <span>{formatPrice(tax)}</span>
-              </div>
-              <hr />
-              <div className="flex justify-between font-semibold">
-                <span>Total</span>
-                <span className="text-primary">{formatPrice(total)}</span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                * Ini adalah demo. Pembayaran bersifat simulasi.
-              </p>
+            <CardContent>
+              <OrderSummary
+                items={items}
+                subtotal={summary.subtotal}
+                shipping={selectedShipping}
+              />
             </CardContent>
           </Card>
         </div>

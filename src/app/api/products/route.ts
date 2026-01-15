@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getProducts as getSupabaseProducts } from "@/lib/supabase/products";
+import { toFrontendProducts } from "@/lib/supabase/adapters";
 import { filterProducts, sortProducts, paginateProducts } from "@/lib/products";
 import { FilterState, SortOption, ProductsResponse, Product } from "@/lib/types";
 import snapshotData from "@/data/products.snapshot.json";
@@ -8,6 +10,25 @@ import snapshotData from "@/data/products.snapshot.json";
  */
 function isValidSortOption(value: string): value is SortOption {
   return ["newest", "price-asc", "price-desc", "bestselling", "rating"].includes(value);
+}
+
+/**
+ * Map frontend sort option to Supabase sort parameters
+ */
+function mapSortToSupabase(sort: SortOption): { sortBy: 'price' | 'created_at' | 'sold' | 'average_rating', sortOrder: 'asc' | 'desc' } {
+  switch (sort) {
+    case 'price-asc':
+      return { sortBy: 'price', sortOrder: 'asc' };
+    case 'price-desc':
+      return { sortBy: 'price', sortOrder: 'desc' };
+    case 'bestselling':
+      return { sortBy: 'sold', sortOrder: 'desc' };
+    case 'rating':
+      return { sortBy: 'average_rating', sortOrder: 'desc' };
+    case 'newest':
+    default:
+      return { sortBy: 'created_at', sortOrder: 'desc' };
+  }
 }
 
 export async function GET(request: NextRequest) {
@@ -23,41 +44,74 @@ export async function GET(request: NextRequest) {
   const sortParam = searchParams.get("sort");
   const sort: SortOption = sortParam && isValidSortOption(sortParam) ? sortParam : "newest";
 
-  // Parse query parameters into FilterState
-  const filters: FilterState = {
-    q: searchParams.get("q") || undefined,
-    categories,
-    minPrice: searchParams.get("min") ? Number(searchParams.get("min")) : null,
-    maxPrice: searchParams.get("max") ? Number(searchParams.get("max")) : null,
-    inStockOnly: searchParams.get("inStock") === "true",
-    sort,
-  };
-
   const page = searchParams.get("page") ? Number(searchParams.get("page")) : 1;
   const pageSize = searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 12;
+  const search = searchParams.get("q") || undefined;
+  const minPrice = searchParams.get("min") ? Number(searchParams.get("min")) : undefined;
+  const maxPrice = searchParams.get("max") ? Number(searchParams.get("max")) : undefined;
+  const inStock = searchParams.get("inStock") === "true";
 
-  // Use snapshot data directly - single source of truth from data_produk
-  const products: Product[] = snapshotData as unknown as Product[];
+  try {
+    // Try to fetch from Supabase first
+    const { sortBy, sortOrder } = mapSortToSupabase(sort);
+    
+    const supabaseResult = await getSupabaseProducts({
+      category: categories[0], // Supabase currently supports single category
+      minPrice,
+      maxPrice,
+      inStock: inStock || undefined,
+      search,
+      sortBy,
+      sortOrder,
+      page,
+      limit: pageSize,
+    });
 
-  // Apply filters (supports multiple categories)
-  let filteredProducts = filterProducts(products, filters);
+    // Convert to frontend format
+    const products = toFrontendProducts(supabaseResult.data);
 
-  // Apply sorting (supports all sort options: newest, price-asc, price-desc, bestselling, rating)
-  filteredProducts = sortProducts(filteredProducts, filters.sort);
+    // If multiple categories selected, filter client-side
+    let filteredProducts = products;
+    if (categories.length > 1) {
+      filteredProducts = products.filter(p => categories.includes(p.category));
+    }
 
-  // Get total before pagination
-  const total = filteredProducts.length;
+    const response: ProductsResponse = {
+      products: filteredProducts,
+      total: supabaseResult.total,
+      page: supabaseResult.page,
+      pageSize: supabaseResult.limit,
+      source: "snapshot", // Keep as snapshot for compatibility
+    };
 
-  // Apply pagination
-  const paginatedProducts = paginateProducts(filteredProducts, page, pageSize);
+    return NextResponse.json(response);
+  } catch (error) {
+    console.error("Supabase fetch failed, falling back to snapshot:", error);
+    
+    // Fallback to snapshot data
+    const filters: FilterState = {
+      q: search,
+      categories,
+      minPrice: minPrice ?? null,
+      maxPrice: maxPrice ?? null,
+      inStockOnly: inStock,
+      sort,
+    };
 
-  const response: ProductsResponse = {
-    products: paginatedProducts,
-    total,
-    page,
-    pageSize,
-    source: "snapshot",
-  };
+    const products: Product[] = snapshotData as unknown as Product[];
+    let filteredProducts = filterProducts(products, filters);
+    filteredProducts = sortProducts(filteredProducts, filters.sort);
+    const total = filteredProducts.length;
+    const paginatedProducts = paginateProducts(filteredProducts, page, pageSize);
 
-  return NextResponse.json(response);
+    const response: ProductsResponse = {
+      products: paginatedProducts,
+      total,
+      page,
+      pageSize,
+      source: "snapshot",
+    };
+
+    return NextResponse.json(response);
+  }
 }

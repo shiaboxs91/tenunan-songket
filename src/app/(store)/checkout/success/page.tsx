@@ -1,73 +1,99 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle, Package, ArrowRight } from "lucide-react";
+import { CheckCircle, Package, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-interface SuccessPageProps {
-  searchParams: { order?: string };
-}
+export default function CheckoutSuccessPage() {
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get("session_id");
+  const orderNumber = searchParams.get("order");
+  
+  const [isVerifying, setIsVerifying] = useState(!!sessionId);
+  const [verified, setVerified] = useState(!sessionId);
 
-export default function SuccessPage({ searchParams }: SuccessPageProps) {
-  const orderNumber = searchParams.order || `TS${Date.now().toString().slice(-8)}`;
+  useEffect(() => {
+    if (sessionId) {
+      // Verify the session with our backend
+      fetch(`/api/checkout/verify?session_id=${sessionId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setVerified(data.success);
+        })
+        .catch(() => {
+          setVerified(false);
+        })
+        .finally(() => {
+          setIsVerifying(false);
+        });
+    }
+  }, [sessionId]);
+
+  if (isVerifying) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 text-center">
+        <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">Memverifikasi pembayaran...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto px-4 py-16">
-      <div className="max-w-lg mx-auto text-center">
-        {/* Success Icon */}
-        <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-green-100 mb-6">
-          <CheckCircle className="h-10 w-10 text-green-600" />
-        </div>
+    <div className="mx-auto max-w-lg px-4 py-16">
+      <Card>
+        <CardContent className="pt-6 text-center">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+            <CheckCircle className="h-10 w-10 text-green-600" />
+          </div>
 
-        {/* Title */}
-        <h1 className="text-3xl font-bold mb-2">Pesanan Berhasil!</h1>
-        <p className="text-muted-foreground mb-8">
-          Terima kasih telah berbelanja di TenunanSongket
-        </p>
-
-        {/* Order Info Card */}
-        <Card className="mb-8">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Package className="h-5 w-5 text-primary" />
-              <span className="text-sm text-muted-foreground">Nomor Pesanan</span>
-            </div>
-            <p className="text-2xl font-bold text-primary mb-4">{orderNumber}</p>
-            <p className="text-sm text-muted-foreground">
-              Simpan nomor pesanan ini untuk melacak status pengiriman Anda.
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Info */}
-        <div className="bg-muted/50 rounded-lg p-4 mb-8 text-left">
-          <h3 className="font-medium mb-2">Langkah Selanjutnya</h3>
-          <ul className="text-sm text-muted-foreground space-y-2">
-            <li>• Email konfirmasi akan dikirim ke alamat email Anda</li>
-            <li>• Pesanan akan diproses dalam 1-2 hari kerja</li>
-            <li>• Anda akan menerima notifikasi saat pesanan dikirim</li>
-          </ul>
-        </div>
-
-        {/* Demo Notice */}
-        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-8">
-          <p className="text-sm text-primary">
-            <strong>Catatan:</strong> Ini adalah demo. Tidak ada transaksi nyata
-            yang terjadi dan tidak ada produk yang akan dikirim.
+          <h1 className="mb-2 text-2xl font-bold">Pembayaran Berhasil!</h1>
+          <p className="mb-6 text-muted-foreground">
+            Terima kasih atas pesanan Anda. Kami akan segera memproses pesanan Anda.
           </p>
-        </div>
 
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button asChild>
-            <Link href="/products">
-              Lanjut Belanja
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/">Kembali ke Beranda</Link>
-          </Button>
-        </div>
+          {orderNumber && (
+            <div className="mb-6 rounded-lg bg-muted/50 p-4">
+              <p className="text-sm text-muted-foreground">Nomor Pesanan</p>
+              <p className="text-lg font-bold">{orderNumber}</p>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <Button asChild className="w-full">
+              <Link href="/account/orders">
+                <Package className="mr-2 h-4 w-4" />
+                Lihat Pesanan Saya
+              </Link>
+            </Button>
+
+            <Button variant="outline" asChild className="w-full">
+              <Link href="/products">
+                Lanjut Belanja
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Order Info */}
+      <div className="mt-8 text-center text-sm text-muted-foreground">
+        <p>
+          Email konfirmasi telah dikirim ke alamat email Anda.
+        </p>
+        <p className="mt-2">
+          Ada pertanyaan?{" "}
+          <Link href="/faq" className="text-primary hover:underline">
+            Lihat FAQ
+          </Link>{" "}
+          atau{" "}
+          <Link href="/cara-order" className="text-primary hover:underline">
+            hubungi kami
+          </Link>
+        </p>
       </div>
     </div>
   );

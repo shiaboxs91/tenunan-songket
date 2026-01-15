@@ -1,74 +1,59 @@
 "use client";
 
-import { Star } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Star, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface Review {
-  id: number;
-  name: string;
-  rating: number;
-  date: string;
-  comment: string;
-  verified: boolean;
-}
-
-const sampleReviews: Review[] = [
-  {
-    id: 1,
-    name: "Siti Aminah",
-    rating: 5,
-    date: "2 minggu lalu",
-    comment: "Kain songket sangat indah dan berkualitas tinggi. Benang emasnya berkilau dan jahitannya rapi. Sangat puas!",
-    verified: true,
-  },
-  {
-    id: 2,
-    name: "Ahmad Rizki",
-    rating: 5,
-    date: "1 bulan lalu",
-    comment: "Pengiriman cepat dan packaging aman. Kain sesuai dengan foto, motifnya cantik sekali.",
-    verified: true,
-  },
-  {
-    id: 3,
-    name: "Dewi Lestari",
-    rating: 4,
-    date: "1 bulan lalu",
-    comment: "Kualitas bagus, warna sesuai ekspektasi. Recommended seller!",
-    verified: true,
-  },
-];
-
-function StarRating({ rating, size = "sm" }: { rating: number; size?: "sm" | "md" }) {
-  const starSize = size === "sm" ? "h-3 w-3" : "h-4 w-4";
-  return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Star
-          key={star}
-          className={cn(
-            starSize,
-            star <= rating ? "fill-amber-400 text-amber-400" : "fill-muted text-muted"
-          )}
-        />
-      ))}
-    </div>
-  );
-}
+import { Button } from "@/components/ui/button";
+import { ReviewForm, ReviewList, StarRating } from "@/components/review";
+import { getProductReviews, canReviewProduct, getRatingDistribution, type Review } from "@/lib/supabase/reviews";
+import { createClient } from "@/lib/supabase/client";
 
 interface ProductReviewsProps {
+  productId: string;
   productRating: number;
   totalReviews?: number;
 }
 
-export function ProductReviews({ productRating, totalReviews = 128 }: ProductReviewsProps) {
-  const ratingDistribution = [
-    { stars: 5, percentage: 75 },
-    { stars: 4, percentage: 18 },
-    { stars: 3, percentage: 5 },
-    { stars: 2, percentage: 1 },
-    { stars: 1, percentage: 1 },
-  ];
+export function ProductReviews({ productId, productRating, totalReviews = 0 }: ProductReviewsProps) {
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [canReview, setCanReview] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [ratingDist, setRatingDist] = useState<Record<number, number>>({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 });
+
+  useEffect(() => {
+    loadReviews();
+    checkAuth();
+  }, [productId]);
+
+  const loadReviews = async () => {
+    setIsLoading(true);
+    const result = await getProductReviews(productId, 1, 5);
+    setReviews(result.data);
+    setRatingDist(getRatingDistribution(result.data));
+    setIsLoading(false);
+  };
+
+  const checkAuth = async () => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    setIsAuthenticated(!!user);
+    
+    if (user) {
+      const eligible = await canReviewProduct(productId);
+      setCanReview(eligible);
+    }
+  };
+
+  const handleReviewSuccess = () => {
+    setShowReviewForm(false);
+    loadReviews();
+    setCanReview(false); // User can only review once
+  };
+
+  const totalRatings = Object.values(ratingDist).reduce((a, b) => a + b, 0);
+  const getPercentage = (count: number) => totalRatings > 0 ? Math.round((count / totalRatings) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -77,57 +62,63 @@ export function ProductReviews({ productRating, totalReviews = 128 }: ProductRev
         {/* Overall Rating */}
         <div className="text-center sm:text-left sm:pr-6 sm:border-r">
           <div className="text-4xl font-bold text-primary">{productRating.toFixed(1)}</div>
-          <StarRating rating={Math.round(productRating)} size="md" />
+          <StarRating rating={productRating} size="md" />
           <p className="text-xs text-muted-foreground mt-1">{totalReviews} ulasan</p>
         </div>
 
         {/* Rating Distribution */}
         <div className="flex-1 space-y-1.5">
-          {ratingDistribution.map(({ stars, percentage }) => (
+          {[5, 4, 3, 2, 1].map((stars) => (
             <div key={stars} className="flex items-center gap-2 text-xs">
               <span className="w-3 text-muted-foreground">{stars}</span>
               <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
               <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                 <div
                   className="h-full bg-amber-400 rounded-full"
-                  style={{ width: `${percentage}%` }}
+                  style={{ width: `${getPercentage(ratingDist[stars])}%` }}
                 />
               </div>
-              <span className="w-8 text-muted-foreground text-right">{percentage}%</span>
+              <span className="w-8 text-muted-foreground text-right">
+                {getPercentage(ratingDist[stars])}%
+              </span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Reviews List */}
-      <div className="space-y-4">
-        {sampleReviews.map((review) => (
-          <div key={review.id} className="p-4 border rounded-lg">
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm">{review.name}</span>
-                  {review.verified && (
-                    <span className="text-[10px] text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
-                      Terverifikasi
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <StarRating rating={review.rating} />
-                  <span className="text-xs text-muted-foreground">{review.date}</span>
-                </div>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">{review.comment}</p>
-          </div>
-        ))}
-      </div>
+      {/* Write Review Button */}
+      {isAuthenticated && canReview && !showReviewForm && (
+        <Button onClick={() => setShowReviewForm(true)} variant="outline">
+          Tulis Ulasan
+        </Button>
+      )}
 
-      {/* Load More */}
-      <button className="w-full py-2 text-sm text-primary hover:text-primary/80 font-medium">
-        Lihat semua {totalReviews} ulasan →
-      </button>
+      {!isAuthenticated && (
+        <p className="text-sm text-muted-foreground">
+          <a href="/login" className="text-primary hover:underline">Masuk</a> untuk menulis ulasan
+        </p>
+      )}
+
+      {/* Review Form */}
+      {showReviewForm && (
+        <div className="p-4 border rounded-lg bg-muted/20">
+          <h3 className="font-medium mb-4">Tulis Ulasan Anda</h3>
+          <ReviewForm
+            productId={productId}
+            onSuccess={handleReviewSuccess}
+            onCancel={() => setShowReviewForm(false)}
+          />
+        </div>
+      )}
+
+      {/* Reviews List */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      ) : (
+        <ReviewList productId={productId} initialReviews={reviews} />
+      )}
     </div>
   );
 }

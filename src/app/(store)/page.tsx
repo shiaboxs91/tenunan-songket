@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { HeroSlider } from "@/components/home/HeroSlider";
 import { TrustBadges } from "@/components/mobile/TrustBadges";
-import { getPopularProducts, getLatestProducts } from "@/lib/products";
-import { Product } from "@/lib/types";
-import snapshotData from "@/data/products.snapshot.json";
+import { getPopularProducts, getLatestProducts } from "@/lib/supabase/products";
+import { getCategoriesWithProductCount } from "@/lib/supabase/categories";
+import { toFrontendProducts } from "@/lib/supabase/adapters";
 import categoryImagesData from "@/data/category-images.json";
 import { getTranslations } from "next-intl/server";
 
@@ -21,23 +21,39 @@ const SectionDivider = () => (
   </div>
 );
 
-// Jenis Corak Kain - using real images from category data
-const JENIS_CORAK = categoryImagesData.categories.map(cat => {
-  const products = snapshotData as unknown as Product[];
-  const count = products.filter(p => p.category === cat.name).length;
-  return { name: cat.name, items: count || 1, image: cat.image };
-});
-
 async function getHomeData() {
-  const products = snapshotData as unknown as Product[];
+  // Fetch data from Supabase
+  const [popularProductsRaw, latestProductsRaw, categoriesWithCount] = await Promise.all([
+    getPopularProducts(5),
+    getLatestProducts(5),
+    getCategoriesWithProductCount(),
+  ]);
+
+  // Convert to frontend format
+  const popularProducts = toFrontendProducts(popularProductsRaw);
+  const latestProducts = toFrontendProducts(latestProductsRaw);
+
+  // Build category data with images from local config
+  const categoryImages = categoryImagesData.categories.reduce((acc, cat) => {
+    acc[cat.name] = cat.image;
+    return acc;
+  }, {} as Record<string, string>);
+
+  const jenisCorak = categoriesWithCount.map(cat => ({
+    name: cat.name,
+    items: cat.product_count,
+    image: categoryImages[cat.name] || '/images/placeholder-product.svg',
+  }));
+
   return {
-    popularProducts: getPopularProducts(products, 5),
-    latestProducts: getLatestProducts(products, 5),
+    popularProducts,
+    latestProducts,
+    jenisCorak,
   };
 }
 
 export default async function HomePage() {
-  const { popularProducts, latestProducts } = await getHomeData();
+  const { popularProducts, latestProducts, jenisCorak } = await getHomeData();
   const t = await getTranslations("home");
   const tCommon = await getTranslations("common");
 
@@ -150,7 +166,7 @@ export default async function HomePage() {
           </div>
 
           <div className="flex flex-wrap justify-center gap-4 md:gap-6 lg:gap-10">
-            {JENIS_CORAK.map((corak) => (
+            {jenisCorak.map((corak) => (
               <Link key={corak.name} href={`/products?q=${encodeURIComponent(corak.name)}`} className="group flex flex-col items-center text-center">
                 <div className="relative w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full overflow-hidden mb-2 md:mb-3 ring-2 ring-amber-200 group-hover:ring-amber-400 transition-all shadow-sm group-hover:shadow-md">
                   <Image src={corak.image} alt={corak.name} fill className="object-cover group-hover:scale-110 transition-transform duration-300" sizes="96px" />

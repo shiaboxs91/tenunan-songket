@@ -6,40 +6,51 @@ import { ProductReviews } from "@/components/product/ProductReviews";
 import { StickyProductCTA } from "@/components/product/StickyProductCTA";
 import { AddToCartButton } from "./AddToCartButton";
 import { Badge } from "@/components/ui/badge";
-// Temporarily disabled due to Radix UI issue
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatPrice } from "@/lib/utils";
-import { getRelatedProducts } from "@/lib/products";
+import { getProductBySlug, getProductsByCategory } from "@/lib/supabase/products";
+import { toFrontendProduct, toFrontendProducts } from "@/lib/supabase/adapters";
 import { Product } from "@/lib/types";
-import snapshotData from "@/data/products.snapshot.json";
 
 interface ProductDetailPageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
-async function getProduct(slug: string): Promise<Product | null> {
-  // snapshotData is directly an array
-  const products = snapshotData as unknown as Product[];
-  return products.find((p) => p.slug === slug) || null;
+async function getProduct(slug: string): Promise<{ product: Product | null; images: string[] }> {
+  const supabaseProduct = await getProductBySlug(slug);
+  if (!supabaseProduct) {
+    return { product: null, images: [] };
+  }
+  
+  // Get all images sorted by display order
+  const images = supabaseProduct.images
+    ?.sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+    .map(img => img.url) || [];
+  
+  return { 
+    product: toFrontendProduct(supabaseProduct),
+    images: images.length > 0 ? images : ['/images/placeholder-product.svg']
+  };
 }
 
-async function getRecommendations(product: Product): Promise<Product[]> {
-  // snapshotData is directly an array
-  const products = snapshotData as unknown as Product[];
-  return getRelatedProducts(products, product, 4);
+async function getRecommendations(categorySlug: string, currentProductId: string): Promise<Product[]> {
+  const products = await getProductsByCategory(categorySlug);
+  const filtered = products.filter(p => p.id !== currentProductId).slice(0, 4);
+  return toFrontendProducts(filtered);
 }
 
 export default async function ProductDetailPage({
   params,
 }: ProductDetailPageProps) {
-  const product = await getProduct(params.slug);
+  const { slug } = await params;
+  const { product, images } = await getProduct(slug);
 
   if (!product) {
     notFound();
   }
 
-  const recommendations = await getRecommendations(product);
-  const images = product.image ? [product.image] : [];
+  // Get category slug from product category name for recommendations
+  const categorySlug = product.category.toLowerCase().replace(/\s+/g, '-');
+  const recommendations = await getRecommendations(categorySlug, product.id);
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
@@ -148,6 +159,16 @@ export default async function ProductDetailPage({
             <li>Teknik: Tenun tradisional</li>
           </ul>
         </div>
+      </div>
+
+      {/* Reviews Section */}
+      <div className="mt-12">
+        <h2 className="text-xl font-bold mb-6">Ulasan Pelanggan</h2>
+        <ProductReviews 
+          productId={product.id} 
+          productRating={product.rating} 
+          totalReviews={product.sold > 0 ? Math.floor(product.sold * 0.3) : 0} 
+        />
       </div>
 
       {/* Recommendations */}

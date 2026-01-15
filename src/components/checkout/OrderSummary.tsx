@@ -15,7 +15,7 @@ interface CartItem {
     price: number;
     sale_price?: number | null;
     slug: string;
-    images?: Array<{ url: string; is_primary: boolean }>;
+    images?: Array<{ url: string; is_primary: boolean | null }>;
   };
 }
 

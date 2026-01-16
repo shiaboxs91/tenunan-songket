@@ -9,7 +9,9 @@ import {
   Calendar,
   AlertTriangle,
   X,
-  Loader2
+  Loader2,
+  Pencil,
+  Key
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -26,6 +28,8 @@ export default function AdminUsersPage() {
   const [admins, setAdmins] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showEditForm, setShowEditForm] = useState(false)
+  const [editingAdmin, setEditingAdmin] = useState<AdminUser | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -35,6 +39,10 @@ export default function AdminUsersPage() {
     email: '',
     password: '',
     full_name: ''
+  })
+  const [editFormData, setEditFormData] = useState({
+    full_name: '',
+    new_password: ''
   })
   const [formLoading, setFormLoading] = useState(false)
 
@@ -179,6 +187,57 @@ export default function AdminUsersPage() {
     }
   }
 
+  const handleEditAdmin = (admin: AdminUser) => {
+    setEditingAdmin(admin)
+    setEditFormData({
+      full_name: admin.full_name || '',
+      new_password: ''
+    })
+    setShowEditForm(true)
+  }
+
+  const handleUpdateAdmin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingAdmin) return
+    
+    setFormLoading(true)
+    setError(null)
+
+    try {
+      // Update profile name
+      if (editFormData.full_name !== editingAdmin.full_name) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ full_name: editFormData.full_name })
+          .eq('user_id', editingAdmin.user_id)
+
+        if (profileError) throw profileError
+      }
+
+      // Update password if provided
+      if (editFormData.new_password && editFormData.new_password.length >= 8) {
+        const { error: passwordError } = await supabase.auth.updateUser({
+          password: editFormData.new_password
+        })
+
+        if (passwordError) {
+          throw new Error('Gagal mengubah password: ' + passwordError.message)
+        }
+      }
+
+      setSuccess('Admin berhasil diperbarui')
+      setShowEditForm(false)
+      setEditingAdmin(null)
+      setEditFormData({ full_name: '', new_password: '' })
+      fetchAdmins()
+    } catch (err: any) {
+      console.error('Update admin error:', err)
+      setError(err.message || 'Gagal memperbarui admin')
+    } finally {
+      setFormLoading(false)
+    }
+  }
+
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '-'
     return new Date(dateStr).toLocaleDateString('id-ID', {
@@ -284,13 +343,22 @@ export default function AdminUsersPage() {
                       </button>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => setDeleteConfirm(admin.user_id)}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Hapus admin"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
+                    <>
+                      <button
+                        onClick={() => handleEditAdmin(admin)}
+                        className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Edit admin"
+                      >
+                        <Pencil className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirm(admin.user_id)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Hapus admin"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -372,6 +440,82 @@ export default function AdminUsersPage() {
                 >
                   {formLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                   Tambah Admin
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Admin Modal */}
+      {showEditForm && editingAdmin && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Edit Admin</h2>
+                <button
+                  onClick={() => {
+                    setShowEditForm(false)
+                    setEditingAdmin(null)
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            
+            <form onSubmit={handleUpdateAdmin} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nama Lengkap
+                </label>
+                <input
+                  type="text"
+                  value={editFormData.full_name}
+                  onChange={(e) => setEditFormData({ ...editFormData, full_name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <span className="flex items-center gap-2">
+                    <Key className="h-4 w-4" />
+                    Password Baru
+                  </span>
+                </label>
+                <input
+                  type="password"
+                  value={editFormData.new_password}
+                  onChange={(e) => setEditFormData({ ...editFormData, new_password: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  minLength={8}
+                  placeholder="Kosongkan jika tidak ingin mengubah"
+                />
+                <p className="text-xs text-gray-500 mt-1">Minimal 8 karakter. Kosongkan jika tidak ingin mengubah password.</p>
+              </div>
+              
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditForm(false)
+                    setEditingAdmin(null)
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={formLoading}
+                  className="flex-1 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {formLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Simpan
                 </button>
               </div>
             </form>

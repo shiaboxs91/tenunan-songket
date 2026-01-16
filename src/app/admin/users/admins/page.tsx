@@ -80,35 +80,75 @@ export default function AdminUsersPage() {
     setFormLoading(true)
     setError(null)
 
+    // Validate email domain
+    const emailDomain = formData.email.split('@')[1]?.toLowerCase()
+    const blockedDomains = ['example.com', 'test.com', 'localhost']
+    if (blockedDomains.includes(emailDomain)) {
+      setError('Gunakan email asli, bukan email test (example.com, test.com)')
+      setFormLoading(false)
+      return
+    }
+
     try {
-      // Create user via Supabase Auth
+      // Create user via Supabase Auth with emailRedirectTo for confirmation
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
             full_name: formData.full_name
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       })
 
-      if (authError) throw authError
-
-      if (authData.user) {
-        // Update profile to admin role
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ role: 'admin', full_name: formData.full_name })
-          .eq('user_id', authData.user.id)
-
-        if (profileError) throw profileError
+      if (authError) {
+        // Handle specific error messages
+        if (authError.message.includes('invalid') || authError.message.includes('Invalid')) {
+          throw new Error('Email tidak valid. Gunakan email asli yang bisa menerima konfirmasi.')
+        }
+        if (authError.message.includes('already registered')) {
+          throw new Error('Email sudah terdaftar. Gunakan email lain.')
+        }
+        throw authError
       }
 
-      setSuccess('Admin baru berhasil ditambahkan')
+      if (authData.user) {
+        // Check if profile exists, if not create it
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', authData.user.id)
+          .single()
+
+        if (existingProfile) {
+          // Update existing profile
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({ role: 'admin', full_name: formData.full_name })
+            .eq('user_id', authData.user.id)
+
+          if (profileError) throw profileError
+        } else {
+          // Create new profile
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({ 
+              user_id: authData.user.id, 
+              role: 'admin', 
+              full_name: formData.full_name 
+            })
+
+          if (profileError) throw profileError
+        }
+      }
+
+      setSuccess('Admin baru berhasil ditambahkan. Email konfirmasi telah dikirim.')
       setShowAddForm(false)
       setFormData({ email: '', password: '', full_name: '' })
       fetchAdmins()
     } catch (err: any) {
+      console.error('Add admin error:', err)
       setError(err.message || 'Gagal menambahkan admin')
     } finally {
       setFormLoading(false)

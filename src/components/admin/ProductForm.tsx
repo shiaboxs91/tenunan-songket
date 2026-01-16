@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Upload, X } from 'lucide-react'
+import { ArrowLeft, Upload, X, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,7 +16,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { createProduct, updateProduct, type Product } from '@/lib/supabase/products-client'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { createProduct, updateProduct, deleteProduct, type Product } from '@/lib/supabase/products-client'
 import { getCategories, type Category } from '@/lib/supabase/categories-client'
 
 interface ProductFormProps {
@@ -41,6 +52,7 @@ export function ProductForm({ product }: ProductFormProps) {
   const router = useRouter()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [formData, setFormData] = useState<ProductFormData>({
     title: product?.title || '',
     slug: product?.slug || '',
@@ -116,6 +128,21 @@ export function ProductForm({ product }: ProductFormProps) {
       alert('Gagal menyimpan produk. Silakan coba lagi.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!product) return
+    
+    setDeleting(true)
+    try {
+      await deleteProduct(product.id)
+      router.push('/admin/products')
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      alert('Gagal menghapus produk. Silakan coba lagi.')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -360,6 +387,41 @@ export function ProductForm({ product }: ProductFormProps) {
             >
               Batal
             </Button>
+            
+            {/* Tombol Hapus - hanya tampil saat edit */}
+            {product && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    type="button" 
+                    variant="destructive" 
+                    className="w-full"
+                    disabled={deleting}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    {deleting ? 'Menghapus...' : 'Hapus Produk'}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Hapus Produk?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Apakah Anda yakin ingin menghapus produk &quot;{product.title}&quot;? 
+                      Tindakan ini tidak dapat dibatalkan.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleDelete}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Ya, Hapus
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         </div>
       </div>

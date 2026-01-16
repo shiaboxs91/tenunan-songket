@@ -11,5 +11,6 @@ export default getRequestConfig(async () => {
   return {
     locale,
     messages: (await import(`./messages/${locale}.json`)).default,
+    timeZone: 'Asia/Kuala_Lumpur', // Malaysia/Brunei timezone
   };
 });

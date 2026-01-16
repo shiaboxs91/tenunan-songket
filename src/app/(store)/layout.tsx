@@ -8,6 +8,7 @@ import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { WhatsAppButton } from "@/components/mobile/WhatsAppButton";
 import { ToastProvider } from "@/components/ui/Toast";
 import { RecoveryTokenHandler } from "@/components/auth/RecoveryTokenHandler";
+import { VersionChecker } from "@/components/version";
 
 export default function StoreLayout({
   children,
@@ -33,6 +34,7 @@ export default function StoreLayout({
           <MobileBottomNav />
           <WhatsAppButton phoneNumber="6281234567890" message="Halo, saya tertarik dengan produk songket di website Anda" />
           <InstallPrompt />
+          <VersionChecker clientVersion="1.0.0" />
         </div>
       </ToastProvider>
     </CartProvider>

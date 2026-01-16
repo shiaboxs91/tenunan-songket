@@ -1,3 +1,6 @@
+import { createClient } from './client'
+import type { ShippingProvider, ShippingService } from './types'
+
 export type Currency = 'USD' | 'MYR' | 'SGD' | 'BND' | 'EUR' | 'GBP' | 'IDR'
 
 export interface ShippingZone {
@@ -137,11 +140,13 @@ export async function calculateShipping(
   weight: number,
   dimensions?: Dimensions
 ): Promise<ShippingOption[]> {
-  const zone = await getShippingZoneByCountry(destination.country)
-  
-  if (!zone) {
-    return []
-  }
+  // Try to get active shipping providers from database
+  const supabase = createClient()
+  const { data: providers } = await supabase
+    .from('shipping_providers')
+    .select('*')
+    .eq('is_active', true)
+    .order('display_order', { ascending: true })
 
   // Calculate actual weight vs volumetric weight
   let chargeableWeight = weight
@@ -153,9 +158,41 @@ export async function calculateShipping(
   // Minimum weight 0.5 kg
   chargeableWeight = Math.max(chargeableWeight, 0.5)
 
-  const baseCost = zone.base_rate + (zone.per_kg_rate * chargeableWeight)
-  
   const options: ShippingOption[] = []
+
+  // If we have providers from database, use them
+  if (providers && providers.length > 0) {
+    for (const provider of providers) {
+      const services = (provider.services as unknown as ShippingService[]) || []
+      
+      for (const service of services) {
+        const cost = service.base_cost + (service.base_cost * 0.1 * chargeableWeight) // Simple calculation
+        
+        options.push({
+          courier: provider.code,
+          service: `${provider.name} - ${service.name}`,
+          cost: Math.round(cost),
+          currency: 'BND' as Currency, // Default to BND for Brunei store
+          estimatedDays: service.estimated_days,
+          includesInsurance: false,
+          trackingAvailable: true
+        })
+      }
+    }
+    
+    // Sort by cost
+    options.sort((a, b) => a.cost - b.cost)
+    return options
+  }
+
+  // Fallback to zone-based calculation if no providers in database
+  const zone = await getShippingZoneByCountry(destination.country)
+  
+  if (!zone) {
+    return []
+  }
+
+  const baseCost = zone.base_rate + (zone.per_kg_rate * chargeableWeight)
 
   // Standard shipping
   options.push({

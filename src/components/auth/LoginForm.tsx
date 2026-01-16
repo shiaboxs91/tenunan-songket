@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signIn, signInWithGoogle } from "@/lib/supabase/auth";
+import { createClient } from "@/lib/supabase/client";
 
 interface LoginFormProps {
   redirectTo?: string;
@@ -28,7 +29,7 @@ export function LoginForm({ redirectTo = "/" }: LoginFormProps) {
     setIsLoading(true);
 
     try {
-      const { error: authError } = await signIn(email, password);
+      const { user, error: authError } = await signIn(email, password);
       
       if (authError) {
         if (authError.message.includes("Invalid login")) {
@@ -41,7 +42,24 @@ export function LoginForm({ redirectTo = "/" }: LoginFormProps) {
         return;
       }
 
-      router.push(redirectTo);
+      // Check if user is admin and redirect accordingly
+      if (user) {
+        const supabase = createClient();
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profile?.role === 'admin') {
+          router.push('/admin');
+        } else {
+          router.push(redirectTo);
+        }
+      } else {
+        router.push(redirectTo);
+      }
+      
       router.refresh();
     } catch {
       setError("Terjadi kesalahan. Silakan coba lagi");

@@ -1,15 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getAdminUsers, type AdminUser } from '@/lib/supabase/admin'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Search, Users, Crown, User, Mail, Calendar, ShoppingBag } from 'lucide-react'
+import { getCustomersWithStats } from '@/lib/supabase/admin'
+import { 
+  Search, 
+  Users, 
+  User, 
+  Mail, 
+  Calendar, 
+  ShoppingBag,
+  Phone,
+  ChevronLeft,
+  ChevronRight,
+  Loader2
+} from 'lucide-react'
+import type { CustomerWithStats } from '@/lib/supabase/types'
 
-export default function AdminUsersPage() {
-  const [users, setUsers] = useState<AdminUser[]>([])
+export default function CustomersPage() {
+  const [customers, setCustomers] = useState<CustomerWithStats[]>([])
   const [loading, setLoading] = useState(true)
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -19,17 +27,17 @@ export default function AdminUsersPage() {
   const limit = 20
 
   useEffect(() => {
-    loadUsers()
+    loadCustomers()
   }, [page, search])
 
-  const loadUsers = async () => {
+  const loadCustomers = async () => {
     setLoading(true)
     try {
-      const result = await getAdminUsers(page, limit, search)
-      setUsers(result.users)
+      const result = await getCustomersWithStats(page, limit, search)
+      setCustomers(result.customers)
       setTotal(result.total)
     } catch (error) {
-      console.error('Error loading users:', error)
+      console.error('Error loading customers:', error)
     } finally {
       setLoading(false)
     }
@@ -45,11 +53,13 @@ export default function AdminUsersPage() {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
-      currency: 'IDR'
+      currency: 'IDR',
+      minimumFractionDigits: 0
     }).format(amount)
   }
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return '-'
     return new Date(dateString).toLocaleDateString('id-ID', {
       year: 'numeric',
       month: 'short',
@@ -57,169 +67,169 @@ export default function AdminUsersPage() {
     })
   }
 
-  const getRoleBadge = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return (
-          <Badge className="bg-red-100 text-red-800">
-            <Crown className="h-3 w-3 mr-1" />
-            Admin
-          </Badge>
-        )
-      case 'customer':
-        return (
-          <Badge className="bg-blue-100 text-blue-800">
-            <User className="h-3 w-3 mr-1" />
-            Pelanggan
-          </Badge>
-        )
-      default:
-        return (
-          <Badge variant="secondary">
-            <User className="h-3 w-3 mr-1" />
-            {role}
-          </Badge>
-        )
-    }
-  }
-
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Kelola Pengguna</h1>
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Daftar Pelanggan</h1>
+        <p className="text-gray-500">Kelola dan lihat informasi pelanggan</p>
       </div>
 
       {/* Search */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex gap-2">
-            <Input
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
               placeholder="Cari nama atau email..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              className="flex-1"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
-            <Button onClick={handleSearch} variant="outline">
-              <Search className="h-4 w-4" />
-            </Button>
           </div>
-        </CardContent>
-      </Card>
+          <button 
+            onClick={handleSearch}
+            className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+          >
+            Cari
+          </button>
+        </div>
+      </div>
 
-      {/* Users List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            Daftar Pengguna ({total} total)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-              <p className="mt-2 text-gray-600">Memuat pengguna...</p>
+      {/* Stats Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Users className="h-5 w-5 text-blue-600" />
             </div>
-          ) : users.length === 0 ? (
-            <div className="text-center py-8">
-              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">Tidak ada pengguna ditemukan</p>
+            <div>
+              <p className="text-sm text-gray-500">Total Pelanggan</p>
+              <p className="text-xl font-bold text-gray-900">{total}</p>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {users.map((user) => (
-                <div
-                  key={user.id}
-                  className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                          <User className="h-5 w-5 text-gray-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold">
-                            {user.full_name || 'Nama tidak tersedia'}
-                          </h3>
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Mail className="h-3 w-3" />
-                            {user.email}
-                          </div>
-                        </div>
-                        {getRoleBadge(user.role)}
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-gray-400" />
-                          <div>
-                            <span className="text-gray-600">Bergabung:</span>
-                            <br />
-                            <span className="font-medium">{formatDate(user.created_at)}</span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-gray-400" />
-                          <div>
-                            <span className="text-gray-600">Login Terakhir:</span>
-                            <br />
-                            <span className="font-medium">
-                              {user.last_sign_in_at ? formatDate(user.last_sign_in_at) : 'Belum pernah'}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <ShoppingBag className="h-4 w-4 text-gray-400" />
-                          <div>
-                            <span className="text-gray-600">Total Pesanan:</span>
-                            <br />
-                            <span className="font-medium">{user.orders_count}</span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <ShoppingBag className="h-4 w-4 text-gray-400" />
-                          <div>
-                            <span className="text-gray-600">Total Belanja:</span>
-                            <br />
-                            <span className="font-medium">{formatCurrency(user.total_spent)}</span>
-                          </div>
-                        </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <ShoppingBag className="h-5 w-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Total Pesanan</p>
+              <p className="text-xl font-bold text-gray-900">
+                {customers.reduce((sum, c) => sum + c.total_orders, 0)}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-100 rounded-lg">
+              <ShoppingBag className="h-5 w-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Total Belanja</p>
+              <p className="text-xl font-bold text-gray-900">
+                {formatCurrency(customers.reduce((sum, c) => sum + c.total_spent, 0))}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Customers List */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+        {loading ? (
+          <div className="p-8 text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto text-amber-500" />
+            <p className="mt-2 text-gray-500">Memuat data...</p>
+          </div>
+        ) : customers.length === 0 ? (
+          <div className="p-8 text-center">
+            <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500">Tidak ada pelanggan ditemukan</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {customers.map((customer) => (
+              <div
+                key={customer.id}
+                className="p-4 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center text-white font-bold">
+                      {customer.full_name?.charAt(0).toUpperCase() || customer.email.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">
+                        {customer.full_name || 'Tanpa Nama'}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <Mail className="h-4 w-4" />
+                          {customer.email}
+                        </span>
+                        {customer.phone && (
+                          <span className="flex items-center gap-1">
+                            <Phone className="h-4 w-4" />
+                            {customer.phone}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
+                  
+                  <div className="flex flex-wrap items-center gap-4 md:gap-6">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500">Bergabung</p>
+                      <p className="font-medium text-gray-900">{formatDate(customer.created_at)}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500">Pesanan</p>
+                      <p className="font-medium text-gray-900">{customer.total_orders}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500">Total Belanja</p>
+                      <p className="font-medium text-amber-600">{formatCurrency(customer.total_spent)}</p>
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
+        )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-6">
-              <Button
-                variant="outline"
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between p-4 border-t border-gray-100">
+            <p className="text-sm text-gray-500">
+              Menampilkan {(page - 1) * limit + 1} - {Math.min(page * limit, total)} dari {total}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
                 onClick={() => setPage(page - 1)}
                 disabled={page === 1}
+                className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Sebelumnya
-              </Button>
-              <span className="text-sm text-gray-600">
-                Halaman {page} dari {totalPages}
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <span className="px-3 py-1 text-sm">
+                {page} / {totalPages}
               </span>
-              <Button
-                variant="outline"
+              <button
                 onClick={() => setPage(page + 1)}
                 disabled={page === totalPages}
+                className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Selanjutnya
-              </Button>
+                <ChevronRight className="h-5 w-5" />
+              </button>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

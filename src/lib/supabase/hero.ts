@@ -58,7 +58,20 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
     ];
   }
   
-  return data || [];
+  // Transform data to match HeroSlide type (convert null to undefined)
+  const transformedData: HeroSlide[] = (data || []).map(item => ({
+    id: item.id,
+    title: item.title,
+    description: item.description ?? undefined,
+    image_url: item.image_url,
+    link_url: item.link_url ?? undefined,
+    order_index: item.order_index,
+    is_active: item.is_active ?? true,
+    created_at: item.created_at ?? new Date().toISOString(),
+    updated_at: item.updated_at ?? new Date().toISOString(),
+  }));
+  
+  return transformedData;
 }
 
 /**
@@ -67,9 +80,16 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
 export async function upsertHeroSlide(slide: Partial<HeroSlide>): Promise<HeroSlide | null> {
   const supabase = await createClient();
   
+  // Convert undefined to null for database compatibility
+  const dbSlide = {
+    ...slide,
+    description: slide.description ?? null,
+    link_url: slide.link_url ?? null,
+  };
+  
   const { data, error } = await supabase
     .from('hero_slides')
-    .upsert(slide)
+    .upsert(dbSlide as any)
     .select()
     .single();
   
@@ -78,7 +98,15 @@ export async function upsertHeroSlide(slide: Partial<HeroSlide>): Promise<HeroSl
     return null;
   }
   
-  return data;
+  // Transform back to HeroSlide type
+  return data ? {
+    ...data,
+    description: data.description ?? undefined,
+    link_url: data.link_url ?? undefined,
+    is_active: data.is_active ?? true,
+    created_at: data.created_at ?? new Date().toISOString(),
+    updated_at: data.updated_at ?? new Date().toISOString(),
+  } : null;
 }
 
 /**

@@ -55,6 +55,7 @@ export default function AdminUsersPage() {
   const fetchAdmins = async () => {
     setLoading(true)
     try {
+      // Fetch admins from profiles
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select('id, user_id, full_name, role, created_at')
@@ -63,18 +64,32 @@ export default function AdminUsersPage() {
 
       if (error) throw error
 
-      // Transform data to match AdminUser type
-      const transformedAdmins: AdminUser[] = (profiles || []).map(p => ({
-        id: p.id,
-        user_id: p.user_id,
-        email: 'Memuat...',
-        full_name: p.full_name,
-        role: p.role || 'admin',
-        created_at: p.created_at,
-        is_active: true
-      }))
+      // Fetch emails using the database function via raw query
+      const { data: adminsWithEmail } = await supabase
+        .rpc('get_admins_with_email' as any)
 
-      setAdmins(transformedAdmins)
+      if (adminsWithEmail && Array.isArray(adminsWithEmail)) {
+        const transformedAdmins: AdminUser[] = adminsWithEmail.map((p: any) => ({
+          id: p.id,
+          user_id: p.user_id,
+          email: p.email || '-',
+          full_name: p.full_name,
+          role: p.role || 'admin',
+          created_at: p.created_at
+        }))
+        setAdmins(transformedAdmins)
+      } else {
+        // Fallback without email
+        const transformedAdmins: AdminUser[] = (profiles || []).map(p => ({
+          id: p.id,
+          user_id: p.user_id,
+          email: '-',
+          full_name: p.full_name,
+          role: p.role || 'admin',
+          created_at: p.created_at
+        }))
+        setAdmins(transformedAdmins)
+      }
     } catch (err) {
       console.error('Error fetching admins:', err)
       setError('Gagal memuat daftar admin')
@@ -98,60 +113,26 @@ export default function AdminUsersPage() {
     }
 
     try {
-      // Create user via Supabase Auth with emailRedirectTo for confirmation
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.full_name
-          },
-          emailRedirectTo: `${window.location.origin}/auth/callback`
-        }
+      // Use API route to create admin (requires service role key)
+      const response = await fetch('/api/admin/create-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          full_name: formData.full_name
+        })
       })
 
-      if (authError) {
-        // Handle specific error messages
-        if (authError.message.includes('invalid') || authError.message.includes('Invalid')) {
-          throw new Error('Email tidak valid. Gunakan email asli yang bisa menerima konfirmasi.')
-        }
-        if (authError.message.includes('already registered')) {
-          throw new Error('Email sudah terdaftar. Gunakan email lain.')
-        }
-        throw authError
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Gagal menambahkan admin')
       }
 
-      if (authData.user) {
-        // Check if profile exists, if not create it
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('user_id', authData.user.id)
-          .single()
-
-        if (existingProfile) {
-          // Update existing profile
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .update({ role: 'admin', full_name: formData.full_name })
-            .eq('user_id', authData.user.id)
-
-          if (profileError) throw profileError
-        } else {
-          // Create new profile
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({ 
-              user_id: authData.user.id, 
-              role: 'admin', 
-              full_name: formData.full_name 
-            })
-
-          if (profileError) throw profileError
-        }
-      }
-
-      setSuccess('Admin baru berhasil ditambahkan. Email konfirmasi telah dikirim.')
+      setSuccess('Admin baru berhasil ditambahkan!')
       setShowAddForm(false)
       setFormData({ email: '', password: '', full_name: '' })
       fetchAdmins()
@@ -204,25 +185,23 @@ export default function AdminUsersPage() {
     setError(null)
 
     try {
-      // Update profile name
-      if (editFormData.full_name !== editingAdmin.full_name) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ full_name: editFormData.full_name })
-          .eq('user_id', editingAdmin.user_id)
-
-        if (profileError) throw profileError
-      }
-
-      // Update password if provided
-      if (editFormData.new_password && editFormData.new_password.length >= 8) {
-        const { error: passwordError } = await supabase.auth.updateUser({
-          password: editFormData.new_password
+      // Use API route to update admin (requires service role key for password change)
+      const response = await fetch('/api/admin/create-user', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: editingAdmin.user_id,
+          full_name: editFormData.full_name,
+          new_password: editFormData.new_password || undefined
         })
+      })
 
-        if (passwordError) {
-          throw new Error('Gagal mengubah password: ' + passwordError.message)
-        }
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Gagal memperbarui admin')
       }
 
       setSuccess('Admin berhasil diperbarui')

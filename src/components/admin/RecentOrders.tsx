@@ -1,8 +1,10 @@
 "use client"
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { subscribeToAllOrderUpdates, unsubscribeFromChannel } from '@/lib/supabase/realtime'
 
 interface RecentOrder {
   id: string
@@ -66,7 +68,40 @@ function getStatusBadge(status: string | null) {
   )
 }
 
-export function RecentOrders({ orders }: RecentOrdersProps) {
+export function RecentOrders({ orders: initialOrders }: RecentOrdersProps) {
+  const [orders, setOrders] = useState<RecentOrder[]>(initialOrders)
+
+  useEffect(() => {
+    // Subscribe to realtime order updates
+    const channel = subscribeToAllOrderUpdates((updatedOrder) => {
+      setOrders((prevOrders) => {
+        // Check if order exists in list
+        const existingIndex = prevOrders.findIndex(o => o.id === updatedOrder.id)
+        
+        if (existingIndex >= 0) {
+          // Update existing order
+          const newOrders = [...prevOrders]
+          newOrders[existingIndex] = {
+            ...newOrders[existingIndex],
+            status: updatedOrder.status,
+            order_number: updatedOrder.order_number
+          }
+          return newOrders
+        }
+        
+        return prevOrders
+      })
+    })
+
+    return () => {
+      unsubscribeFromChannel(channel)
+    }
+  }, [])
+
+  // Update when initial orders change
+  useEffect(() => {
+    setOrders(initialOrders)
+  }, [initialOrders])
   return (
     <Card>
       <CardHeader>

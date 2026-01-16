@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getOrders, getOrderStats, type Order } from "@/lib/supabase/orders";
 import { getProfile } from "@/lib/supabase/profiles";
 import { signOut } from "@/lib/supabase/auth";
+import { useRealtimeOrders } from "@/hooks/useRealtimeOrders";
 
 const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending: { label: "Menunggu Pembayaran", variant: "outline" },
@@ -47,6 +48,26 @@ export default function OrdersPage() {
   const [stats, setStats] = useState({ total: 0, pending: 0, processing: 0, completed: 0 });
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Subscribe to realtime order updates
+  const { latestUpdate } = useRealtimeOrders(userId);
+
+  // Update orders when realtime update received
+  useEffect(() => {
+    if (latestUpdate) {
+      setOrders((prevOrders) => 
+        prevOrders.map((order) => 
+          order.id === latestUpdate.id 
+            ? { ...order, status: latestUpdate.status, tracking_number: latestUpdate.tracking_number }
+            : order
+        )
+      );
+      
+      // Refresh stats
+      getOrderStats().then(setStats);
+    }
+  }, [latestUpdate]);
 
   useEffect(() => {
     async function loadData() {
@@ -58,6 +79,7 @@ export default function OrdersPage() {
         return;
       }
 
+      setUserId(user.id);
       setUserEmail(user.email || "");
       
       const [profile, ordersData, orderStats] = await Promise.all([

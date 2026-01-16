@@ -170,7 +170,7 @@ Implementasi backend e-commerce lengkap menggunakan Supabase untuk Tenunan Songk
   - [ ]* 18.1 Setup PayPal
   - [ ]* 18.2 Create PayPal integration
 
-- [ ] 19. Checkpoint - Payment Complete
+- [x] 19. Checkpoint - Payment Complete
   - Test Stripe checkout flow
   - Test webhook handling
   - Test payment status updates
@@ -212,7 +212,7 @@ Implementasi backend e-commerce lengkap menggunakan Supabase untuk Tenunan Songk
     - **Property 16: Wishlist Uniqueness**
     - **Validates: Requirements 10.3**
 
-- [ ] 22. Checkpoint - Reviews & Wishlist Complete
+- [x] 22. Checkpoint - Reviews & Wishlist Complete
   - Test review submission
   - Test rating calculation
   - Test wishlist add/remove
@@ -236,7 +236,7 @@ Implementasi backend e-commerce lengkap menggunakan Supabase untuk Tenunan Songk
     - **Property 17: Coupon Validation Rules**
     - **Validates: Requirements 11.3, 11.4**
 
-- [-] 24. Implement Notification System
+- [x] 24. Implement Notification System
   - [x] 24.1 Create notification service
     - Create `src/lib/supabase/notifications.ts` dengan getNotifications, markAsRead
     - Implement realtime subscription
@@ -247,11 +247,11 @@ Implementasi backend e-commerce lengkap menggunakan Supabase untuk Tenunan Songk
     - Create `src/components/notification/NotificationList.tsx`
     - _Requirements: 12.1_
 
-  - [-] 24.3 Create notification triggers
+  - [x] 24.3 Create notification triggers
     - Create Edge Function untuk send notifications on order status change
     - _Requirements: 6.8, 12.2_
 
-- [ ] 25. Checkpoint - Coupons & Notifications Complete
+- [x] 25. Checkpoint - Coupons & Notifications Complete
   - Test coupon application
   - Test notification display
   - Test realtime notifications
@@ -312,7 +312,7 @@ Implementasi backend e-commerce lengkap menggunakan Supabase untuk Tenunan Songk
     - Implement CRUD for coupons
     - _Requirements: 11.1, 13.4_
 
-- [ ] 30. Checkpoint - Admin Panel Complete
+- [x] 30. Checkpoint - Admin Panel Complete
   - Test dashboard stats
   - Test product CRUD
   - Test order management
@@ -322,43 +322,43 @@ Implementasi backend e-commerce lengkap menggunakan Supabase untuk Tenunan Songk
 
 ### Phase 10: Realtime & Edge Functions
 
-- [ ] 31. Implement Realtime Features
-  - [ ] 31.1 Setup realtime subscriptions
+- [x] 31. Implement Realtime Features
+  - [x] 31.1 Setup realtime subscriptions
     - Implement order status realtime updates
     - Implement stock realtime updates
     - Implement notification realtime
     - _Requirements: 18.1, 18.2, 18.3, 18.4_
 
-  - [ ] 31.2 Handle connection recovery
+  - [x] 31.2 Handle connection recovery
     - Implement auto-reconnect
     - Sync missed updates
     - _Requirements: 18.5_
 
-- [ ] 32. Create Scheduled Functions
-  - [ ] 32.1 Create auto-cancel expired orders function
+- [x] 32. Create Scheduled Functions
+  - [x] 32.1 Create auto-cancel expired orders function
     - Create `supabase/functions/cancel-expired-orders/index.ts`
     - Setup pg_cron to run hourly
     - _Requirements: 6.6_
 
-  - [ ] 32.2 Create daily stats aggregation function
+  - [x] 32.2 Create daily stats aggregation function
     - Create `supabase/functions/aggregate-daily-stats/index.ts`
     - Setup pg_cron to run daily
     - _Requirements: 15.1, 15.6_
 
-- [ ] 33. Setup Supabase Storage
-  - [ ] 33.1 Create storage buckets
+- [x] 33. Setup Supabase Storage
+  - [x] 33.1 Create storage buckets
     - Create products bucket (public)
     - Create avatars bucket (public)
     - Create reviews bucket (public)
     - _Requirements: 17.1_
 
-  - [ ] 33.2 Configure storage policies
+  - [x] 33.2 Configure storage policies
     - Set upload size limits
     - Set allowed mime types
     - Configure access policies
     - _Requirements: 17.2, 17.4_
 
-- [ ] 34. Final Checkpoint - All Features Complete
+- [x] 34. Final Checkpoint - All Features Complete
   - Run full integration test
   - Verify all features working end-to-end
   - Performance testing

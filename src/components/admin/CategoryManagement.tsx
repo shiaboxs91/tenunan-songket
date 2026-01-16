@@ -17,7 +17,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { 
-  getCategoriesClient, 
+  getCategories, 
   createCategory, 
   updateCategory, 
   deleteCategory,
@@ -52,7 +52,7 @@ export function CategoryManagement() {
   const loadCategories = async () => {
     setLoading(true)
     try {
-      const data = await getCategoriesClient()
+      const data = await getCategories()
       setCategories(data)
     } catch (error) {
       console.error('Error loading categories:', error)

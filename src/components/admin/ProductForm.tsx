@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { createProduct, updateProduct, type Product } from '@/lib/supabase/products-client'
-import { getCategoriesClient, type Category } from '@/lib/supabase/categories-client'
+import { getCategories, type Category } from '@/lib/supabase/categories-client'
 
 interface ProductFormProps {
   product?: Product
@@ -61,7 +61,7 @@ export function ProductForm({ product }: ProductFormProps) {
 
   const loadCategories = async () => {
     try {
-      const data = await getCategoriesClient()
+      const data = await getCategories()
       setCategories(data)
     } catch (error) {
       console.error('Error loading categories:', error)

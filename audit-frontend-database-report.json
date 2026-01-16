@@ -1,0 +1,1211 @@
+{
+  "timestamp": "2026-01-16T02:48:51.068Z",
+  "summary": {
+    "totalFiles": 168,
+    "usingDatabase": 59,
+    "usingDummy": 15,
+    "mixed": 27,
+    "needsReview": 67,
+    "databaseAdoption": 58
+  },
+  "details": {
+    "usingDatabase": [
+      {
+        "path": "\\src\\app\\(store)\\account\\addresses\\page.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 188,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(store)\\account\\orders\\page.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 244,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(store)\\account\\orders\\[id]\\page.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 338,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(store)\\account\\page.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 123,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(store)\\cart\\page.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 128,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(store)\\checkout\\page.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 318,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(store)\\products\\[slug]\\AddToCartButton.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 92,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\admin\\layout.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 56,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\admin\\page.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 69,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\admin\\products\\[id]\\edit\\page.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 29,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\api\\checkout\\route.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 114,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\api\\checkout\\verify\\route.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 62,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\api\\products\\route.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 98,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\api\\webhook\\stripe\\route.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 191,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\auth\\callback\\route.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 60,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\admin\\RecentOrders.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 155,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\cart\\CartDrawer.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 145,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\cart\\CartProvider.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 98,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\cart\\CartSummary.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 167,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\checkout\\AddressSelector.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 152,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\checkout\\OrderSummary.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 141,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\checkout\\ShippingSelector.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 142,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\layout\\MobileBottomNav.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 210,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\mobile\\HorizontalCategories.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 93,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\mobile\\StickyAddToCart.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 122,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\notification\\NotificationBell.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 112,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\notification\\NotificationList.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 203,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\order\\OrderStatus.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 175,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\product\\ProductGrid.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 99,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\product\\ProductReviews.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 125,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\product\\RealtimeProductGrid.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 73,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\product\\StickyProductCTA.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 145,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\profile\\AddressList.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 167,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\realtime\\ConnectionStatus.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 76,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\review\\ReviewList.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 176,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\wishlist\\WishlistButton.tsx",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 120,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\products.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 251,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\addresses.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 232,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\auth.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 113,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\cart.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 221,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\categories-client.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 82,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\categories.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 150,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\client.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 25,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\coupons.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 206,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\hero.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 102,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\notifications.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 257,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\orders.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 335,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\payments.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 256,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\products-client.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 162,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\products.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 359,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\profiles.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 115,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\realtime.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 174,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\reviews.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 209,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\server.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 31,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\storage.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 336,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\wishlist.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 117,
+        "examples": []
+      },
+      {
+        "path": "\\src\\hooks\\useRealtimeConnection.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 67,
+        "examples": []
+      },
+      {
+        "path": "\\src\\hooks\\useRealtimeOrders.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 34,
+        "examples": []
+      },
+      {
+        "path": "\\src\\hooks\\useRealtimeStock.ts",
+        "hasDatabase": true,
+        "hasDummy": false,
+        "lines": 38,
+        "examples": []
+      }
+    ],
+    "usingDummy": [
+      {
+        "path": "\\src\\app\\(store)\\atur-server\\page.tsx",
+        "hasDatabase": false,
+        "hasDummy": true,
+        "lines": 254,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\cart\\CartItemCard.tsx",
+        "hasDatabase": false,
+        "hasDummy": true,
+        "lines": 117,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\checkout\\AddressForm.tsx",
+        "hasDatabase": false,
+        "hasDummy": true,
+        "lines": 198,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\filters\\FilterSidebar.tsx",
+        "hasDatabase": false,
+        "hasDummy": true,
+        "lines": 151,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\product\\MobileFilterSheet.tsx",
+        "hasDatabase": false,
+        "hasDummy": true,
+        "lines": 317,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\product\\ProductFilters.tsx",
+        "hasDatabase": false,
+        "hasDummy": true,
+        "lines": 257,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\product\\ProductGallery.tsx",
+        "hasDatabase": false,
+        "hasDummy": true,
+        "lines": 180,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\product\\ProductSorting.tsx",
+        "hasDatabase": false,
+        "hasDummy": true,
+        "lines": 66,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\product\\QuickViewModal.tsx",
+        "hasDatabase": false,
+        "hasDummy": true,
+        "lines": 123,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\ui\\input.tsx",
+        "hasDatabase": false,
+        "hasDummy": true,
+        "lines": 25,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\ui\\select.tsx",
+        "hasDatabase": false,
+        "hasDummy": true,
+        "lines": 150,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\ui\\textarea.tsx",
+        "hasDatabase": false,
+        "hasDummy": true,
+        "lines": 24,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\rss.ts",
+        "hasDatabase": false,
+        "hasDummy": true,
+        "lines": 240,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\adapters.ts",
+        "hasDatabase": false,
+        "hasDummy": true,
+        "lines": 42,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\shipping.ts",
+        "hasDatabase": false,
+        "hasDummy": true,
+        "lines": 239,
+        "examples": []
+      }
+    ],
+    "mixed": [
+      {
+        "path": "\\src\\app\\(store)\\account\\wishlist\\page.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 156,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(store)\\page.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 251,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(store)\\products\\[slug]\\page.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 187,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\admin\\coupons\\page.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 502,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\admin\\orders\\page.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 234,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\admin\\orders\\[id]\\page.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 338,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\admin\\users\\page.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 225,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\admin\\AdminSidebar.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 80,
+        "examples": [
+          "⚠ Hardcoded arrays: 1"
+        ]
+      },
+      {
+        "path": "\\src\\components\\admin\\CategoryManagement.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 316,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\admin\\ProductForm.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 368,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\admin\\ProductList.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 219,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\auth\\ForgotPasswordForm.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 113,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\auth\\LoginForm.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 195,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\auth\\RegisterForm.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 245,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\auth\\ResetPasswordForm.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 148,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\cart\\CartItem.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 191,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\cart\\CouponInput.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 130,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\home\\HeroSlider.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 147,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\layout\\CategorySheet.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 172,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\layout\\Header.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 373,
+        "examples": [
+          "⚠ Hardcoded arrays: 1"
+        ]
+      },
+      {
+        "path": "\\src\\components\\product\\ProductCard.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 181,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\profile\\AddressForm.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 279,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\profile\\ProfileForm.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 200,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\review\\ReviewForm.tsx",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 118,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\admin.ts",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 629,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\middleware.ts",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 151,
+        "examples": []
+      },
+      {
+        "path": "\\src\\hooks\\useCart.ts",
+        "hasDatabase": true,
+        "hasDummy": true,
+        "lines": 594,
+        "examples": []
+      }
+    ],
+    "needsReview": [
+      {
+        "path": "\\src\\app\\(auth)\\forgot-password\\page.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 12,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(auth)\\layout.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 37,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(auth)\\login\\page.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 22,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(auth)\\register\\page.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 22,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(auth)\\reset-password\\page.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 12,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(store)\\cara-order\\page.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 201,
+        "examples": [
+          "⚠ Hardcoded arrays: 2"
+        ]
+      },
+      {
+        "path": "\\src\\app\\(store)\\checkout\\cancel\\page.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 69,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(store)\\checkout\\success\\page.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 101,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(store)\\faq\\page.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 163,
+        "examples": [
+          "⚠ Hardcoded arrays: 1"
+        ]
+      },
+      {
+        "path": "\\src\\app\\(store)\\layout.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 39,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(store)\\products\\loading.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 63,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(store)\\products\\page.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 225,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(store)\\products\\[slug]\\loading.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 93,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(store)\\products\\[slug]\\not-found.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 28,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\(store)\\tentang-kami\\page.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 107,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\admin\\categories\\page.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 16,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\admin\\products\\new\\page.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 16,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\admin\\products\\page.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 27,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\api\\maintenance\\route.ts",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 38,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\icon.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 45,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\layout.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 106,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\maintenance\\layout.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 15,
+        "examples": []
+      },
+      {
+        "path": "\\src\\app\\maintenance\\page.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 318,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\admin\\DashboardStats.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 77,
+        "examples": [
+          "⚠ Hardcoded arrays: 1"
+        ]
+      },
+      {
+        "path": "\\src\\components\\auth\\index.ts",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 5,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\cart\\index.ts",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 7,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\checkout\\CheckoutStepper.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 65,
+        "examples": [
+          "⚠ Hardcoded arrays: 1"
+        ]
+      },
+      {
+        "path": "\\src\\components\\checkout\\index.ts",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 7,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\checkout\\PaymentSelector.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 142,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\filters\\FilterSheetMobile.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 59,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\layout\\Breadcrumbs.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 98,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\layout\\Footer.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 286,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\layout\\LanguageSwitcher.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 113,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\layout\\SkipLink.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 18,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\mobile\\TrustBadges.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 126,
+        "examples": [
+          "⚠ Hardcoded arrays: 1"
+        ]
+      },
+      {
+        "path": "\\src\\components\\mobile\\WhatsAppButton.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 71,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\notification\\index.ts",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 3,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\order\\index.ts",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 2,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\product\\GridDensityToggle.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 77,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\profile\\index.ts",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 4,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\providers\\IntlProvider.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 19,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\pwa\\InstallPrompt.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 182,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\review\\index.ts",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 4,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\review\\StarRating.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 88,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\ui\\accordion.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 59,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\ui\\alert-dialog.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 142,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\ui\\badge.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 34,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\ui\\button.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 53,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\ui\\card.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 79,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\ui\\checkbox.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 30,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\ui\\dialog.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 120,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\ui\\label.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 26,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\ui\\scroll-area.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 47,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\ui\\separator.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 32,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\ui\\sheet.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 135,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\ui\\skeleton.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 16,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\ui\\slider.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 28,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\ui\\tabs.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 55,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\ui\\Toast.tsx",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 102,
+        "examples": []
+      },
+      {
+        "path": "\\src\\components\\wishlist\\index.ts",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 2,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\maintenance.ts",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 28,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\index.ts",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 45,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\supabase\\types.ts",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 846,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\types.ts",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 130,
+        "examples": []
+      },
+      {
+        "path": "\\src\\lib\\utils.ts",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 38,
+        "examples": []
+      },
+      {
+        "path": "\\src\\hooks\\useProductFilters.ts",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 200,
+        "examples": []
+      },
+      {
+        "path": "\\src\\hooks\\useScrollDirection.ts",
+        "hasDatabase": false,
+        "hasDummy": false,
+        "lines": 80,
+        "examples": []
+      }
+    ]
+  }
+}

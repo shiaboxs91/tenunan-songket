@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Edit, Trash2, Search, Filter } from 'lucide-react'
+import { Edit, Trash2, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { getProductsClient, type Product } from '@/lib/supabase/products-client'
-import { getCategoriesClient, type Category } from '@/lib/supabase/categories-client'
+import { getCategories, type Category } from '@/lib/supabase/categories-client'
 
 export function ProductList() {
   const [products, setProducts] = useState<Product[]>([])
@@ -35,7 +35,7 @@ export function ProductList() {
     try {
       const [productsData, categoriesData] = await Promise.all([
         getProductsClient({ includeInactive: true }),
-        getCategoriesClient()
+        getCategories()
       ])
       
       setProducts(productsData)

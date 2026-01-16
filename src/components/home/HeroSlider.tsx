@@ -3,24 +3,11 @@
 import { useState, useEffect, useCallback, memo } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { HeroSlide } from "@/lib/supabase/hero";
 
-const SLIDES = [
-  {
-    id: 1,
-    image: "https://tenunansongket.com/wp-content/uploads/2020/08/Untitled-Facebook-Cover-6-1.webp",
-    alt: "Tenunan Songket Collection",
-  },
-  {
-    id: 2,
-    image: "https://tenunansongket.com/wp-content/uploads/2023/09/were-open-1pm-till-late-14.png",
-    alt: "Model Songket Elegant",
-  },
-  {
-    id: 3,
-    image: "https://tenunansongket.com/wp-content/uploads/2023/09/were-open-1pm-till-late-10.png",
-    alt: "Songket Fashion",
-  },
-];
+interface HeroSliderProps {
+  slides: HeroSlide[];
+}
 
 // Memoized slide component for better performance
 const Slide = memo(function Slide({ 
@@ -51,17 +38,17 @@ const Slide = memo(function Slide({
   );
 });
 
-export function HeroSlider() {
+export function HeroSlider({ slides }: HeroSliderProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
   const nextSlide = useCallback(() => {
-    setCurrentSlide((prev) => (prev + 1) % SLIDES.length);
-  }, []);
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  }, [slides.length]);
 
   const prevSlide = useCallback(() => {
-    setCurrentSlide((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
-  }, []);
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  }, [slides.length]);
 
   const goToSlide = useCallback((index: number) => {
     setCurrentSlide(index);
@@ -70,10 +57,18 @@ export function HeroSlider() {
   }, []);
 
   useEffect(() => {
-    if (!isAutoPlaying) return;
+    if (!isAutoPlaying || slides.length === 0) return;
     const interval = setInterval(nextSlide, 4000);
     return () => clearInterval(interval);
-  }, [isAutoPlaying, nextSlide]);
+  }, [isAutoPlaying, nextSlide, slides.length]);
+
+  if (slides.length === 0) {
+    return (
+      <div className="relative flex-1 aspect-[16/9] md:aspect-[4/3] lg:aspect-[4/3] rounded-2xl overflow-hidden shadow-xl shadow-amber-900/10 border border-amber-200/30 bg-amber-50 flex items-center justify-center">
+        <p className="text-amber-700">Loading slides...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full flex items-center gap-2 md:gap-4">
@@ -102,11 +97,11 @@ export function HeroSlider() {
             transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
           }}
         >
-          {SLIDES.map((slide, index) => (
+          {slides.map((slide, index) => (
             <Slide
               key={slide.id}
-              image={slide.image}
-              alt={slide.alt}
+              image={slide.image_url}
+              alt={slide.title}
               priority={index === 0}
             />
           ))}
@@ -114,7 +109,7 @@ export function HeroSlider() {
 
         {/* Dots Indicator */}
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2" role="tablist">
-          {SLIDES.map((_, index) => (
+          {slides.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}

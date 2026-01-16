@@ -7,8 +7,8 @@ import { HeroSlider } from "@/components/home/HeroSlider";
 import { TrustBadges } from "@/components/mobile/TrustBadges";
 import { getPopularProducts, getLatestProducts } from "@/lib/supabase/products";
 import { getCategoriesWithProductCount } from "@/lib/supabase/categories";
+import { getHeroSlides } from "@/lib/supabase/hero";
 import { toFrontendProducts } from "@/lib/supabase/adapters";
-import categoryImagesData from "@/data/category-images.json";
 import { getTranslations } from "next-intl/server";
 
 // Simple Section Divider - optimized for performance
@@ -23,37 +23,34 @@ const SectionDivider = () => (
 
 async function getHomeData() {
   // Fetch data from Supabase
-  const [popularProductsRaw, latestProductsRaw, categoriesWithCount] = await Promise.all([
+  const [popularProductsRaw, latestProductsRaw, categoriesWithCount, heroSlides] = await Promise.all([
     getPopularProducts(5),
     getLatestProducts(5),
     getCategoriesWithProductCount(),
+    getHeroSlides(),
   ]);
 
   // Convert to frontend format
   const popularProducts = toFrontendProducts(popularProductsRaw);
   const latestProducts = toFrontendProducts(latestProductsRaw);
 
-  // Build category data with images from local config
-  const categoryImages = categoryImagesData.categories.reduce((acc, cat) => {
-    acc[cat.name] = cat.image;
-    return acc;
-  }, {} as Record<string, string>);
-
+  // Build category data with images from database
   const jenisCorak = categoriesWithCount.map(cat => ({
     name: cat.name,
     items: cat.product_count,
-    image: categoryImages[cat.name] || '/images/placeholder-product.svg',
+    image: cat.image_url || '/images/placeholder-product.svg',
   }));
 
   return {
     popularProducts,
     latestProducts,
     jenisCorak,
+    heroSlides,
   };
 }
 
 export default async function HomePage() {
-  const { popularProducts, latestProducts, jenisCorak } = await getHomeData();
+  const { popularProducts, latestProducts, jenisCorak, heroSlides } = await getHomeData();
   const t = await getTranslations("home");
   const tCommon = await getTranslations("common");
 
@@ -142,7 +139,7 @@ export default async function HomePage() {
 
             {/* Right - Hero Slider */}
             <div className="order-1 md:order-2 w-full">
-              <HeroSlider />
+              <HeroSlider slides={heroSlides} />
             </div>
           </div>
         </div>

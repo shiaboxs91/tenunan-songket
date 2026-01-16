@@ -1,26 +1,45 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { LayoutGrid, X, ArrowRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import categoryData from "@/data/category-images.json";
-import productsData from "@/data/products.snapshot.json";
-import type { Product } from "@/lib/types";
+import { getCategoriesWithProductCount, getTotalProductCount } from "@/lib/supabase/categories-client";
+import type { Category } from "@/lib/supabase/categories-client";
 
 interface CategorySheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-// Get product count per category
-function getCategoryCount(categoryName: string): number {
-  const products = productsData as unknown as Product[];
-  return products.filter(p => p.category === categoryName).length;
-}
-
 export function CategorySheet({ open, onOpenChange }: CategorySheetProps) {
   const router = useRouter();
+  const [categories, setCategories] = useState<(Category & { product_count: number })[]>([]);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (open) {
+      loadCategories();
+    }
+  }, [open]);
+
+  async function loadCategories() {
+    setLoading(true);
+    try {
+      const [categoriesData, total] = await Promise.all([
+        getCategoriesWithProductCount(),
+        getTotalProductCount(),
+      ]);
+      setCategories(categoriesData);
+      setTotalProducts(total);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const handleCategorySelect = (category: string) => {
     onOpenChange(false);
@@ -88,19 +107,24 @@ export function CategorySheet({ open, onOpenChange }: CategorySheetProps) {
               </div>
               <div className="text-left">
                 <p className="font-semibold text-slate-800">Semua Produk</p>
-                <p className="text-xs text-slate-500">{(productsData as unknown as Product[]).length} produk tersedia</p>
+                <p className="text-xs text-slate-500">{totalProducts} produk tersedia</p>
               </div>
             </div>
             <ArrowRight className="h-5 w-5 text-amber-600 group-hover:translate-x-1 transition-transform" />
           </button>
 
           {/* Category Grid */}
-          <div className="grid grid-cols-2 gap-3">
-            {categoryData.categories.map((category, index) => {
-              const count = getCategoryCount(category.name);
-              return (
+          {loading ? (
+            <div className="grid grid-cols-2 gap-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="relative overflow-hidden rounded-2xl aspect-[4/3] bg-slate-200 animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {categories.map((category, index) => (
                 <button
-                  key={category.name}
+                  key={category.id}
                   onClick={() => handleCategorySelect(category.name)}
                   className={cn(
                     "relative overflow-hidden rounded-2xl aspect-[4/3] group",
@@ -111,7 +135,7 @@ export function CategorySheet({ open, onOpenChange }: CategorySheetProps) {
                 >
                   {/* Background Image */}
                   <Image
-                    src={category.image}
+                    src={category.image_url || '/images/placeholder-product.svg'}
                     alt={category.name}
                     fill
                     className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -127,16 +151,16 @@ export function CategorySheet({ open, onOpenChange }: CategorySheetProps) {
                       {category.name}
                     </h3>
                     <p className="text-white/80 text-[10px] mt-0.5">
-                      {count} produk
+                      {category.product_count} produk
                     </p>
                   </div>
 
                   {/* Hover glow effect */}
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-amber-500/20 to-transparent" />
                 </button>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Safe area for iOS */}

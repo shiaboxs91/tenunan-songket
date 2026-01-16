@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProducts as getSupabaseProducts } from "@/lib/supabase/products";
 import { toFrontendProducts } from "@/lib/supabase/adapters";
-import { filterProducts, sortProducts, paginateProducts } from "@/lib/products";
-import { FilterState, SortOption, ProductsResponse, Product } from "@/lib/types";
-import snapshotData from "@/data/products.snapshot.json";
+import { SortOption, ProductsResponse } from "@/lib/types";
 
 /**
  * Validate sort option
@@ -52,7 +50,7 @@ export async function GET(request: NextRequest) {
   const inStock = searchParams.get("inStock") === "true";
 
   try {
-    // Try to fetch from Supabase first
+    // Fetch from Supabase database
     const { sortBy, sortOrder } = mapSortToSupabase(sort);
     
     const supabaseResult = await getSupabaseProducts({
@@ -81,37 +79,19 @@ export async function GET(request: NextRequest) {
       total: supabaseResult.total,
       page: supabaseResult.page,
       pageSize: supabaseResult.limit,
-      source: "snapshot", // Keep as snapshot for compatibility
+      source: "database",
     };
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error("Supabase fetch failed, falling back to snapshot:", error);
+    console.error("Failed to fetch products from database:", error);
     
-    // Fallback to snapshot data
-    const filters: FilterState = {
-      q: search,
-      categories,
-      minPrice: minPrice ?? null,
-      maxPrice: maxPrice ?? null,
-      inStockOnly: inStock,
-      sort,
-    };
-
-    const products: Product[] = snapshotData as unknown as Product[];
-    let filteredProducts = filterProducts(products, filters);
-    filteredProducts = sortProducts(filteredProducts, filters.sort);
-    const total = filteredProducts.length;
-    const paginatedProducts = paginateProducts(filteredProducts, page, pageSize);
-
-    const response: ProductsResponse = {
-      products: paginatedProducts,
-      total,
-      page,
-      pageSize,
-      source: "snapshot",
-    };
-
-    return NextResponse.json(response);
+    return NextResponse.json(
+      { 
+        error: "Failed to fetch products",
+        message: error instanceof Error ? error.message : "Unknown error"
+      },
+      { status: 500 }
+    );
   }
 }

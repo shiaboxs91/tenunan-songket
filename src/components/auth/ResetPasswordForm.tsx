@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, Loader2, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updatePassword } from "@/lib/supabase/auth";
+import { createClient } from "@/lib/supabase/client";
 
 export function ResetPasswordForm() {
   const router = useRouter();
@@ -17,6 +18,45 @@ export function ResetPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [hasValidToken, setHasValidToken] = useState<boolean | null>(null);
+
+  // Check for recovery token in URL hash on mount
+  useEffect(() => {
+    const checkRecoveryToken = async () => {
+      // Check if there's a hash fragment with access_token
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const type = hashParams.get('type');
+      
+      if (accessToken && type === 'recovery') {
+        // Token exists in URL, verify it's valid
+        const supabase = createClient();
+        const { data, error } = await supabase.auth.getUser();
+        
+        if (error || !data.user) {
+          setError('Link reset password tidak valid atau sudah kadaluarsa');
+          setHasValidToken(false);
+        } else {
+          setHasValidToken(true);
+          // Clear the hash from URL for security
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+      } else {
+        // No token in URL, check if user has an active session
+        const supabase = createClient();
+        const { data } = await supabase.auth.getUser();
+        
+        if (data.user) {
+          setHasValidToken(true);
+        } else {
+          setError('Link reset password tidak ditemukan. Silakan minta link baru dari halaman Forgot Password.');
+          setHasValidToken(false);
+        }
+      }
+    };
+
+    checkRecoveryToken();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +89,39 @@ export function ResetPasswordForm() {
       setIsLoading(false);
     }
   };
+
+  // Show loading state while checking token
+  if (hasValidToken === null) {
+    return (
+      <div className="text-center space-y-4">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+        <p className="text-muted-foreground">Memverifikasi link reset password...</p>
+      </div>
+    );
+  }
+
+  // Show error if token is invalid
+  if (hasValidToken === false) {
+    return (
+      <div className="text-center space-y-4">
+        <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+          <AlertCircle className="h-8 w-8 text-red-600" />
+        </div>
+        <h2 className="text-xl font-semibold">Link Tidak Valid</h2>
+        <p className="text-muted-foreground">
+          {error || 'Link reset password tidak valid atau sudah kadaluarsa.'}
+        </p>
+        <div className="flex gap-2 justify-center">
+          <Button variant="outline" onClick={() => router.push('/forgot-password')}>
+            Minta Link Baru
+          </Button>
+          <Button onClick={() => router.push('/login')}>
+            Kembali ke Login
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (success) {
     return (

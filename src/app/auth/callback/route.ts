@@ -5,13 +5,23 @@ import { NextResponse } from 'next/server'
  * OAuth callback handler
  * This route handles the callback from OAuth providers (Google, etc.)
  * It exchanges the code for a session and redirects the user
+ * 
+ * Also handles password recovery tokens by redirecting to reset-password page
  */
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams, origin, hash } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/'
   const error = searchParams.get('error')
   const errorDescription = searchParams.get('error_description')
+  
+  // Check if this is a password recovery callback
+  // Recovery tokens come as hash fragments, but we can check for type=recovery in query params
+  const type = searchParams.get('type')
+  if (type === 'recovery' || hash.includes('type=recovery')) {
+    // Redirect to reset password page - the token will be in the hash fragment
+    return NextResponse.redirect(new URL('/reset-password', origin))
+  }
 
   // Handle OAuth errors
   if (error) {

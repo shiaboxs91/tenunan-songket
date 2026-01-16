@@ -7,6 +7,7 @@ import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { WhatsAppButton } from "@/components/mobile/WhatsAppButton";
 import { ToastProvider } from "@/components/ui/Toast";
+import { RecoveryTokenHandler } from "@/components/auth/RecoveryTokenHandler";
 
 export default function StoreLayout({
   children,
@@ -16,6 +17,7 @@ export default function StoreLayout({
   return (
     <CartProvider>
       <ToastProvider>
+        <RecoveryTokenHandler />
         <div className="flex min-h-screen flex-col bg-slate-50">
           <SkipLink />
           <Header />

@@ -25,14 +25,14 @@ export async function validateCoupon(
   userId: string,
   categoryId?: string
 ): Promise<CouponValidationResult> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { data, error } = await supabase.rpc('validate_coupon', {
       p_code: code.toUpperCase(),
       p_subtotal: subtotal,
       p_user_id: userId,
-      p_category_id: categoryId || null
+      p_category_id: categoryId || undefined
     })
 
     if (error) {
@@ -77,7 +77,7 @@ export async function validateCoupon(
  * Get coupon details by code
  */
 export async function getCouponByCode(code: string): Promise<AppliedCoupon | null> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { data, error } = await supabase
@@ -134,7 +134,7 @@ export async function recordCouponUsage(
   userId: string,
   orderId: string
 ): Promise<boolean> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     // Insert coupon usage record
@@ -183,7 +183,7 @@ export async function hasUserUsedCoupon(
   couponId: string,
   userId: string
 ): Promise<boolean> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { count, error } = await supabase

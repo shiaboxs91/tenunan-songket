@@ -1,5 +1,6 @@
 import { createClient } from './client'
 import type { ShippingProvider, ShippingService } from './types'
+import { ShippingCalculator, stateToRegion, type RegionalPricing } from '@/lib/shipping'
 
 export type Currency = 'USD' | 'MYR' | 'SGD' | 'BND' | 'EUR' | 'GBP' | 'IDR'
 
@@ -146,8 +147,7 @@ export async function calculateShipping(
   weight: number,
   dimensions?: Dimensions
 ): Promise<ShippingOption[]> {
-  // Import ShippingCalculator dynamically to avoid circular dependencies
-  const { ShippingCalculator, stateToRegion } = await import('@/lib/shipping')
+  // Use static import (imported at top of file)
   const calculator = new ShippingCalculator()
 
   // Try to get active shipping providers from database
@@ -176,8 +176,6 @@ export async function calculateShipping(
     const region = stateToRegion(destination.state || '')
     
     // Convert database providers to ShippingProvider format
-    // Import the type from shipping module
-    type ShippingProviderType = Awaited<ReturnType<typeof import('@/lib/shipping').ShippingCalculator.prototype.calculateShipping>> extends Array<infer R> ? R : never
     
     const formattedProviders = providers.map(p => {
       const dbServices = (p.services as unknown as Array<{

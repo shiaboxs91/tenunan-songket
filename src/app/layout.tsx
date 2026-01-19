@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { cookies } from "next/headers";
 import { getMessages } from "next-intl/server";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { IntlProvider } from "@/components/providers/IntlProvider";
 import { defaultLocale, locales, type Locale } from "@/i18n/config";
 import "./globals.css";
@@ -85,6 +86,7 @@ export default async function RootLayout({
         <IntlProvider locale={locale} messages={messages as Record<string, unknown>}>
           {children}
         </IntlProvider>
+        <SpeedInsights />
         {/* Defer service worker registration */}
         <script
           dangerouslySetInnerHTML={{

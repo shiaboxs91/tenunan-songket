@@ -66,6 +66,32 @@ export async function signInWithGoogle(): Promise<{ error: Error | null }> {
   return { error: error as Error | null }
 }
 
+export async function signInWithFacebook(): Promise<{ error: Error | null }> {
+  const supabase = createClient()
+
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'facebook',
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback`,
+    },
+  })
+
+  return { error: error as Error | null }
+}
+
+export async function signInWithApple(): Promise<{ error: Error | null }> {
+  const supabase = createClient()
+
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'apple',
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback`,
+    },
+  })
+
+  return { error: error as Error | null }
+}
+
 export async function signOut(): Promise<{ error: Error | null }> {
   const supabase = createClient()
   const { error } = await supabase.auth.signOut()

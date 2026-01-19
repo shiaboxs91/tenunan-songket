@@ -36,8 +36,8 @@ export function WhatsAppButton({
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "fixed z-40 md:hidden transition-all duration-500",
-        "right-4 bottom-24", // Above bottom nav
+        "fixed z-50 md:hidden transition-all duration-500",
+        "right-4 bottom-40", // Above bottom nav and sticky CTA
         isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
       )}
       onMouseEnter={() => setIsHovered(true)}

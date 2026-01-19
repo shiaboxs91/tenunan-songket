@@ -1,69 +1,48 @@
-import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 /**
- * OAuth callback handler
- * This route handles the callback from OAuth providers (Google, etc.)
- * It exchanges the code for a session and redirects the user
+ * Custom OAuth Callback Handler
  * 
- * Also handles password recovery tokens by redirecting to reset-password page
+ * Ini memungkinkan URL callback menggunakan domain kustom
+ * instead of langsung ke Supabase
+ * 
+ * URL: /auth/callback
+ * 
+ * Google/Facebook/Apple akan redirect ke:
+ * https://tenunansongket.com/auth/callback?code=xxx
+ * 
+ * Kemudian kita exchange code dengan Supabase
  */
-export async function GET(request: Request) {
-  const { searchParams, origin, hash } = new URL(request.url)
-  const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/'
-  const error = searchParams.get('error')
-  const errorDescription = searchParams.get('error_description')
-  
-  // Check if this is a password recovery callback
-  // Recovery tokens come as hash fragments, but we can check for type=recovery in query params
-  const type = searchParams.get('type')
-  if (type === 'recovery' || hash.includes('type=recovery')) {
-    // Redirect to reset password page - the token will be in the hash fragment
-    return NextResponse.redirect(new URL('/reset-password', origin))
-  }
+export async function GET(request: NextRequest) {
+  const requestUrl = new URL(request.url);
+  const code = requestUrl.searchParams.get('code');
+  const next = requestUrl.searchParams.get('next') || '/';
+  const error = requestUrl.searchParams.get('error');
+  const errorDescription = requestUrl.searchParams.get('error_description');
 
-  // Handle OAuth errors
+  // Handle error from OAuth provider
   if (error) {
-    console.error('OAuth error:', error, errorDescription)
-    const redirectUrl = new URL('/login', origin)
-    redirectUrl.searchParams.set('error', error)
-    if (errorDescription) {
-      redirectUrl.searchParams.set('error_description', errorDescription)
-    }
-    return NextResponse.redirect(redirectUrl)
+    console.error('OAuth Error:', error, errorDescription);
+    return NextResponse.redirect(
+      new URL(`/login?error=${encodeURIComponent(errorDescription || error)}`, requestUrl.origin)
+    );
   }
 
   if (code) {
-    const supabase = await createClient()
+    const supabase = await createClient();
     
     // Exchange the code for a session
-    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
     
     if (exchangeError) {
-      console.error('Error exchanging code for session:', exchangeError)
-      const redirectUrl = new URL('/login', origin)
-      redirectUrl.searchParams.set('error', 'auth_error')
-      redirectUrl.searchParams.set('error_description', exchangeError.message)
-      return NextResponse.redirect(redirectUrl)
-    }
-
-    // Successful authentication - redirect to the intended destination
-    const forwardedHost = request.headers.get('x-forwarded-host')
-    const isLocalEnv = process.env.NODE_ENV === 'development'
-    
-    if (isLocalEnv) {
-      // In development, redirect to localhost
-      return NextResponse.redirect(`${origin}${next}`)
-    } else if (forwardedHost) {
-      // In production with a proxy, use the forwarded host
-      return NextResponse.redirect(`https://${forwardedHost}${next}`)
-    } else {
-      // Default redirect
-      return NextResponse.redirect(`${origin}${next}`)
+      console.error('Code exchange error:', exchangeError.message);
+      return NextResponse.redirect(
+        new URL(`/login?error=${encodeURIComponent(exchangeError.message)}`, requestUrl.origin)
+      );
     }
   }
 
-  // No code provided - redirect to login
-  return NextResponse.redirect(new URL('/login', origin))
+  // Redirect to the next page or home
+  return NextResponse.redirect(new URL(next, requestUrl.origin));
 }

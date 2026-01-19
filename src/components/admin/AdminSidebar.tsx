@@ -94,10 +94,14 @@ export function AdminSidebar() {
   }
 
   const isActive = (href: string) => {
-    if (href === '/admin') {
-      return pathname === '/admin'
-    }
-    return pathname.startsWith(href)
+    // Exact match
+    if (pathname === href) return true
+    
+    // Sub-route match (ensure it starts with href + /)
+    // This prevents /admin/settings/shipping from matching /admin/settings
+    if (pathname.startsWith(`${href}/`)) return true
+    
+    return false
   }
 
   return (

@@ -135,11 +135,21 @@ export function calculateVolumetricWeight(dimensions: Dimensions): number {
   return Math.ceil(volumetricWeight * 10) / 10 // Round up to 1 decimal
 }
 
+/**
+ * Calculate shipping options with regional pricing support
+ * Task 5: Updated to use ShippingCalculator for regional pricing
+ * 
+ * Requirements: 4.1, 4.2, 4.3, 10.1, 10.2, 10.3
+ */
 export async function calculateShipping(
   destination: ShippingAddress,
   weight: number,
   dimensions?: Dimensions
 ): Promise<ShippingOption[]> {
+  // Import ShippingCalculator dynamically to avoid circular dependencies
+  const { ShippingCalculator, stateToRegion } = await import('@/lib/shipping')
+  const calculator = new ShippingCalculator()
+
   // Try to get active shipping providers from database
   const supabase = createClient()
   const { data: providers } = await supabase
@@ -160,28 +170,76 @@ export async function calculateShipping(
 
   const options: ShippingOption[] = []
 
-  // If we have providers from database, use them
+  // If we have providers from database, use them with regional pricing
   if (providers && providers.length > 0) {
-    for (const provider of providers) {
-      const services = (provider.services as unknown as ShippingService[]) || []
+    // Detect region from destination
+    const region = stateToRegion(destination.state || '')
+    
+    // Convert database providers to ShippingProvider format
+    // Import the type from shipping module
+    type ShippingProviderType = Awaited<ReturnType<typeof import('@/lib/shipping').ShippingCalculator.prototype.calculateShipping>> extends Array<infer R> ? R : never
+    
+    const formattedProviders = providers.map(p => {
+      const dbServices = (p.services as unknown as Array<{
+        id?: string;
+        name?: string;
+        base_cost?: number;
+        estimated_days?: string;
+        tracking_available?: boolean;
+        includes_insurance?: boolean;
+        regional_pricing?: unknown[];
+        display_order?: number;
+      }>) || []
       
-      for (const service of services) {
-        const cost = service.base_cost + (service.base_cost * 0.1 * chargeableWeight) // Simple calculation
-        
-        options.push({
-          courier: provider.code,
-          service: `${provider.name} - ${service.name}`,
-          cost: Math.round(cost),
-          currency: 'BND' as Currency, // Default to BND for Brunei store
-          estimatedDays: service.estimated_days,
-          includesInsurance: false,
-          trackingAvailable: true
-        })
+      return {
+        id: p.id,
+        code: p.code,
+        name: p.name,
+        logo_url: p.logo_url || undefined,
+        is_active: p.is_active ?? true,
+        services: dbServices.map((s, idx) => ({
+          id: String(s.id || `${p.code}-${idx}`),
+          name: String(s.name || 'Standard'),
+          base_cost: Number(s.base_cost || 0),
+          estimated_days: String(s.estimated_days || '3-5 hari'),
+          tracking_available: Boolean(s.tracking_available ?? true),
+          includes_insurance: Boolean(s.includes_insurance ?? false),
+          regional_pricing: s.regional_pricing as import('@/lib/shipping').RegionalPricing[] | undefined,
+          display_order: Number(s.display_order ?? idx),
+        })),
+        display_order: p.display_order ?? 0,
       }
+    })
+
+    // Calculate shipping with regional pricing
+    const results = calculator.calculateShipping(
+      {
+        destination: {
+          state: destination.state,
+          country: destination.country,
+          postalCode: destination.postalCode,
+          city: destination.city,
+        },
+        weight: chargeableWeight,
+        dimensions,
+        region: region !== 'unknown' ? region : undefined,
+      },
+      formattedProviders as import('@/lib/shipping').ShippingProvider[]
+    )
+
+    // Convert to ShippingOption format
+    for (const result of results) {
+      options.push({
+        courier: result.providerCode,
+        service: `${result.providerName} - ${result.serviceName}`,
+        cost: result.cost,
+        currency: result.currency as Currency,
+        estimatedDays: result.estimatedDays,
+        includesInsurance: result.includesInsurance,
+        trackingAvailable: result.trackingAvailable,
+      })
     }
     
-    // Sort by cost
-    options.sort((a, b) => a.cost - b.cost)
     return options
   }
 

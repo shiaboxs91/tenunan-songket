@@ -1,5 +1,12 @@
 import { createClient } from './client'
 import type { Tables } from './types'
+import {
+  sanitizeText,
+  sanitizePhone,
+  sanitizePostalCode,
+  sanitizeAddress,
+  trimWhitespace,
+} from '@/lib/validation/sanitization'
 
 export type Address = Tables<'addresses'>
 
@@ -81,14 +88,58 @@ export async function getDefaultAddress(): Promise<Address | null> {
   return data
 }
 
+/**
+ * Sanitize address input before database operations
+ * Requirement 3.4: Sanitize all inputs before database storage
+ */
+function sanitizeAddressInput(input: Partial<AddressInput>): Partial<AddressInput> {
+  const sanitized: Partial<AddressInput> = {}
+  
+  if (input.label !== undefined) {
+    sanitized.label = sanitizeText(input.label)
+  }
+  if (input.recipient_name !== undefined) {
+    sanitized.recipient_name = sanitizeText(input.recipient_name)
+  }
+  if (input.phone !== undefined) {
+    sanitized.phone = sanitizePhone(input.phone)
+  }
+  if (input.address_line1 !== undefined) {
+    sanitized.address_line1 = sanitizeAddress(input.address_line1)
+  }
+  if (input.address_line2 !== undefined) {
+    sanitized.address_line2 = input.address_line2 ? sanitizeAddress(input.address_line2) : undefined
+  }
+  if (input.city !== undefined) {
+    sanitized.city = sanitizeText(input.city)
+  }
+  if (input.state !== undefined) {
+    sanitized.state = sanitizeText(input.state)
+  }
+  if (input.postal_code !== undefined) {
+    sanitized.postal_code = sanitizePostalCode(input.postal_code)
+  }
+  if (input.country !== undefined) {
+    sanitized.country = trimWhitespace(input.country)
+  }
+  if (input.is_default !== undefined) {
+    sanitized.is_default = input.is_default
+  }
+  
+  return sanitized
+}
+
 export async function createAddress(input: AddressInput): Promise<Address | null> {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) return null
 
+  // Sanitize input before saving - Requirement 3.4
+  const sanitizedInput = sanitizeAddressInput(input) as AddressInput
+
   // If this is the first address or marked as default, handle default logic
-  if (input.is_default) {
+  if (sanitizedInput.is_default) {
     await clearDefaultAddress()
   }
 
@@ -100,16 +151,16 @@ export async function createAddress(input: AddressInput): Promise<Address | null
     .from('addresses')
     .insert({
       user_id: user.id,
-      label: input.label,
-      recipient_name: input.recipient_name,
-      phone: input.phone,
-      address_line1: input.address_line1,
-      address_line2: input.address_line2,
-      city: input.city,
-      state: input.state,
-      postal_code: input.postal_code,
-      country: input.country || 'Indonesia',
-      is_default: input.is_default || isFirstAddress,
+      label: sanitizedInput.label,
+      recipient_name: sanitizedInput.recipient_name,
+      phone: sanitizedInput.phone,
+      address_line1: sanitizedInput.address_line1,
+      address_line2: sanitizedInput.address_line2,
+      city: sanitizedInput.city,
+      state: sanitizedInput.state,
+      postal_code: sanitizedInput.postal_code,
+      country: sanitizedInput.country || 'Indonesia',
+      is_default: sanitizedInput.is_default || isFirstAddress,
     })
     .select()
     .single()
@@ -128,24 +179,27 @@ export async function updateAddress(id: string, input: Partial<AddressInput>): P
   
   if (!user) return null
 
+  // Sanitize input before saving - Requirement 3.4
+  const sanitizedInput = sanitizeAddressInput(input)
+
   // If setting as default, clear other defaults first
-  if (input.is_default) {
+  if (sanitizedInput.is_default) {
     await clearDefaultAddress()
   }
 
   const { data, error } = await supabase
     .from('addresses')
     .update({
-      label: input.label,
-      recipient_name: input.recipient_name,
-      phone: input.phone,
-      address_line1: input.address_line1,
-      address_line2: input.address_line2,
-      city: input.city,
-      state: input.state,
-      postal_code: input.postal_code,
-      country: input.country,
-      is_default: input.is_default,
+      label: sanitizedInput.label,
+      recipient_name: sanitizedInput.recipient_name,
+      phone: sanitizedInput.phone,
+      address_line1: sanitizedInput.address_line1,
+      address_line2: sanitizedInput.address_line2,
+      city: sanitizedInput.city,
+      state: sanitizedInput.state,
+      postal_code: sanitizedInput.postal_code,
+      country: sanitizedInput.country,
+      is_default: sanitizedInput.is_default,
     })
     .eq('id', id)
     .eq('user_id', user.id)

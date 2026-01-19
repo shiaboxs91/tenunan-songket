@@ -187,6 +187,12 @@ export default function CheckoutPage() {
                 <AddressSelector
                   selectedAddressId={selectedAddress?.id}
                   onSelect={handleAddressSelect}
+                  onAddressUpdated={(updatedAddress) => {
+                    // Update selected address if it was the one edited
+                    if (selectedAddress?.id === updatedAddress.id) {
+                      setSelectedAddress(updatedAddress);
+                    }
+                  }}
                 />
                 
                 <div className="mt-6 pt-4 border-t">

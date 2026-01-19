@@ -13,6 +13,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AddressForm, AddressList } from "@/components/profile";
+import { CountryProvider } from "@/contexts/CountryContext";
+import { useToast } from "@/components/ui/Toast";
 import { createClient } from "@/lib/supabase/client";
 import { getAddresses, type Address } from "@/lib/supabase/addresses";
 import { getProfile } from "@/lib/supabase/profiles";
@@ -20,6 +22,7 @@ import { signOut } from "@/lib/supabase/auth";
 
 export default function AddressesPage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [userName, setUserName] = useState("");
@@ -67,22 +70,37 @@ export default function AddressesPage() {
     setIsDialogOpen(true);
   };
 
-  const handleSuccess = async () => {
+  const handleSuccess = async (savedAddress: Address) => {
     setIsDialogOpen(false);
+    const wasEditing = editingAddress !== null;
     setEditingAddress(null);
+    
     // Refresh addresses
     const updated = await getAddresses();
     setAddresses(updated);
+    
+    // Show success toast - Requirement 13.1, 13.4
+    if (wasEditing) {
+      if (savedAddress.is_default) {
+        showToast("Alamat utama berhasil diperbarui!", "success");
+      } else {
+        showToast("Alamat berhasil diperbarui!", "success");
+      }
+    } else {
+      showToast("Alamat baru berhasil ditambahkan!", "success");
+    }
   };
 
   const handleDelete = async () => {
     const updated = await getAddresses();
     setAddresses(updated);
+    showToast("Alamat berhasil dihapus", "success");
   };
 
   const handleSetDefault = async () => {
     const updated = await getAddresses();
     setAddresses(updated);
+    showToast("Alamat utama berhasil diubah", "success");
   };
 
   if (isLoading) {
@@ -175,11 +193,13 @@ export default function AddressesPage() {
               {editingAddress ? "Edit Alamat" : "Tambah Alamat Baru"}
             </DialogTitle>
           </DialogHeader>
-          <AddressForm
-            address={editingAddress}
-            onSuccess={handleSuccess}
-            onCancel={() => setIsDialogOpen(false)}
-          />
+          <CountryProvider initialCountry={editingAddress?.country as any || 'BN'}>
+            <AddressForm
+              address={editingAddress}
+              onSuccess={handleSuccess}
+              onCancel={() => setIsDialogOpen(false)}
+            />
+          </CountryProvider>
         </DialogContent>
       </Dialog>
     </div>

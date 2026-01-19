@@ -148,11 +148,18 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
 
 // Mobile Header with Menu Button
 export function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
+  const handleClick = () => {
+    console.log('Hamburger menu clicked!')
+    onMenuClick()
+  }
+
   return (
     <div className="lg:hidden bg-amber-800 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-30">
       <button
-        onClick={onMenuClick}
+        type="button"
+        onClick={handleClick}
         className="p-2 hover:bg-amber-700 rounded-lg transition-colors"
+        aria-label="Toggle menu"
       >
         <Menu className="h-6 w-6" />
       </button>

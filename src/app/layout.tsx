@@ -83,7 +83,7 @@ export default async function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className="antialiased">
+      <body className="antialiased" suppressHydrationWarning>
         <IntlProvider locale={locale} messages={messages as Record<string, unknown>}>
           {children}
         </IntlProvider>

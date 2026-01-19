@@ -58,9 +58,7 @@ export default async function AdminDashboard() {
             Selamat datang di panel admin Tenunan Songket
           </p>
         </div>
-        <div className="text-sm text-gray-500">
-          Terakhir diperbarui: {new Date().toLocaleString('id-ID')}
-        </div>
+        {/* Time stamp removed to prevent hydration mismatch */}
       </div>
 
       {/* Stats Cards with Revenue Comparison */}

@@ -1,4 +1,4 @@
-import { createClient } from './client'
+import { getSupabaseClient } from './client'
 import type { User, Session } from '@supabase/supabase-js'
 
 export interface AuthResponse {
@@ -18,7 +18,7 @@ export async function signUp(
   password: string,
   metadata?: UserMetadata
 ): Promise<AuthResponse> {
-  const supabase = createClient()
+  const supabase = getSupabaseClient()
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -39,7 +39,7 @@ export async function signIn(
   email: string,
   password: string
 ): Promise<AuthResponse> {
-  const supabase = createClient()
+  const supabase = getSupabaseClient()
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -54,7 +54,7 @@ export async function signIn(
 }
 
 export async function signInWithGoogle(): Promise<{ error: Error | null }> {
-  const supabase = createClient()
+  const supabase = getSupabaseClient()
 
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -67,7 +67,7 @@ export async function signInWithGoogle(): Promise<{ error: Error | null }> {
 }
 
 export async function signInWithFacebook(): Promise<{ error: Error | null }> {
-  const supabase = createClient()
+  const supabase = getSupabaseClient()
 
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'facebook',
@@ -80,7 +80,7 @@ export async function signInWithFacebook(): Promise<{ error: Error | null }> {
 }
 
 export async function signInWithApple(): Promise<{ error: Error | null }> {
-  const supabase = createClient()
+  const supabase = getSupabaseClient()
 
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'apple',
@@ -93,13 +93,13 @@ export async function signInWithApple(): Promise<{ error: Error | null }> {
 }
 
 export async function signOut(): Promise<{ error: Error | null }> {
-  const supabase = createClient()
+  const supabase = getSupabaseClient()
   const { error } = await supabase.auth.signOut()
   return { error: error as Error | null }
 }
 
 export async function resetPassword(email: string): Promise<{ error: Error | null }> {
-  const supabase = createClient()
+  const supabase = getSupabaseClient()
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/auth/reset-password`,
@@ -109,7 +109,7 @@ export async function resetPassword(email: string): Promise<{ error: Error | nul
 }
 
 export async function updatePassword(newPassword: string): Promise<{ error: Error | null }> {
-  const supabase = createClient()
+  const supabase = getSupabaseClient()
 
   const { error } = await supabase.auth.updateUser({
     password: newPassword,
@@ -119,13 +119,13 @@ export async function updatePassword(newPassword: string): Promise<{ error: Erro
 }
 
 export async function getSession(): Promise<Session | null> {
-  const supabase = createClient()
+  const supabase = getSupabaseClient()
   const { data } = await supabase.auth.getSession()
   return data.session
 }
 
 export async function getUser(): Promise<User | null> {
-  const supabase = createClient()
+  const supabase = getSupabaseClient()
   const { data } = await supabase.auth.getUser()
   return data.user
 }
@@ -133,6 +133,6 @@ export async function getUser(): Promise<User | null> {
 export function onAuthStateChange(
   callback: (event: string, session: Session | null) => void
 ) {
-  const supabase = createClient()
+  const supabase = getSupabaseClient()
   return supabase.auth.onAuthStateChange(callback)
 }

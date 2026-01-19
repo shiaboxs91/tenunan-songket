@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, Loader2, Mail } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signIn, signInWithGoogle, signInWithFacebook } from "@/lib/supabase/auth";
-import { createClient } from "@/lib/supabase/client";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 interface LoginFormProps {
   redirectTo?: string;
@@ -19,7 +19,12 @@ export function LoginForm({ redirectTo = "/" }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  
+  // UI States
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [loadingText, setLoadingText] = useState("Memverifikasi...");
+  
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isFacebookLoading, setIsFacebookLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,11 +33,13 @@ export function LoginForm({ redirectTo = "/" }: LoginFormProps) {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+    setLoadingText("Memverifikasi kredensial...");
 
     try {
       const { user, error: authError } = await signIn(email, password);
       
       if (authError) {
+        setIsLoading(false);
         if (authError.message.includes("Invalid login")) {
           setError("Email atau password salah");
         } else if (authError.message.includes("Email not confirmed")) {
@@ -43,14 +50,26 @@ export function LoginForm({ redirectTo = "/" }: LoginFormProps) {
         return;
       }
 
-      // Check if user is admin and redirect accordingly
       if (user) {
-        const supabase = createClient();
+        setLoadingText("Login berhasil! Memeriksa akses...");
+        
+        // Use singleton client to avoid race conditions
+        const supabase = getSupabaseClient();
+        
+        // Add a small delay for better UX (so user sees "Login berhasil")
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')
           .eq('user_id', user.id)
           .single();
+
+        setLoadingText("Mengalihkan ke dashboard...");
+        setIsSuccess(true);
+        
+        // Another small delay for the success state
+        await new Promise(resolve => setTimeout(resolve, 500));
 
         if (profile?.role === 'admin') {
           router.push('/admin');
@@ -63,9 +82,8 @@ export function LoginForm({ redirectTo = "/" }: LoginFormProps) {
       
       router.refresh();
     } catch {
-      setError("Terjadi kesalahan. Silakan coba lagi");
-    } finally {
       setIsLoading(false);
+      setError("Terjadi kesalahan. Silakan coba lagi");
     }
   };
 
@@ -77,10 +95,10 @@ export function LoginForm({ redirectTo = "/" }: LoginFormProps) {
       const { error: authError } = await signInWithGoogle();
       if (authError) {
         setError(authError.message);
+        setIsGoogleLoading(false);
       }
     } catch {
       setError("Gagal login dengan Google");
-    } finally {
       setIsGoogleLoading(false);
     }
   };
@@ -93,13 +111,41 @@ export function LoginForm({ redirectTo = "/" }: LoginFormProps) {
       const { error: authError } = await signInWithFacebook();
       if (authError) {
         setError(authError.message);
+        setIsFacebookLoading(false);
       }
     } catch {
       setError("Gagal login dengan Facebook");
-    } finally {
       setIsFacebookLoading(false);
     }
   };
+
+  // Modern Loading View
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[300px] space-y-6 animate-in fade-in duration-500">
+        <div className="relative">
+          {isSuccess ? (
+            <div className="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full animate-in zoom-in duration-300">
+              <CheckCircle2 className="w-8 h-8 text-green-600" />
+            </div>
+          ) : (
+            <div className="relative flex items-center justify-center w-16 h-16">
+              <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
+              <div className="absolute inset-0 rounded-full border-4 border-t-primary animate-spin" />
+            </div>
+          )}
+        </div>
+        <div className="text-center space-y-2">
+          <h3 className="text-lg font-medium text-foreground">
+            {isSuccess ? "Berhasil Masuk" : "Mohon Tunggu"}
+          </h3>
+          <p className="text-sm text-muted-foreground animate-pulse">
+            {loadingText}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -164,14 +210,7 @@ export function LoginForm({ redirectTo = "/" }: LoginFormProps) {
         </div>
 
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Masuk...
-            </>
-          ) : (
-            "Masuk"
-          )}
+          Masuk
         </Button>
       </form>
 

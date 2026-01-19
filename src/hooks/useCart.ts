@@ -31,7 +31,7 @@ interface UseCartReturn {
   isAuthenticated: boolean;
   
   // Actions
-  addItem: (productId: string, quantity?: number) => Promise<void>;
+  addItem: (productOrId: string | Product, quantity?: number) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -211,8 +211,12 @@ export function useCart(): UseCartReturn {
   }, [isAuthenticated, userId, supabase]);
 
   // Add item to cart
-  const addItem = useCallback(async (productId: string, quantity: number = 1) => {
+  const addItem = useCallback(async (productOrId: string | Product, quantity: number = 1) => {
     setError(null);
+    
+    // Resolve productId and product object
+    const productId = typeof productOrId === "string" ? productOrId : productOrId.id;
+    const productObj = typeof productOrId !== "string" ? productOrId : null;
 
     if (isAuthenticated && userId) {
       // Optimistic update
@@ -261,24 +265,57 @@ export function useCart(): UseCartReturn {
         ? JSON.parse(stored) 
         : { items: [], lastUpdated: new Date().toISOString() };
 
-      // Fetch product data
-      const { data: product } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", productId)
-        .single();
+      // Use provided product object OR fetch if missing
+      let product = productObj;
+
+      if (!product) {
+          const { data: fetchedProduct } = await supabase
+            .from("products")
+            .select("*")
+            .eq("id", productId)
+            .single();
+            
+          if (fetchedProduct) {
+             // Convert DB product to Frontend Product (simplified)
+             product = {
+                 id: fetchedProduct.id,
+                 slug: fetchedProduct.slug,
+                 title: fetchedProduct.title,
+                 description: fetchedProduct.description || "",
+                 image: "", // Will Fetch below
+                 price: Number(fetchedProduct.price),
+                 currency: "IDR",
+                 category: "Songket",
+                 tags: [],
+                 inStock: (fetchedProduct.stock || 0) > 0,
+                 rating: Number(fetchedProduct.average_rating) || 0,
+                 sold: fetchedProduct.sold || 0,
+                 sourceUrl: "",
+             }
+          }
+      }
 
       if (!product) {
         setError("Produk tidak ditemukan");
         return;
       }
 
-      // Fetch product images separately
-      const { data: productImages } = await supabase
-        .from("product_images")
-        .select("*")
-        .eq("product_id", productId)
-        .order("display_order", { ascending: true });
+      // If we don't have an image yet (passed product might have it, fetched might not)
+      let imageUrl = product.image;
+      if (!imageUrl || imageUrl === "") {
+           const { data: productImages } = await supabase
+            .from("product_images")
+            .select("*")
+            .eq("product_id", productId)
+            .order("display_order", { ascending: true });
+            
+           imageUrl = productImages?.find((img) => img.is_primary)?.url 
+              || productImages?.[0]?.url 
+              || "/images/placeholder-product.svg";
+      }
+      
+      // Ensure product has image
+      const productWithImage = { ...product, image: imageUrl };
 
       const existingIndex = localCart.items.findIndex(
         (item) => item.product.id === productId
@@ -287,27 +324,7 @@ export function useCart(): UseCartReturn {
       if (existingIndex >= 0) {
         localCart.items[existingIndex].quantity += quantity;
       } else {
-        // Convert to frontend Product format
-        const primaryImage = productImages?.find((img) => img.is_primary)?.url 
-          || productImages?.[0]?.url 
-          || "/images/placeholder-product.svg";
-        
-        const frontendProduct: Product = {
-          id: product.id,
-          slug: product.slug,
-          title: product.title,
-          description: product.description || "",
-          image: primaryImage,
-          price: Number(product.price),
-          currency: "IDR",
-          category: "Songket",
-          tags: [],
-          inStock: (product.stock || 0) > 0,
-          rating: Number(product.average_rating) || 0,
-          sold: product.sold || 0,
-          sourceUrl: "",
-        };
-        localCart.items.push({ product: frontendProduct, quantity });
+        localCart.items.push({ product: productWithImage, quantity });
       }
 
       localCart.lastUpdated = new Date().toISOString();

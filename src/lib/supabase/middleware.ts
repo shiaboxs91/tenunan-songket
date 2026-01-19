@@ -45,7 +45,7 @@ export async function createMiddlewareClient(request: NextRequest) {
  */
 export const PROTECTED_ROUTES = [
   '/account',
-  '/checkout',
+  // '/checkout', // Checkout should be accessible to guests
   '/orders',
   '/wishlist',
 ]

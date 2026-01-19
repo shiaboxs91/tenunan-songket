@@ -55,8 +55,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Wrapper for addItem to support both Product object and productId string
   const addItem = async (productOrId: Product | string, quantity: number = 1) => {
-    const productId = typeof productOrId === "string" ? productOrId : productOrId.id;
-    await addItemById(productId, quantity);
+    // Pass through directly to hook which now handles both types
+    await addItemById(productOrId, quantity);
   };
 
   return (

@@ -25,16 +25,13 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
-  // Check authentication
+  // Check authentication (optional now)
   useEffect(() => {
     async function checkAuth() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       setIsAuthenticated(!!user);
-      
-      if (!user) {
-        router.push("/login?redirect=/checkout");
-      }
+      // Removed forced redirect to login
     }
     checkAuth();
   }, [router]);
@@ -127,7 +124,7 @@ export default function CheckoutPage() {
   };
 
   // Loading state
-  if (isAuthenticated === null || cartLoading) {
+  if (cartLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

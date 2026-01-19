@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { cookies } from "next/headers";
 import { getMessages } from "next-intl/server";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 import { IntlProvider } from "@/components/providers/IntlProvider";
 import { defaultLocale, locales, type Locale } from "@/i18n/config";
 import "./globals.css";
@@ -87,6 +88,7 @@ export default async function RootLayout({
           {children}
         </IntlProvider>
         <SpeedInsights />
+        <Analytics />
         {/* Defer service worker registration */}
         <script
           dangerouslySetInnerHTML={{

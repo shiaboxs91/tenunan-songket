@@ -31,7 +31,23 @@ export function ProductReviews({ productId, productRating, totalReviews = 0 }: P
     setIsLoading(true);
     const result = await getProductReviews(productId, 1, 5);
     setReviews(result.data);
-    setRatingDist(getRatingDistribution(result.data));
+    
+    // If we have "fake" stats (productRating > 0) but no actual reviews,
+    // we need to fake the distribution to match the visual rating.
+    if (result.data.length === 0 && productRating > 0 && totalReviews > 0) {
+        // Generate a distribution that roughly matches the 4.8 rating
+        // Mostly 5 stars, some 4 stars.
+        setRatingDist({
+            1: 0,
+            2: 0,
+            3: 0,
+            4: Math.floor(totalReviews * 0.2), // 20% 4 stars
+            5: Math.ceil(totalReviews * 0.8)   // 80% 5 stars
+        });
+    } else {
+        setRatingDist(getRatingDistribution(result.data));
+    }
+    
     setIsLoading(false);
   };
 

@@ -4,6 +4,8 @@ import { cookies } from "next/headers";
 import { getMessages } from "next-intl/server";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
+import { Toaster } from "sonner";
+// import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { IntlProvider } from "@/components/providers/IntlProvider";
 import { defaultLocale, locales, type Locale } from "@/i18n/config";
 import "./globals.css";
@@ -84,9 +86,11 @@ export default async function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="antialiased" suppressHydrationWarning>
-        <IntlProvider locale={locale} messages={messages as Record<string, unknown>}>
-          {children}
-        </IntlProvider>
+        {/* <NuqsAdapter> */}
+          <IntlProvider locale={locale} messages={messages as Record<string, unknown>}>
+            {children}
+          </IntlProvider>
+        {/* </NuqsAdapter> */}
         <SpeedInsights />
         <Analytics />
         {/* Defer service worker registration */}
@@ -103,6 +107,7 @@ export default async function RootLayout({
             `,
           }}
         />
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );

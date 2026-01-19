@@ -106,7 +106,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     .single()
 
   if (error) {
-    console.error('Error fetching product:', error)
+    // console.error('Error fetching product:', error)
     return null
   }
 

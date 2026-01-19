@@ -4,12 +4,14 @@ import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { ProductReviews } from "@/components/product/ProductReviews";
 import { StickyProductCTA } from "@/components/product/StickyProductCTA";
-import { AddToCartButton } from "./AddToCartButton";
+import { ProductActions } from "@/components/product/ProductActions";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils";
 import { getProductBySlug, getProductsByCategory } from "@/lib/supabase/products";
 import { toFrontendProduct, toFrontendProducts } from "@/lib/supabase/adapters";
 import { Product } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
 
 interface ProductDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -42,7 +44,9 @@ export default async function ProductDetailPage({
   params,
 }: ProductDetailPageProps) {
   const { slug } = await params;
-  const { product, images } = await getProduct(slug);
+  const decodedSlug = decodeURIComponent(slug);
+  
+  const { product, images } = await getProduct(decodedSlug);
 
   if (!product) {
     notFound();
@@ -106,25 +110,11 @@ export default async function ProductDetailPage({
             </div>
           )}
 
-          {/* Variant Selector (Demo) */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium">Pilih Motif</label>
-            <div className="flex flex-wrap gap-2">
-              {["Original", "Lepus", "Nago Besaung", "Bungo Mawar"].map(
-                (motif) => (
-                  <button
-                    key={motif}
-                    className="px-4 py-2 text-sm border rounded-md hover:border-primary hover:text-primary transition-colors first:border-primary first:text-primary"
-                  >
-                    {motif}
-                  </button>
-                )
-              )}
-            </div>
-          </div>
-
-          {/* Add to Cart Buttons */}
-          <AddToCartButton product={product} />
+          {/* Product Actions (Variant + Cart) */}
+          <ProductActions 
+            product={product} 
+            variants={["Original", "Lepus", "Nago Besaung", "Bungo Mawar"]} 
+          />
 
           {/* Trust Badges */}
           <div className="grid grid-cols-3 gap-4 pt-4">

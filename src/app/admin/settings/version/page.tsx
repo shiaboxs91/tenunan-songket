@@ -9,7 +9,7 @@ import {
   Loader2,
   AlertTriangle,
   Star,
-  Trash2,
+
   Calendar,
   FileText
 } from 'lucide-react'
@@ -157,27 +157,7 @@ export default function VersionManagementPage() {
     }
   }
 
-  const handleDelete = async (id: string, isCurrent: boolean) => {
-    if (isCurrent) {
-      setError('Tidak dapat menghapus versi yang sedang aktif')
-      return
-    }
 
-    if (!confirm('Yakin ingin menghapus versi ini?')) return
-
-    try {
-      const { error } = await supabase
-        .from('app_versions')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
-      setSuccess('Versi berhasil dihapus')
-      fetchVersions()
-    } catch (err) {
-      setError('Gagal menghapus versi')
-    }
-  }
 
   const resetForm = () => {
     setFormData({
@@ -328,13 +308,7 @@ export default function VersionManagementPage() {
                     >
                       {version.is_mandatory ? 'Wajib' : 'Opsional'}
                     </button>
-                    <button
-                      onClick={() => handleDelete(version.id, version.is_current)}
-                      disabled={version.is_current}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
+
                   </div>
                 </div>
               </div>

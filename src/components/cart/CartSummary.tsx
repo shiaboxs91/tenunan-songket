@@ -15,6 +15,7 @@ interface CartSummaryProps {
   showTax?: boolean;
   taxRate?: number;
   shippingCost?: number;
+  totalWeight?: number;
   showCheckoutButton?: boolean;
   checkoutHref?: string;
   compact?: boolean;
@@ -39,6 +40,7 @@ export function CartSummary({
   showTax = true,
   taxRate = 0.11,
   shippingCost,
+  totalWeight,
   showCheckoutButton = true,
   checkoutHref = "/checkout",
   compact = false,
@@ -49,10 +51,14 @@ export function CartSummary({
   onCouponApplied,
   onCouponRemoved,
 }: CartSummaryProps) {
-  const shipping = shippingCost ?? (summary.itemCount > 0 ? 50000 : 0);
+  const shipping = shippingCost ?? 0;
   const discount = appliedCoupon?.discountAmount || summary.discount || 0;
   const subtotalAfterDiscount = Math.max(0, summary.subtotal - discount);
   const tax = showTax ? Math.round(subtotalAfterDiscount * taxRate) : 0;
+  
+  // Only add shipping to total if it's explicitly explicitly provided/calculated
+  // If no shipping cost provided, we assume it's TBD at checkout, so don't include in total yet?
+  // OR if shippingCost is provided (even if 0), use it.
   const total = subtotalAfterDiscount + (showShipping ? shipping : 0) + tax;
 
   if (compact) {
@@ -124,9 +130,16 @@ export function CartSummary({
         )}
         
         {showShipping && (
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Ongkos Kirim</span>
-            <span>{formatPrice(shipping)}</span>
+          <div className="space-y-1">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Est. Ongkos Kirim</span>
+              <span>{formatPrice(shipping)}</span>
+            </div>
+            {totalWeight !== undefined && totalWeight > 0 && (
+              <div className="text-xs text-muted-foreground text-right">
+                Berat: {totalWeight.toFixed(1)} kg
+              </div>
+            )}
           </div>
         )}
         

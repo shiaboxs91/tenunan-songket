@@ -27,6 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { toast } from 'sonner'
 import { createProduct, updateProduct, deleteProduct, type Product } from '@/lib/supabase/products-client'
 import { getCategories, type Category } from '@/lib/supabase/categories-client'
 
@@ -118,14 +119,16 @@ export function ProductForm({ product }: ProductFormProps) {
 
       if (product) {
         await updateProduct(product.id, productData)
+        toast.success('Produk berhasil diperbarui')
       } else {
         await createProduct(productData)
+        toast.success('Produk berhasil ditambahkan')
       }
 
       router.push('/admin/products')
     } catch (error) {
       console.error('Error saving product:', error)
-      alert('Gagal menyimpan produk. Silakan coba lagi.')
+      toast.error('Gagal menyimpan produk. Silakan coba lagi.')
     } finally {
       setLoading(false)
     }
@@ -137,10 +140,11 @@ export function ProductForm({ product }: ProductFormProps) {
     setDeleting(true)
     try {
       await deleteProduct(product.id)
+      toast.success('Produk berhasil dihapus')
       router.push('/admin/products')
     } catch (error) {
       console.error('Error deleting product:', error)
-      alert('Gagal menghapus produk. Silakan coba lagi.')
+      toast.error('Gagal menghapus produk. Silakan coba lagi.')
     } finally {
       setDeleting(false)
     }

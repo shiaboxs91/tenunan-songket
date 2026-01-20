@@ -138,6 +138,11 @@ export function CartItem({
                 Sisa {stock} item
               </p>
             )}
+            {product?.weight && (
+               <p className="text-xs text-muted-foreground mt-1">
+                 Berat: {product.weight} kg
+               </p>
+            )}
           </div>
 
           <Button

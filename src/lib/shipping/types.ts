@@ -50,6 +50,8 @@ export interface ShippingService {
   includes_insurance: boolean;
   /** Regional pricing overrides - if present, used instead of base_cost */
   regional_pricing?: RegionalPricing[];
+  /** Optional cost per kilogram to override default flat rate multiplier */
+  cost_per_kg?: number;
   /** Display order for sorting */
   display_order: number;
 }

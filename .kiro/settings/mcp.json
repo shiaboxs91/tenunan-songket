@@ -1,0 +1,40 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "browser_navigate",
+        "browser_take_screenshot",
+        "browser_snapshot",
+        "browser_click",
+        "browser_type",
+        "browser_evaluate",
+        "browser_console_messages",
+        "browser_press_key",
+        "browser_wait_for",
+        "browser_run_code",
+        "browser_fill_form",
+        "browser_network_requests",
+        "browser_select_option"
+      ]
+    },
+    "vercel": {
+      "url": "https://mcp.vercel.com",
+      "disabled": false,
+      "autoApprove": [
+        "list_projects",
+        "list_teams",
+        "list_deployments",
+        "get_deployment_build_logs",
+        "get_project",
+        "get_deployment",
+        "web_fetch_vercel_url",
+        "search_vercel_documentation"
+      ]
+    }
+  }
+}

@@ -133,11 +133,15 @@ export class ShippingCalculator {
       };
     }
 
-    // Fallback to base cost with simple weight multiplier
-    const cost = service.base_cost + (service.base_cost * 0.1 * weight);
+    // Fallback to base cost with weight multiplier
+    // If service has specific cost_per_kg, use that. Otherwise use 10% of base_cost as default multiplier
+    const weightMultiplier = service.cost_per_kg ?? (service.base_cost * 0.1);
+    const cost = service.base_cost + (weightMultiplier * weight);
+    
     return {
       cost: Math.max(cost, 0),
       usedRegionalPricing: false,
+      costPerKg: service.cost_per_kg
     };
   }
 

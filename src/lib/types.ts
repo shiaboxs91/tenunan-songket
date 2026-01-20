@@ -12,6 +12,7 @@ export type Product = {
   inStock: boolean;
   rating: number;
   sold: number;
+  weight?: number;
   createdAt?: string;
   sourceUrl: string;
 };

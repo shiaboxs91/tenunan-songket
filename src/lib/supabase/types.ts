@@ -1054,6 +1054,7 @@ export interface ShippingService {
   name: string
   estimated_days: string
   base_cost: number
+  cost_per_kg?: number
 }
 
 export interface ShippingProvider {

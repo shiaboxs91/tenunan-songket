@@ -291,6 +291,7 @@ export function useCart(): UseCartReturn {
                  rating: Number(fetchedProduct.average_rating) || 0,
                  sold: fetchedProduct.sold || 0,
                  sourceUrl: "",
+                 weight: Number(fetchedProduct.weight) || 0.5,
              }
           }
       }
@@ -582,7 +583,7 @@ function convertLocalCartToSupabaseFormat(localCart: LocalCartState): CartWithIt
         stock: item.product.inStock ? 10 : 0,
         reserved_stock: 0,
         sold: item.product.sold,
-        weight: 0.5,
+        weight: (item.product as any).weight || 0.5, // Use stored weight
         dimensions: null,
         average_rating: item.product.rating,
         review_count: 0,

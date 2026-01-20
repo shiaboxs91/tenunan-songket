@@ -167,7 +167,7 @@ export default function ShippingSettingsPage() {
   const addService = () => {
     setFormData({
       ...formData,
-      services: [...formData.services, { code: '', name: '', estimated_days: '', base_cost: 0 }]
+      services: [...formData.services, { code: '', name: '', estimated_days: '', base_cost: 0, cost_per_kg: 0 }]
     })
   }
 
@@ -355,7 +355,7 @@ export default function ShippingSettingsPage() {
                 <div className="space-y-3">
                   {formData.services.map((service, index) => (
                     <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
                         <input
                           type="text"
                           placeholder="Kode"
@@ -380,10 +380,18 @@ export default function ShippingSettingsPage() {
                         <div className="flex gap-1">
                           <input
                             type="number"
-                            placeholder="Biaya"
+                            placeholder="Biaya Dasar"
                             value={service.base_cost}
                             onChange={(e) => updateService(index, 'base_cost', parseInt(e.target.value) || 0)}
                             className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded"
+                          />
+                          <input
+                            type="number"
+                            placeholder="Biaya/Kg"
+                            value={service.cost_per_kg || 0}
+                            onChange={(e) => updateService(index, 'cost_per_kg', parseInt(e.target.value) || 0)}
+                            className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded"
+                            title="Biaya per Kg (Opsional)"
                           />
                           <button
                             type="button"

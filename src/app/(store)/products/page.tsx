@@ -34,6 +34,27 @@ export default function ProductsPage() {
     activeFilterCount,
   } = useProductFilters();
 
+  // Fetch categories with counts - Requirement 3.2
+  const [categories, setCategories] = useState<(string | { name: string; slug: string; count: number })[]>(
+    PRODUCT_CATEGORIES as unknown as string[]
+  );
+
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const response = await fetch("/api/categories");
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
+    }
+
+    fetchCategories();
+  }, []);
+
   const page = useMemo(() => 
     searchParams.get("page") ? Number(searchParams.get("page")) : 1,
     [searchParams]
@@ -48,6 +69,10 @@ export default function ProductsPage() {
         if (hookFilters.q) params.set("q", hookFilters.q);
         // Support multiple categories (comma-separated)
         if (hookFilters.categories.length > 0) {
+          // If we have category objects, we might need to map them back to slugs or names depending on what filters.categories stores.
+          // Currently filters.categories stores names (e.g. "Si Pugut").
+          // The API expects slugs usually, but currently the frontend uses names. 
+          // Let's assume names are consistent.
           params.set("category", hookFilters.categories.join(","));
         }
         if (hookFilters.minPrice !== null) params.set("min", hookFilters.minPrice.toString());
@@ -113,7 +138,7 @@ export default function ProductsPage() {
               filters={hookFilters}
               onFilterChange={setHookFilters}
               onReset={resetHookFilters}
-              categories={PRODUCT_CATEGORIES as unknown as string[]}
+              categories={categories}
             />
           </div>
         </aside>

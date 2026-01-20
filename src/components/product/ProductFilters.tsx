@@ -10,11 +10,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
+export interface CategoryWithCount {
+  name: string;
+  slug: string;
+  count: number;
+}
+
 interface ProductFiltersProps {
   filters: FilterState;
   onFilterChange: (filters: FilterState) => void;
   onReset: () => void;
-  categories?: string[];
+  categories?: (string | CategoryWithCount)[];
 }
 
 /**
@@ -26,6 +32,7 @@ interface ProductFiltersProps {
  * - Stock availability toggle (3.4)
  * - Reset button (3.6)
  * - Active filter count badge (3.7)
+ * - Category counts display
  */
 export function ProductFilters({
   filters,
@@ -58,6 +65,14 @@ export function ProductFilters({
       ...filters,
       categories: newCategories,
     });
+  };
+
+  // Helper to get category name and display label
+  const getCategoryInfo = (cat: string | CategoryWithCount) => {
+    if (typeof cat === 'string') {
+      return { name: cat, label: cat };
+    }
+    return { name: cat.name, label: `${cat.name} [${cat.count}]` };
   };
 
   // Handle price input blur - Requirement 3.3
@@ -174,24 +189,27 @@ export function ProductFilters({
       {/* Category Filter - Requirement 3.2 */}
       <div className="space-y-3">
         <Label className="text-sm font-medium">Kategori</Label>
-        <div className="space-y-2 max-h-[200px] overflow-y-auto">
-          {categories.map((category) => (
-            <div key={category} className="flex items-center space-x-2">
-              <Checkbox
-                id={`category-${category}`}
-                checked={filters.categories.includes(category)}
-                onCheckedChange={(checked) =>
-                  handleCategoryToggle(category, checked as boolean)
-                }
-              />
-              <Label
-                htmlFor={`category-${category}`}
-                className="text-sm font-normal cursor-pointer"
-              >
-                {category}
-              </Label>
-            </div>
-          ))}
+        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+          {categories.map((cat) => {
+            const { name, label } = getCategoryInfo(cat);
+            return (
+              <div key={name} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`category-${name}`}
+                  checked={filters.categories.includes(name)}
+                  onCheckedChange={(checked) =>
+                    handleCategoryToggle(name, checked as boolean)
+                  }
+                />
+                <Label
+                  htmlFor={`category-${name}`}
+                  className="text-sm font-normal cursor-pointer flex-1"
+                >
+                  {label}
+                </Label>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -254,3 +272,4 @@ export function ProductFilters({
     </div>
   );
 }
+

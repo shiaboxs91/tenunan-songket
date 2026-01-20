@@ -356,3 +356,42 @@ export async function getProductsClient(filters: ProductFilters & { includeInact
 
   return (data || []) as unknown as Product[]
 }
+
+export async function getCategoryCounts(): Promise<{ name: string; slug: string; count: number }[]> {
+  const supabase = await createClient()
+
+  // Get all active categories
+  const { data: categories, error: categoryError } = await supabase
+    .from('categories')
+    .select('id, name, slug')
+    .eq('is_active', true)
+    .order('display_order', { ascending: true })
+
+  if (categoryError) {
+    console.error('Error fetching categories:', categoryError)
+    return []
+  }
+
+  // Get product counts for each category
+  // Note: This could be optimized with a raw RPC or view, but for now we'll do it purely via query
+  const counts: { name: string; slug: string; count: number }[] = []
+
+  for (const category of categories) {
+    const { count, error: countError } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('category_id', category.id)
+      .eq('is_active', true)
+      .eq('is_deleted', false)
+
+    if (!countError) {
+      counts.push({
+        name: category.name,
+        slug: category.slug,
+        count: count || 0
+      })
+    }
+  }
+
+  return counts
+}

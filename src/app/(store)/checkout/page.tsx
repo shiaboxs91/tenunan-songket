@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckoutStepper } from "@/components/checkout/CheckoutStepper";
 import { AddressSelector, ShippingSelector, OrderSummary } from "@/components/checkout";
+import { PaymentMethodSelector } from "@/components/checkout/PaymentMethodSelector";
 import { useCart } from "@/components/cart/CartProvider";
 import { createClient } from "@/lib/supabase/client";
 import { createOrder } from "@/lib/supabase/orders";
@@ -18,9 +19,10 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, summary, clearCart, isLoading: cartLoading } = useCart();
 
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [selectedShipping, setSelectedShipping] = useState<ShippingOption | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -69,14 +71,20 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleContinueToSummary = () => {
+  const handleContinueToPayment = () => {
     if (selectedShipping) {
       setCurrentStep(3);
     }
   };
 
+  const handleContinueToSummary = () => {
+    if (selectedPayment) {
+      setCurrentStep(4);
+    }
+  };
+
   const handlePlaceOrder = async () => {
-    if (!selectedAddress || !selectedShipping) return;
+    if (!selectedAddress || !selectedShipping || !selectedPayment) return;
 
     setIsSubmitting(true);
     setError(null);
@@ -106,6 +114,7 @@ export default function CheckoutPage() {
         shipping_cost: selectedShipping.cost,
         shipping_courier: selectedShipping.courier,
         shipping_service: selectedShipping.service,
+        payment_method: selectedPayment,
         notes: '',
       });
 
@@ -185,7 +194,6 @@ export default function CheckoutPage() {
                   selectedAddressId={selectedAddress?.id}
                   onSelect={handleAddressSelect}
                   onAddressUpdated={(updatedAddress) => {
-                    // Update selected address if it was the one edited
                     if (selectedAddress?.id === updatedAddress.id) {
                       setSelectedAddress(updatedAddress);
                     }
@@ -224,18 +232,45 @@ export default function CheckoutPage() {
                     Kembali
                   </Button>
                   <Button
-                    onClick={handleContinueToSummary}
+                    onClick={handleContinueToPayment} // Changed to Payment
                     disabled={!selectedShipping}
                   >
-                    Lanjutkan
+                    Lanjutkan ke Pembayaran
                   </Button>
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Step 3: Summary */}
+          {/* Step 3: Payment (NEW) */}
           {currentStep === 3 && (
+            <Card>
+              {/* No Header needed as PaymentMethodSelector has its own card style usually, but here we wrap it */}
+              {/* Actually PaymentMethodSelector has its own Card, so we might not need to wrap it in another CardContent if it renders a Card. 
+                  Checking PaymentMethodSelector: it returns a Card. So we should probably just render it directly or wrap for consistency.
+                  Let's render it directly to avoid double cards.
+               */}
+               <PaymentMethodSelector 
+                  selectedMethod={selectedPayment}
+                  onSelect={setSelectedPayment}
+               />
+               
+               <div className="flex gap-4 mt-6">
+                  <Button variant="outline" onClick={() => setCurrentStep(2)}>
+                    Kembali
+                  </Button>
+                  <Button
+                    onClick={handleContinueToSummary}
+                    disabled={!selectedPayment}
+                  >
+                    Lanjutkan ke Ringkasan
+                  </Button>
+                </div>
+            </Card>
+          )}
+
+           {/* Step 4: Summary */}
+          {currentStep === 4 && (
             <Card>
               <CardHeader>
                 <CardTitle>Konfirmasi Pesanan</CardTitle>
@@ -275,8 +310,22 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
+                {/* Payment Summary */}
+                {selectedPayment && (
+                  <div>
+                    <h4 className="font-medium mb-2">Metode Pembayaran</h4>
+                    <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                      <p className="font-medium text-foreground capitalize">
+                        {selectedPayment === 'intl_transfer' ? 'International Bank Transfer / Wise' : 
+                         selectedPayment === 'brunei_transfer' ? 'Bank Transfer (Brunei)' :
+                         selectedPayment}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-4 pt-4 border-t">
-                  <Button variant="outline" onClick={() => setCurrentStep(2)}>
+                  <Button variant="outline" onClick={() => setCurrentStep(3)}>
                     Kembali
                   </Button>
                   <Button

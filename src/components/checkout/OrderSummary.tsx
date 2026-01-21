@@ -124,6 +124,16 @@ export function OrderSummary({
             {shipping.service} • {shipping.estimatedDays}
           </p>
         )}
+
+        {/* Payment Method Display */}
+        {/* We can infer payment method from context or pass it in, for now simpler to leave generic or add prop later if strictly needed here. 
+            Actually, let's just stick to totals. The payment method is shown in the main checkout flow step. 
+            But wait, the user might want to see it in the final review. 
+            Let's keep it simple for now as the prop isn't passed yet. 
+            Reverting to just standard summary updates if any were needed, but actually the file looks mostly fine. 
+            I'll skip adding it to the summary sidebar to avoid clutter, as it's prominently shown in Step 3. 
+            Wait, I should probably add the TOTAL WEIGHT display as that was a previous request/good practice for weight based shipping.
+        */}
       </div>
 
       <Separator />

@@ -4,13 +4,14 @@ import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CheckoutStepperProps {
-  currentStep: 1 | 2 | 3;
+  currentStep: 1 | 2 | 3 | 4;
 }
 
 const steps = [
   { number: 1, title: "Alamat" },
   { number: 2, title: "Pengiriman" },
-  { number: 3, title: "Ringkasan" },
+  { number: 3, title: "Pembayaran" },
+  { number: 4, title: "Ringkasan" },
 ];
 
 export function CheckoutStepper({ currentStep }: CheckoutStepperProps) {

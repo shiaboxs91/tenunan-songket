@@ -16,7 +16,8 @@ import {
   GitBranch,
   Shield,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  Images
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
@@ -26,6 +27,7 @@ interface MenuItem {
   href: string
   icon: React.ElementType
   badge?: number
+  exactMatch?: boolean
 }
 
 interface MenuGroup {
@@ -66,7 +68,8 @@ const menuGroups: MenuGroup[] = [
     items: [
       { name: 'Ekspedisi', href: '/admin/settings/shipping', icon: Truck },
       { name: 'Pembayaran', href: '/admin/settings/payments', icon: CreditCard },
-      { name: 'Situs', href: '/admin/settings', icon: Settings },
+      { name: 'Situs', href: '/admin/settings', icon: Settings, exactMatch: true },
+      { name: 'Slider', href: '/admin/settings/hero', icon: Images },
       { name: 'Versi', href: '/admin/settings/version', icon: GitBranch }
     ]
   }
@@ -93,52 +96,34 @@ export function AdminSidebar() {
     )
   }
 
-  const isActive = (href: string) => {
+  const isActive = (item: MenuItem) => {
+    // If exact match is required
+    if (item.exactMatch) {
+      return pathname === item.href
+    }
+    
     // Exact match
-    if (pathname === href) return true
+    if (pathname === item.href) return true
     
     // Sub-route match (ensure it starts with href + /)
     // This prevents /admin/settings/shipping from matching /admin/settings
-    if (pathname.startsWith(`${href}/`)) return true
+    if (pathname.startsWith(`${item.href}/`)) return true
     
     return false
   }
 
   return (
     <div className="w-64 bg-gradient-to-b from-amber-900 via-amber-800 to-amber-900 min-h-screen flex flex-col">
-      {/* Logo Section */}
-      <div className="p-6 border-b border-amber-700/50">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">TS</span>
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-white">Tenunan Songket</h1>
-            <p className="text-xs text-amber-300">Panel Admin</p>
-          </div>
-        </div>
-      </div>
-      
-      {/* Navigation */}
+      {/* ... */}
       <nav className="flex-1 py-4 overflow-y-auto">
         {menuGroups.map((group) => (
           <div key={group.title} className="mb-2">
-            <button
-              onClick={() => toggleGroup(group.title)}
-              className="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-amber-400 uppercase tracking-wider hover:text-amber-300 transition-colors"
-            >
-              {group.title}
-              <ChevronDown 
-                className={`h-4 w-4 transition-transform ${
-                  expandedGroups.includes(group.title) ? 'rotate-180' : ''
-                }`} 
-              />
-            </button>
+            {/* ... */}
             
             {expandedGroups.includes(group.title) && (
               <div className="mt-1 space-y-1 px-3">
                 {group.items.map((item) => {
-                  const active = isActive(item.href)
+                  const active = isActive(item)
                   return (
                     <Link
                       key={item.name}

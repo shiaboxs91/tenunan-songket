@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash, GripVertical, Save, Image as ImageIcon } from "lucide-react";
+import { Plus, Trash, GripVertical, Save, Image as ImageIcon, Pencil, ArrowUpFromLine } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -201,22 +201,45 @@ export default function HeroSliderPage() {
                         <h3 className="text-lg font-bold">{slide.title}</h3>
                         {slide.description && <p className="text-sm text-muted-foreground line-clamp-2">{slide.description}</p>}
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => setEditingSlide(slide)}>
-                            <Save className="h-4 w-4" /> {/* Actually 'Edit' icon would be better but keeping simple */}
-                            <span className="sr-only">Edit</span>
+                     <div className="flex items-center gap-2">
+                        {/* Quick Toggle Switch */}
+                        <div className="flex items-center gap-2 mr-4 bg-slate-50 px-2 py-1 rounded-full border">
+                            <Switch 
+                                checked={slide.is_active} 
+                                onCheckedChange={async (checked) => {
+                                    // Optimistic update
+                                    const updatedSlides = slides.map(s => s.id === slide.id ? { ...s, is_active: checked } : s);
+                                    setSlides(updatedSlides);
+                                    
+                                    try {
+                                        await upsertHeroSlide({ ...slide, is_active: checked });
+                                        toast.success(`Slide ${checked ? 'diaktifkan' : 'dinonaktifkan'}`);
+                                    } catch (e) {
+                                        toast.error("Gagal mengubah status");
+                                        fetchSlides(); // Revert on error
+                                    }
+                                }}
+                            />
+                            <span className={`text-xs font-medium ${slide.is_active ? 'text-green-600' : 'text-slate-400'}`}>
+                                {slide.is_active ? 'Aktif' : 'Non-aktif'}
+                            </span>
+                        </div>
+
+                        <Button variant="outline" size="sm" onClick={() => setEditingSlide(slide)}>
+                            <Pencil className="h-4 w-4 mr-1" /> 
+                            Edit
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(slide.id)}>
+                        <Button variant="destructive" size="sm" onClick={() => handleDelete(slide.id)}>
                             <Trash className="h-4 w-4" />
                         </Button>
                     </div>
                  </div>
                  <div className="mt-2 flex items-center gap-4 text-sm">
-                    <span className={`px-2 py-0.5 rounded-full text-xs ${slide.is_active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'}`}>
-                        {slide.is_active ? 'Aktif' : 'Non-aktif'}
+                    <span className="text-slate-500 bg-slate-100 px-2 py-0.5 rounded text-xs flex items-center gap-1">
+                        <ArrowUpFromLine className="w-3 h-3" />
+                        Urutan: {slide.order_index}
                     </span>
-                    <span className="text-slate-500">Urutan: {slide.order_index}</span>
-                    {slide.cta_link && <span className="text-blue-600 truncate max-w-[200px]">{slide.cta_link}</span>}
+                    {slide.cta_link && <span className="text-blue-600 truncate max-w-[200px] text-xs bg-blue-50 px-2 py-0.5 rounded">{slide.cta_link}</span>}
                  </div>
               </div>
             </div>

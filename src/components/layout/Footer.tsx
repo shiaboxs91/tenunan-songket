@@ -275,7 +275,7 @@ export function Footer() {
               © {new Date().getFullYear()} TenunanSongket. {t("copyright")}
             </p>
             <p className="text-[10px] md:text-xs text-slate-400">
-              Demo frontend - Transaksi simulasi
+              v1.2.0
             </p>
           </div>
         </div>

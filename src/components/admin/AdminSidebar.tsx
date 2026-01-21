@@ -172,7 +172,7 @@ export function AdminSidebar() {
       <div className="p-4 border-t border-amber-700/50">
         <div className="mb-3 px-3">
           <p className="text-xs text-amber-400">Versi Aplikasi</p>
-          <p className="text-sm text-amber-200 font-medium">v1.0.0</p>
+          <p className="text-sm text-amber-200 font-medium">v1.2.0</p>
         </div>
         
         <button

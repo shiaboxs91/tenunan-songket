@@ -373,11 +373,19 @@ export function AddressForm({ address, onSuccess, onCancel }: AddressFormProps) 
       if (result) {
         onSuccess?.(result);
       } else {
-        setError("Failed to save address");
+        setError("Gagal menyimpan alamat. Silakan coba lagi.");
       }
     } catch (err) {
       console.error('Address save error:', err);
-      setError("An error occurred while saving the address");
+      if (err instanceof Error) {
+        if (err.message === 'NOT_AUTHENTICATED' || err.message === 'AUTH_ERROR') {
+          setError("Anda harus login untuk menyimpan alamat. Silakan login terlebih dahulu.");
+        } else {
+          setError("Terjadi kesalahan saat menyimpan alamat. Silakan coba lagi.");
+        }
+      } else {
+        setError("Terjadi kesalahan saat menyimpan alamat. Silakan coba lagi.");
+      }
     } finally {
       setIsLoading(false);
     }

@@ -387,6 +387,8 @@ export type Database = {
           delivered_at: string | null
           discount: number | null
           exchange_rate: number | null
+          guest_email: string | null
+          guest_phone: string | null
           id: string
           insurance_cost: number | null
           notes: string | null
@@ -399,7 +401,7 @@ export type Database = {
           subtotal: number
           total: number
           updated_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           billing_address?: Json | null
@@ -412,6 +414,8 @@ export type Database = {
           delivered_at?: string | null
           discount?: number | null
           exchange_rate?: number | null
+          guest_email?: string | null
+          guest_phone?: string | null
           id?: string
           insurance_cost?: number | null
           notes?: string | null
@@ -424,7 +428,7 @@ export type Database = {
           subtotal: number
           total: number
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           billing_address?: Json | null
@@ -437,6 +441,8 @@ export type Database = {
           delivered_at?: string | null
           discount?: number | null
           exchange_rate?: number | null
+          guest_email?: string | null
+          guest_phone?: string | null
           id?: string
           insurance_cost?: number | null
           notes?: string | null
@@ -449,7 +455,7 @@ export type Database = {
           subtotal?: number
           total?: number
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }

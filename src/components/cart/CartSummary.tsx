@@ -159,9 +159,15 @@ export function CartSummary({
           <span className="text-primary">{formatPrice(total)}</span>
         </div>
         
-        <p className="text-xs text-muted-foreground">
-          * Ongkos kirim dan pajak bersifat estimasi
-        </p>
+{(showShipping || showTax) && (
+          <p className="text-xs text-muted-foreground">
+            * {showShipping && showTax 
+                ? 'Ongkos kirim dan pajak bersifat estimasi' 
+                : showShipping 
+                  ? 'Ongkos kirim bersifat estimasi'
+                  : 'Pajak bersifat estimasi'}
+          </p>
+        )}
       </CardContent>
       
       {showCheckoutButton && summary.itemCount > 0 && (

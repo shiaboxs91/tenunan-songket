@@ -7,12 +7,11 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckoutStepper } from "@/components/checkout/CheckoutStepper";
-import { AddressSelector, ShippingSelector, OrderSummary } from "@/components/checkout";
+import { CheckoutAddressSection, ShippingSelector, OrderSummary, type CheckoutAddress } from "@/components/checkout";
 import { PaymentMethodSelector } from "@/components/checkout/PaymentMethodSelector";
 import { useCart } from "@/components/cart/CartProvider";
 import { createClient } from "@/lib/supabase/client";
 import { createOrder } from "@/lib/supabase/orders";
-import type { Address } from "@/lib/supabase/addresses";
 import type { ShippingOption, ShippingAddress } from "@/lib/supabase/shipping";
 
 export default function CheckoutPage() {
@@ -20,7 +19,7 @@ export default function CheckoutPage() {
   const { items, summary, clearCart, isLoading: cartLoading } = useCart();
 
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
-  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState<CheckoutAddress | null>(null);
   const [selectedShipping, setSelectedShipping] = useState<ShippingOption | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,8 +43,8 @@ export default function CheckoutPage() {
     return acc + (weight * item.quantity);
   }, 0);
 
-  // Convert Address to ShippingAddress format
-  const getShippingAddress = (address: Address): ShippingAddress => ({
+  // Convert CheckoutAddress to ShippingAddress format
+  const getShippingAddress = (address: CheckoutAddress): ShippingAddress => ({
     recipientName: address.recipient_name,
     phone: address.phone,
     addressLine1: address.address_line1,
@@ -56,7 +55,7 @@ export default function CheckoutPage() {
     country: address.country,
   });
 
-  const handleAddressSelect = (address: Address) => {
+  const handleAddressSelect = (address: CheckoutAddress) => {
     setSelectedAddress(address);
     setSelectedShipping(null); // Reset shipping when address changes
   };
@@ -85,6 +84,16 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     if (!selectedAddress || !selectedShipping || !selectedPayment) return;
+
+    // Check if user is authenticated
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // For guest checkout, require email
+    if (!user && !selectedAddress.email) {
+      setError("Email diperlukan untuk checkout sebagai tamu.");
+      return;
+    }
 
     setIsSubmitting(true);
     setError(null);
@@ -116,10 +125,14 @@ export default function CheckoutPage() {
         shipping_service: selectedShipping.service,
         payment_method: selectedPayment,
         notes: '',
+        guest_email: !user ? selectedAddress.email : undefined,
       });
 
       if (order) {
-        await clearCart();
+        // Only clear server cart for authenticated users (guest cart is local)
+        if (user) {
+          await clearCart();
+        }
         router.push(`/checkout/success?order=${order.order_number}`);
       } else {
         setError("Gagal membuat pesanan. Silakan coba lagi.");
@@ -187,17 +200,12 @@ export default function CheckoutPage() {
           {currentStep === 1 && (
             <Card>
               <CardHeader>
-                <CardTitle>Pilih Alamat Pengiriman</CardTitle>
+                <CardTitle>Alamat Pengiriman</CardTitle>
               </CardHeader>
               <CardContent>
-                <AddressSelector
-                  selectedAddressId={selectedAddress?.id}
-                  onSelect={handleAddressSelect}
-                  onAddressUpdated={(updatedAddress) => {
-                    if (selectedAddress?.id === updatedAddress.id) {
-                      setSelectedAddress(updatedAddress);
-                    }
-                  }}
+                <CheckoutAddressSection
+                  selectedAddress={selectedAddress}
+                  onAddressSelect={handleAddressSelect}
                 />
                 
                 <div className="mt-6 pt-4 border-t">
@@ -320,6 +328,17 @@ export default function CheckoutPage() {
                          selectedPayment === 'brunei_transfer' ? 'Bank Transfer (Brunei)' :
                          selectedPayment}
                       </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Guest Email Display */}
+                {isAuthenticated === false && selectedAddress?.email && (
+                  <div>
+                    <h4 className="font-medium mb-2">Email Konfirmasi</h4>
+                    <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                      <p className="text-foreground">{selectedAddress.email}</p>
+                      <p className="text-xs mt-1">Konfirmasi pesanan akan dikirim ke email ini</p>
                     </div>
                   </div>
                 )}

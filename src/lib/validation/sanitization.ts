@@ -64,11 +64,10 @@ export function sanitizeText(value: string): string {
  * 
  * Requirements:
  * - 3.1: Remove potentially harmful characters
- * - 3.3: Preserve hyphens for phone formatting
  * - 3.5: Trim whitespace
  * 
  * @param value - The phone number string to sanitize
- * @returns The sanitized phone number
+ * @returns The sanitized phone number (digits and plus sign only)
  */
 export function sanitizePhone(value: string): string {
   if (!value) return '';
@@ -76,8 +75,8 @@ export function sanitizePhone(value: string): string {
   // Trim whitespace (Requirement 3.5)
   let sanitized = value.trim();
 
-  // Allow only digits, plus sign, and hyphens
-  sanitized = sanitized.replace(/[^\d+\-]/g, '');
+  // Allow only digits and plus sign (no hyphens)
+  sanitized = sanitized.replace(/[^\d+]/g, '');
 
   return sanitized;
 }

@@ -152,8 +152,7 @@ export default function CartPage() {
             summary={summary}
             showCoupon={true}
             userId={userId}
-            shippingCost={estimatedShipping}
-            totalWeight={totalWeight}
+            showShipping={false}
             appliedCoupon={appliedCoupon ? {
               code: appliedCoupon.code,
               discountAmount: appliedCoupon.discountAmount

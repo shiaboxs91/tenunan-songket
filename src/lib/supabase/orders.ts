@@ -4,7 +4,7 @@ import { createNotification } from './notifications'
 
 export type Order = Tables<'orders'>
 export type OrderItem = Tables<'order_items'>
-export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+export type OrderStatus = 'pending_payment' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'completed' | 'cancelled' | 'refunded'
 
 export interface OrderWithItems extends Order {
   items: (OrderItem & {
@@ -37,8 +37,10 @@ export interface CreateOrderInput {
   shipping_cost: number
   shipping_courier: string
   shipping_service: string
+  payment_method?: string
   notes?: string
   currency?: string
+  guest_email?: string
 }
 
 export interface OrderFilters {
@@ -146,7 +148,12 @@ export async function createOrder(input: CreateOrderInput): Promise<Order | null
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   
-  if (!user) return null
+  // For guest checkout, require guest_email
+  const isGuestCheckout = !user
+  if (isGuestCheckout && !input.guest_email) {
+    console.error('Guest checkout requires email')
+    return null
+  }
 
   if (!input.items || input.items.length === 0) {
     console.error('No items provided')
@@ -172,22 +179,37 @@ export async function createOrder(input: CreateOrderInput): Promise<Order | null
     country: input.shipping_address.country,
   }
 
-  // Create order
-  const { data: order, error: orderError } = await supabase
-    .from('orders')
-    .insert({
-      user_id: user.id,
-      status: 'pending',
-      subtotal,
-      shipping_cost: input.shipping_cost,
-      discount: 0,
-      total,
-      currency: input.currency || 'IDR',
-      shipping_address: shippingAddress,
-      notes: input.notes || null,
-    })
-    .select()
-    .single()
+  // Build order data - conditionally include user_id or guest fields
+  const baseOrderData = {
+    status: 'pending_payment' as const,
+    subtotal,
+    shipping_cost: input.shipping_cost,
+    discount: 0,
+    total,
+    currency: input.currency || 'BND',
+    shipping_address: shippingAddress,
+    notes: input.notes || null,
+  }
+
+  // Create order with user_id or guest fields
+  const { data: order, error: orderError } = user
+    ? await supabase
+        .from('orders')
+        .insert({
+          ...baseOrderData,
+          user_id: user.id,
+        })
+        .select()
+        .single()
+    : await supabase
+        .from('orders')
+        .insert({
+          ...baseOrderData,
+          guest_email: input.guest_email,
+          guest_phone: input.shipping_address.phone,
+        })
+        .select()
+        .single()
 
   if (orderError) {
     console.error('Error creating order:', orderError)
@@ -208,14 +230,16 @@ export async function createOrder(input: CreateOrderInput): Promise<Order | null
         subtotal: item.price * item.quantity,
       })
 
-    // Reserve inventory
-    await supabase.rpc('reserve_inventory', {
-      p_product_id: item.product_id,
-      p_quantity: item.quantity,
-      p_reference_id: order.id,
-      p_reference_type: 'order',
-      p_user_id: user.id,
-    })
+    // Reserve inventory (only for authenticated users - guest orders skip RPC)
+    if (user) {
+      await supabase.rpc('reserve_inventory', {
+        p_product_id: item.product_id,
+        p_quantity: item.quantity,
+        p_reference_id: order.id,
+        p_reference_type: 'order',
+        p_user_id: user.id,
+      })
+    }
   }
 
   // Create shipping record
@@ -228,28 +252,30 @@ export async function createOrder(input: CreateOrderInput): Promise<Order | null
       cost: input.shipping_cost,
     })
 
-  // Clear user's cart
-  const { data: cart } = await supabase
-    .from('carts')
-    .select('id')
-    .eq('user_id', user.id)
-    .single()
+  // Clear user's cart (only for authenticated users)
+  if (user) {
+    const { data: cart } = await supabase
+      .from('carts')
+      .select('id')
+      .eq('user_id', user.id)
+      .single()
 
-  if (cart) {
-    await supabase
-      .from('cart_items')
-      .delete()
-      .eq('cart_id', cart.id)
+    if (cart) {
+      await supabase
+        .from('cart_items')
+        .delete()
+        .eq('cart_id', cart.id)
+    }
+
+    // Create notification for new order
+    await createNotification(
+      user.id,
+      'order_created',
+      'Pesanan Berhasil Dibuat',
+      `Pesanan ${order.order_number} telah berhasil dibuat. Silakan lakukan pembayaran.`,
+      { order_id: order.id, order_number: order.order_number }
+    )
   }
-
-  // Create notification for new order
-  await createNotification(
-    user.id,
-    'order_created',
-    'Pesanan Berhasil Dibuat',
-    `Pesanan ${order.order_number} telah berhasil dibuat. Silakan lakukan pembayaran.`,
-    { order_id: order.id, order_number: order.order_number }
-  )
 
   return order
 }
@@ -264,9 +290,9 @@ export async function cancelOrder(orderId: string): Promise<boolean> {
   const order = await getOrderById(orderId)
   if (!order) return false
 
-  // Only pending orders can be cancelled
-  if (order.status !== 'pending') {
-    console.error('Only pending orders can be cancelled')
+  // Only pending_payment orders can be cancelled
+  if (order.status !== 'pending_payment') {
+    console.error('Only pending payment orders can be cancelled')
     return false
   }
 
@@ -325,9 +351,9 @@ export async function getOrderStats(): Promise<{
 
   const stats = {
     total: data.length,
-    pending: data.filter(o => o.status === 'pending').length,
-    processing: data.filter(o => ['confirmed', 'processing', 'shipped'].includes(o.status || '')).length,
-    completed: data.filter(o => o.status === 'delivered').length,
+    pending: data.filter(o => o.status === 'pending_payment').length,
+    processing: data.filter(o => ['paid', 'processing', 'shipped'].includes(o.status || '')).length,
+    completed: data.filter(o => ['delivered', 'completed'].includes(o.status || '')).length,
   }
 
   return stats

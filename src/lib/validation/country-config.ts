@@ -47,9 +47,9 @@ export interface CountryConfig {
 export const bruneiConfig: CountryConfig = {
   code: 'BN',
   name: 'Brunei Darussalam',
-  // Phone: +673-XXX-XXXX or XXX-XXXX
-  phonePattern: /^\+673-\d{3}-\d{4}$|^\d{3}-\d{4}$/,
-  phoneExample: '+673-123-4567',
+  // Phone: +673XXXXXXX or XXXXXXX (7 digits)
+  phonePattern: /^\+673\d{7}$|^\d{7}$/,
+  phoneExample: '+6731234567',
   // Postal code: XX1234 (2 letters + 4 digits)
   postalCodePattern: /^[A-Z]{2}\d{4}$/,
   postalCodeExample: 'BB1234',
@@ -60,7 +60,7 @@ export const bruneiConfig: CountryConfig = {
     phone: 'Nombor Telefon',
   },
   helperText: {
-    phone: 'Format: +673-XXX-XXXX atau XXX-XXXX',
+    phone: 'Format: +673XXXXXXX atau XXXXXXX',
     postalCode: 'Format: XX1234 (contoh: BB1234)',
   },
 };
@@ -72,9 +72,9 @@ export const bruneiConfig: CountryConfig = {
 export const malaysiaConfig: CountryConfig = {
   code: 'MY',
   name: 'Malaysia',
-  // Phone: +60XX-XXXXXXX or +60X-XXXXXXXX
-  phonePattern: /^\+60\d{1,2}-\d{7,8}$/,
-  phoneExample: '+603-12345678',
+  // Phone: +60XXXXXXXXX (10-11 digits after +60)
+  phonePattern: /^\+60\d{9,10}$/,
+  phoneExample: '+60312345678',
   // Postal code: 5 digits
   postalCodePattern: /^\d{5}$/,
   postalCodeExample: '50000',
@@ -85,7 +85,7 @@ export const malaysiaConfig: CountryConfig = {
     phone: 'Nombor Telefon',
   },
   helperText: {
-    phone: 'Format: +60XX-XXXXXXX',
+    phone: 'Format: +60XXXXXXXXX',
     postalCode: 'Format: 5 digit (contoh: 50000)',
   },
 };
@@ -97,9 +97,9 @@ export const malaysiaConfig: CountryConfig = {
 export const singaporeConfig: CountryConfig = {
   code: 'SG',
   name: 'Singapore',
-  // Phone: +65-XXXX-XXXX
-  phonePattern: /^\+65-\d{4}-\d{4}$/,
-  phoneExample: '+65-1234-5678',
+  // Phone: +65XXXXXXXX (8 digits after +65)
+  phonePattern: /^\+65\d{8}$/,
+  phoneExample: '+6512345678',
   // Postal code: 6 digits
   postalCodePattern: /^\d{6}$/,
   postalCodeExample: '123456',
@@ -110,7 +110,7 @@ export const singaporeConfig: CountryConfig = {
     phone: 'Phone Number',
   },
   helperText: {
-    phone: 'Format: +65-XXXX-XXXX',
+    phone: 'Format: +65XXXXXXXX',
     postalCode: 'Format: 6 digits (e.g., 123456)',
   },
 };
@@ -122,9 +122,9 @@ export const singaporeConfig: CountryConfig = {
 export const indonesiaConfig: CountryConfig = {
   code: 'ID',
   name: 'Indonesia',
-  // Phone: +62XX-XXXXXX to +62XXX-XXXXXXXX
-  phonePattern: /^\+62\d{2,3}-\d{6,8}$/,
-  phoneExample: '+6221-12345678',
+  // Phone: +62XXXXXXXXXX (9-12 digits after +62)
+  phonePattern: /^\+62\d{9,12}$/,
+  phoneExample: '+622112345678',
   // Postal code: 5 digits
   postalCodePattern: /^\d{5}$/,
   postalCodeExample: '12345',
@@ -135,7 +135,7 @@ export const indonesiaConfig: CountryConfig = {
     phone: 'Nomor Telepon',
   },
   helperText: {
-    phone: 'Format: +62XX-XXXXXXXX',
+    phone: 'Format: +62XXXXXXXXXX',
     postalCode: 'Format: 5 digit (contoh: 12345)',
   },
 };

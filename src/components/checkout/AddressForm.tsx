@@ -30,7 +30,7 @@ export function validateAddress(address: Partial<ShippingAddress>): FormErrors {
 
   if (!address.phone?.trim()) {
     errors.phone = "Nomor telepon wajib diisi";
-  } else if (!/^[0-9+\-\s]{10,15}$/.test(address.phone.trim())) {
+  } else if (!/^[0-9+]{10,15}$/.test(address.phone.trim())) {
     errors.phone = "Format nomor telepon tidak valid";
   }
 
@@ -116,7 +116,7 @@ export function AddressForm({ initialData, onSubmit }: AddressFormProps) {
             name="phone"
             value={formData.phone || ""}
             onChange={handleChange}
-            placeholder="08xxxxxxxxxx"
+            placeholder="+6731234567"
             className={errors.phone ? "border-destructive" : ""}
           />
           {errors.phone && (

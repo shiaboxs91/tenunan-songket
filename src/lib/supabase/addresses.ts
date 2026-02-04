@@ -131,9 +131,17 @@ function sanitizeAddressInput(input: Partial<AddressInput>): Partial<AddressInpu
 
 export async function createAddress(input: AddressInput): Promise<Address | null> {
   const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
   
-  if (!user) return null
+  if (authError) {
+    console.error('Auth error in createAddress:', authError.message)
+    throw new Error('AUTH_ERROR')
+  }
+  
+  if (!user) {
+    console.error('No authenticated user in createAddress')
+    throw new Error('NOT_AUTHENTICATED')
+  }
 
   // Sanitize input before saving - Requirement 3.4
   const sanitizedInput = sanitizeAddressInput(input) as AddressInput
@@ -166,7 +174,7 @@ export async function createAddress(input: AddressInput): Promise<Address | null
     .single()
 
   if (error) {
-    console.error('Error creating address:', error)
+    console.error('Error creating address:', error.message, error.details, error.hint)
     return null
   }
 

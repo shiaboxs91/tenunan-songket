@@ -1,5 +1,105 @@
 # Changelog
 
+## 2026-02-05 - Address Form UX Improvements
+
+### Summary
+Enhanced the address forms (GuestAddressForm and AddressForm) with improved UX:
+- Grouped Malaysia state dropdown by region (Semenanjung/Sabah/Sarawak)
+- 2-column layout on desktop for related fields
+- Better field ordering per country
+
+### Changes Made
+
+#### 1. Malaysia Data (`src/lib/data/address/malaysia.json`)
+- Added `region` field to each state (semenanjung, sabah, sarawak)
+
+#### 2. Address Helpers (`src/lib/data/address/index.ts`)
+- Added `MalaysiaRegionCode` type
+- Added `MALAYSIA_REGIONS` constant with display names
+- Added `getMalaysiaStatesByRegion()` - returns states grouped by region
+- Added `getMalaysiaRegion(stateCode)` - gets region for a state
+- Updated `MalaysiaState` interface to include `region` field
+
+#### 3. GuestAddressForm (`src/components/checkout/GuestAddressForm.tsx`)
+- **Malaysia grouped dropdown**: Native `<select>` with `<optgroup>` for region grouping
+- **2-column layout**: Phone & Email side by side on desktop
+- **Brunei 2-column**: District & Mukim side by side on desktop
+- **Malaysia 2-column**: City & Postcode side by side on desktop
+- **Field ordering**: Country → Location fields → Address → Details → Postcode
+
+#### 4. AddressForm (`src/components/profile/AddressForm.tsx`)
+- Same UX improvements as GuestAddressForm
+- **Malaysia grouped dropdown**: Native `<select>` with region groupings
+- **2-column layouts**: District/Mukim and City/Postcode pairs
+- Improved placeholder text for dependent fields
+
+### Layout Summary
+
+**Malaysia:**
+| Desktop | Mobile |
+|---------|--------|
+| State (full width, grouped) | State |
+| City | Postcode | City |
+| Address | Postcode |
+| Details | Address |
+| | Details |
+
+**Brunei:**
+| Desktop | Mobile |
+|---------|--------|
+| District | Mukim | District |
+| Kampong (optional) | Mukim |
+| Address | Kampong |
+| Details | Address |
+| Postcode | Details |
+| | Postcode |
+
+### Files Modified
+- `src/lib/data/address/malaysia.json`
+- `src/lib/data/address/index.ts`
+- `src/components/checkout/GuestAddressForm.tsx`
+- `src/components/profile/AddressForm.tsx`
+
+---
+
+## 2026-02-05 - AddressForm Cascading Dropdowns
+
+### Summary
+Updated the profile AddressForm component to use cascading dropdowns for country-specific address fields, matching the GuestAddressForm implementation.
+
+### Changes Made
+
+#### 1. AddressForm (`src/components/profile/AddressForm.tsx`)
+- **Added cascading dropdown imports**: Integrated address data helpers from `@/lib/data/address`
+- **Extended form state**: Added `mukim` and `kampong` fields for Brunei-specific addresses
+- **Memoized dropdown data**: Efficient data loading for Brunei districts/mukims/kampongs and Malaysia states/cities
+- **Malaysia postcode auto-detect**: Automatically fills state and city when 5-digit postcode is entered
+- **Country-specific UI**:
+  - **Brunei**: District → Mukim → Kampong (optional) cascading dropdowns
+  - **Malaysia**: Postcode → State → City cascading dropdowns
+  - **Singapore**: Simplified form with just postal code (no state needed)
+- **Updated validation logic**: Handles Brunei mukim requirement and Singapore state exemption
+- **Code-to-name conversion**: Stores human-readable names (e.g., "Brunei-Muara", "Sabah") instead of codes
+- **Reverse lookup on edit**: Converts stored names back to dropdown codes when editing existing addresses
+
+### Shipping Compatibility
+- Verified that shipping cost calculation (`stateToRegion()`) works with both:
+  - State codes: `JHR`, `SBH`, `SWK`, `BM`, etc.
+  - State names: `Johor`, `Sabah`, `Sarawak`, `Brunei-Muara`, etc.
+- No changes needed to shipping calculation logic
+
+### Files Modified
+- `src/components/profile/AddressForm.tsx`
+
+### Related Files (Previously Created)
+- `src/lib/data/address/index.ts` - Helper functions
+- `src/lib/data/address/brunei.json` - Brunei address data
+- `src/lib/data/address/malaysia.json` - Malaysia address data
+- `src/lib/data/address/singapore.json` - Singapore address data
+- `src/components/checkout/GuestAddressForm.tsx` - Reference implementation
+
+---
+
 ## 2026-02-05 - Guest Checkout Implementation Complete
 
 ### Summary

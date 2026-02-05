@@ -38,6 +38,8 @@ export interface BruneiData {
 }
 
 // Malaysia types
+export type MalaysiaRegionCode = 'semenanjung' | 'sabah' | 'sarawak';
+
 export interface MalaysiaCity {
   name: string;
   postcodes: string[];
@@ -46,6 +48,7 @@ export interface MalaysiaCity {
 export interface MalaysiaState {
   code: string;
   name: string;
+  region: MalaysiaRegionCode;
   cities: MalaysiaCity[];
 }
 
@@ -53,6 +56,13 @@ export interface MalaysiaData {
   country: Country;
   states: MalaysiaState[];
 }
+
+// Malaysia region definitions
+export const MALAYSIA_REGIONS: Record<MalaysiaRegionCode, string> = {
+  semenanjung: 'Semenanjung Malaysia',
+  sabah: 'Sabah',
+  sarawak: 'Sarawak',
+} as const;
 
 // Singapore types
 export interface SingaporeDistrict {
@@ -129,6 +139,29 @@ export function findMalaysiaLocationByPostcode(postcode: string): { state: strin
     }
   }
   return null;
+}
+
+// Get Malaysia states grouped by region for optgroup display
+export interface MalaysiaStateGroup {
+  region: MalaysiaRegionCode;
+  regionName: string;
+  states: MalaysiaState[];
+}
+
+export function getMalaysiaStatesByRegion(): MalaysiaStateGroup[] {
+  const regionOrder: MalaysiaRegionCode[] = ['semenanjung', 'sabah', 'sarawak'];
+  
+  return regionOrder.map(region => ({
+    region,
+    regionName: MALAYSIA_REGIONS[region],
+    states: malaysia.states.filter(s => s.region === region),
+  }));
+}
+
+// Get region for a specific state code
+export function getMalaysiaRegion(stateCode: string): MalaysiaRegionCode | null {
+  const state = malaysia.states.find(s => s.code === stateCode);
+  return state?.region || null;
 }
 
 export function getSingaporePlanningAreas(): SingaporePlanningArea[] {

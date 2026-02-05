@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Loader2, AlertCircle, ChevronDown, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,24 @@ import { useCountry } from "@/contexts/CountryContext";
 import { validationEngine } from "@/lib/validation/validation-engine";
 import { CountryCode, countryConfigs } from "@/lib/validation/country-config";
 
+// Import address data for cascading dropdowns
+import {
+  SUPPORTED_COUNTRIES,
+  getBruneiDistricts,
+  getBruneiMukims,
+  getBruneiKampongs,
+  getMalaysiaStates,
+  getMalaysiaCities,
+  getMalaysiaStatesByRegion,
+  findMalaysiaLocationByPostcode,
+} from "@/lib/data/address";
+
+// Extended AddressInput with Brunei-specific fields
+interface ExtendedAddressInput extends AddressInput {
+  mukim?: string;
+  kampong?: string;
+}
+
 interface AddressFormProps {
   address?: Address | null;
   onSuccess?: (address: Address) => void;
@@ -42,8 +60,8 @@ export function AddressForm({ address, onSuccess, onCancel }: AddressFormProps) 
     getHelperText,
   } = useCountry();
   
-  // Form data state
-  const [formData, setFormData] = useState<AddressInput>({
+  // Form data state - extended with mukim/kampong for Brunei
+  const [formData, setFormData] = useState<ExtendedAddressInput>({
     label: "",
     recipient_name: "",
     phone: "",
@@ -54,7 +72,30 @@ export function AddressForm({ address, onSuccess, onCancel }: AddressFormProps) 
     postal_code: "",
     country: "BN", // Default to Brunei (Requirement 7.5)
     is_default: false,
+    mukim: "",
+    kampong: "",
   });
+  
+  // Memoized data for cascading dropdowns
+  const bruneiDistricts = useMemo(() => getBruneiDistricts(), []);
+  const bruneiMukims = useMemo(
+    () => (formData.state ? getBruneiMukims(formData.state) : []),
+    [formData.state]
+  );
+  const bruneiKampongs = useMemo(
+    () =>
+      formData.state && formData.mukim
+        ? getBruneiKampongs(formData.state, formData.mukim)
+        : [],
+    [formData.state, formData.mukim]
+  );
+
+  const malaysiaStates = useMemo(() => getMalaysiaStates(), []);
+  const malaysiaStatesByRegion = useMemo(() => getMalaysiaStatesByRegion(), []);
+  const malaysiaCities = useMemo(
+    () => (formData.state ? getMalaysiaCities(formData.state) : []),
+    [formData.state]
+  );
   
   // Validation state
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -83,6 +124,23 @@ export function AddressForm({ address, onSuccess, onCancel }: AddressFormProps) 
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Auto-detect Malaysia location from postcode
+  useEffect(() => {
+    if (formData.country === "MY" && formData.postal_code.length === 5) {
+      const location = findMalaysiaLocationByPostcode(formData.postal_code);
+      if (location) {
+        const state = malaysiaStates.find((s) => s.name === location.state);
+        if (state) {
+          setFormData((prev) => ({
+            ...prev,
+            state: state.code,
+            city: location.city,
+          }));
+        }
+      }
+    }
+  }, [formData.country, formData.postal_code, malaysiaStates]);
+
   /**
    * Toggle section expansion - Requirement 10.5
    */
@@ -106,10 +164,18 @@ export function AddressForm({ address, onSuccess, onCancel }: AddressFormProps) 
           !fieldErrors.phone
         );
       case 'address':
+        // For Brunei, mukim is required instead of city
+        const cityOrMukimValid = formData.country === 'BN'
+          ? !!formData.mukim
+          : !!formData.city;
+        // For Singapore, state is not required
+        const stateValid = formData.country === 'SG'
+          ? true
+          : !!formData.state;
         return !!(
           formData.address_line1 &&
-          formData.city &&
-          formData.state &&
+          cityOrMukimValid &&
+          stateValid &&
           formData.postal_code &&
           formData.country &&
           !fieldErrors.address_line1 &&
@@ -145,17 +211,45 @@ export function AddressForm({ address, onSuccess, onCancel }: AddressFormProps) 
   // Initialize form data from address prop
   useEffect(() => {
     if (address) {
-      const addressData = {
+      let stateCode = address.state;
+      let mukimCode = "";
+      
+      // For Brunei, reverse lookup district/mukim codes from names
+      if (address.country === "BN") {
+        const districts = getBruneiDistricts();
+        const district = districts.find(d => d.name === address.state || d.code === address.state);
+        if (district) {
+          stateCode = district.code;
+          // Try to find mukim by city name
+          const mukim = district.mukims.find(m => m.name === address.city || m.code === address.city);
+          if (mukim) {
+            mukimCode = mukim.code;
+          }
+        }
+      }
+      
+      // For Malaysia, reverse lookup state code from name
+      if (address.country === "MY") {
+        const states = getMalaysiaStates();
+        const state = states.find(s => s.name === address.state || s.code === address.state);
+        if (state) {
+          stateCode = state.code;
+        }
+      }
+      
+      const addressData: ExtendedAddressInput = {
         label: address.label || "",
         recipient_name: address.recipient_name,
         phone: address.phone,
         address_line1: address.address_line1,
         address_line2: address.address_line2 || "",
         city: address.city,
-        state: address.state,
+        state: stateCode,
         postal_code: address.postal_code,
         country: address.country,
         is_default: address.is_default || false,
+        mukim: mukimCode,
+        kampong: "",
       };
       setFormData(addressData);
       
@@ -270,35 +364,77 @@ export function AddressForm({ address, onSuccess, onCancel }: AddressFormProps) 
    * Requirements: 7.3, 7.4, 8.4, 8.5
    */
   const handleCountryChange = (newCountry: string) => {
-    // Update form data (Requirement 8.5: preserve form data)
-    setFormData(prev => ({ ...prev, country: newCountry }));
+    // Reset location fields when country changes
+    setFormData(prev => ({
+      ...prev,
+      country: newCountry,
+      state: "",
+      city: newCountry === "SG" ? "Singapore" : "",
+      mukim: "",
+      kampong: "",
+      postal_code: "",
+    }));
+    
+    // Clear location field errors
+    setFieldErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors.state;
+      delete newErrors.city;
+      delete newErrors.postal_code;
+      return newErrors;
+    });
     
     // Update country context (Requirement 7.3: update labels)
     setSelectedCountry(newCountry as CountryCode);
-    
-    // Re-validate phone and postal code with new country rules (Requirement 7.4, 8.4)
-    if (touched.phone && formData.phone) {
-      const phoneResult = validationEngine.validateField('phone', formData.phone, newCountry);
+  };
+  
+  /**
+   * Handle state/district change for cascading dropdowns
+   */
+  const handleStateChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      state: value,
+      city: "",
+      mukim: "",
+      kampong: "",
+    }));
+    if (fieldErrors.state) {
       setFieldErrors(prev => {
         const newErrors = { ...prev };
-        if (!phoneResult.isValid && phoneResult.errorMessage) {
-          newErrors.phone = phoneResult.errorMessage;
-        } else {
-          delete newErrors.phone;
-        }
+        delete newErrors.state;
         return newErrors;
       });
     }
-    
-    if (touched.postal_code && formData.postal_code) {
-      const postalResult = validationEngine.validateField('postalCode', formData.postal_code, newCountry);
+  };
+  
+  /**
+   * Handle mukim change for Brunei
+   */
+  const handleMukimChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      mukim: value,
+      kampong: "",
+    }));
+  };
+  
+  /**
+   * Handle kampong change for Brunei
+   */
+  const handleKampongChange = (value: string) => {
+    setFormData(prev => ({ ...prev, kampong: value }));
+  };
+  
+  /**
+   * Handle city change for Malaysia
+   */
+  const handleCityChange = (value: string) => {
+    setFormData(prev => ({ ...prev, city: value }));
+    if (fieldErrors.city) {
       setFieldErrors(prev => {
         const newErrors = { ...prev };
-        if (!postalResult.isValid && postalResult.errorMessage) {
-          newErrors.postal_code = postalResult.errorMessage;
-        } else {
-          delete newErrors.postal_code;
-        }
+        delete newErrors.city;
         return newErrors;
       });
     }
@@ -312,6 +448,16 @@ export function AddressForm({ address, onSuccess, onCancel }: AddressFormProps) 
     e.preventDefault();
     setError(null);
 
+    // For Brunei, use mukim as city validation
+    const cityForValidation = formData.country === 'BN' 
+      ? (formData.mukim || formData.city) 
+      : formData.city;
+    
+    // For Singapore, state is not required
+    const stateForValidation = formData.country === 'SG' 
+      ? 'Singapore' 
+      : formData.state;
+
     // Validate entire form (Requirement 1.4, 2.5, 11.3)
     const validationResult = validationEngine.validateForm(
       {
@@ -320,8 +466,8 @@ export function AddressForm({ address, onSuccess, onCancel }: AddressFormProps) 
         phone: formData.phone,
         addressLine1: formData.address_line1,
         addressLine2: formData.address_line2 || undefined,
-        city: formData.city,
-        state: formData.state,
+        city: cityForValidation,
+        state: stateForValidation,
         postalCode: formData.postal_code,
         country: formData.country || 'BN',
         isDefault: formData.is_default || false,
@@ -362,12 +508,46 @@ export function AddressForm({ address, onSuccess, onCancel }: AddressFormProps) 
     setIsLoading(true);
 
     try {
+      // Convert codes to names for storage
+      let submittedData: AddressInput = {
+        label: formData.label,
+        recipient_name: formData.recipient_name,
+        phone: formData.phone,
+        address_line1: formData.address_line1,
+        address_line2: formData.address_line2,
+        city: formData.city,
+        state: formData.state,
+        postal_code: formData.postal_code,
+        country: formData.country,
+        is_default: formData.is_default,
+      };
+      
+      // For Brunei, convert district/mukim codes to names
+      if (formData.country === "BN") {
+        const district = bruneiDistricts.find(d => d.code === formData.state);
+        const mukim = bruneiMukims.find(m => m.code === formData.mukim);
+        submittedData.state = district?.name || formData.state;
+        submittedData.city = mukim?.name || formData.mukim || "";
+      }
+      
+      // For Malaysia, convert state code to name
+      if (formData.country === "MY") {
+        const state = malaysiaStates.find(s => s.code === formData.state);
+        submittedData.state = state?.name || formData.state;
+      }
+      
+      // For Singapore, set state to empty and city to Singapore
+      if (formData.country === "SG") {
+        submittedData.state = "";
+        submittedData.city = "Singapore";
+      }
+      
       let result: Address | null;
       
       if (address) {
-        result = await updateAddress(address.id, formData);
+        result = await updateAddress(address.id, submittedData);
       } else {
-        result = await createAddress(formData);
+        result = await createAddress(submittedData);
       }
 
       if (result) {
@@ -596,81 +776,242 @@ export function AddressForm({ address, onSuccess, onCancel }: AddressFormProps) 
               {renderFieldError('address_line2')}
             </div>
 
-            {/* City and State - Requirements 5.1, 5.2, 8.1, 8.2, 8.3, 9.1, 11.1, 15.5 */}
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="city">
-                  {getFieldLabel('city')} <span className="text-red-600">*</span>
-                </Label>
-                <Input
-                  id="city"
-                  name="city"
-                  placeholder={getFieldLabel('city')}
-                  value={formData.city}
-                  onChange={handleChange}
-                  onBlur={() => handleBlur('city')}
-                  disabled={isLoading}
-                  required
-                  className={`transition-colors ${
-                    fieldErrors.city && touched.city 
-                      ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
-                      : 'focus-visible:ring-primary'
-                  }`}
-                  style={{ minHeight: '44px' }} // Requirement 9.3
-                />
-                {renderFieldError('city')}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="state">
-                  {getFieldLabel('state')} <span className="text-red-600">*</span>
-                </Label>
-                <Input
-                  id="state"
-                  name="state"
-                  placeholder={getFieldLabel('state')}
-                  value={formData.state}
-                  onChange={handleChange}
-                  onBlur={() => handleBlur('state')}
-                  disabled={isLoading}
-                  required
-                  className={`transition-colors ${
-                    fieldErrors.state && touched.state 
-                      ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
-                      : 'focus-visible:ring-primary'
-                  }`}
-                  style={{ minHeight: '44px' }} // Requirement 9.3
-                />
-                {renderFieldError('state')}
-              </div>
-            </div>
+            {/* Country-specific location fields */}
+            
+            {/* Brunei: District > Mukim > Kampong */}
+            {formData.country === "BN" && (
+              <>
+                {/* District & Mukim - 2 column on desktop */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* District */}
+                  <div className="space-y-2">
+                    <Label htmlFor="state">
+                      Daerah <span className="text-red-600">*</span>
+                    </Label>
+                    <Select
+                      value={formData.state}
+                      onValueChange={handleStateChange}
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger
+                        id="state"
+                        style={{ minHeight: '44px' }}
+                        className={fieldErrors.state && touched.state ? 'border-[#DC2626]' : ''}
+                      >
+                        <SelectValue placeholder="Pilih daerah" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {bruneiDistricts.map((district) => (
+                          <SelectItem key={district.code} value={district.code}>
+                            {district.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {renderFieldError('state')}
+                  </div>
 
-            {/* Postal Code - Requirements 5.3, 6.2, 6.3, 9.5, 11.1, 15.5 */}
-            <div className="space-y-2">
-              <Label htmlFor="postal_code">
-                {getFieldLabel('postalCode')} <span className="text-red-600">*</span>
-              </Label>
-              <Input
-                id="postal_code"
-                name="postal_code"
-                type="text"
-                inputMode="numeric" // Requirement 9.5: numeric keyboard
-                placeholder={getPlaceholder('postalCode')}
-                value={formData.postal_code}
-                onChange={handleChange}
-                onBlur={() => handleBlur('postal_code')}
-                disabled={isLoading}
-                required
-                className={`transition-colors ${
-                  fieldErrors.postal_code && touched.postal_code 
-                    ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
-                    : 'focus-visible:ring-primary'
-                }`}
-                style={{ minHeight: '44px' }} // Requirement 9.3
-              />
-              {/* Helper text - Requirement 6.2, 6.5 */}
-              <p className="text-xs text-muted-foreground">{getHelperText('postalCode')}</p>
-              {renderFieldError('postal_code')}
-            </div>
+                  {/* Mukim */}
+                  <div className="space-y-2">
+                    <Label htmlFor="mukim">
+                      Mukim <span className="text-red-600">*</span>
+                    </Label>
+                    <Select
+                      value={formData.mukim}
+                      onValueChange={handleMukimChange}
+                      disabled={isLoading || !formData.state}
+                    >
+                      <SelectTrigger id="mukim" style={{ minHeight: '44px' }}>
+                        <SelectValue placeholder={formData.state ? "Pilih mukim" : "Pilih daerah dahulu"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {bruneiMukims.map((mukim) => (
+                          <SelectItem key={mukim.code} value={mukim.code}>
+                            {mukim.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Kampong (optional) */}
+                {formData.mukim && bruneiKampongs.length > 0 && (
+                  <div className="space-y-2">
+                    <Label htmlFor="kampong">Kampong (optional)</Label>
+                    <Select
+                      value={formData.kampong}
+                      onValueChange={handleKampongChange}
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger id="kampong" style={{ minHeight: '44px' }}>
+                        <SelectValue placeholder="Pilih kampong" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {bruneiKampongs.map((kampong) => (
+                          <SelectItem key={kampong} value={kampong}>
+                            {kampong}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Malaysia: State > City > Postcode */}
+            {formData.country === "MY" && (
+              <>
+                {/* State with grouped dropdown - native select for optgroup support */}
+                <div className="space-y-2">
+                  <Label htmlFor="state">
+                    Negeri <span className="text-red-600">*</span>
+                  </Label>
+                  <select
+                    id="state"
+                    value={formData.state}
+                    onChange={(e) => handleStateChange(e.target.value)}
+                    disabled={isLoading}
+                    className={`flex h-11 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+                      fieldErrors.state && touched.state ? 'border-[#DC2626]' : 'border-input'
+                    }`}
+                    style={{ minHeight: '44px' }}
+                  >
+                    <option value="">Pilih negeri</option>
+                    {malaysiaStatesByRegion.map((group) => (
+                      <optgroup key={group.region} label={`── ${group.regionName} ──`}>
+                        {group.states.map((state) => (
+                          <option key={state.code} value={state.code}>
+                            {state.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                  {renderFieldError('state')}
+                </div>
+
+                {/* City & Postcode - 2 column on desktop */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* City */}
+                  <div className="space-y-2">
+                    <Label htmlFor="city">
+                      Bandar/Pekan <span className="text-red-600">*</span>
+                    </Label>
+                    <Select
+                      value={formData.city}
+                      onValueChange={handleCityChange}
+                      disabled={isLoading || !formData.state}
+                    >
+                      <SelectTrigger
+                        id="city"
+                        style={{ minHeight: '44px' }}
+                        className={fieldErrors.city && touched.city ? 'border-[#DC2626]' : ''}
+                      >
+                        <SelectValue placeholder={formData.state ? "Pilih bandar/pekan" : "Pilih negeri dahulu"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {malaysiaCities.map((city) => (
+                          <SelectItem key={city.name} value={city.name}>
+                            {city.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {renderFieldError('city')}
+                  </div>
+
+                  {/* Postal Code */}
+                  <div className="space-y-2">
+                    <Label htmlFor="postal_code">
+                      Poskod <span className="text-red-600">*</span>
+                    </Label>
+                    <Input
+                      id="postal_code"
+                      name="postal_code"
+                      placeholder="50000"
+                      value={formData.postal_code}
+                      onChange={handleChange}
+                      onBlur={() => handleBlur('postal_code')}
+                      disabled={isLoading}
+                      maxLength={5}
+                      required
+                      className={`transition-colors ${
+                        fieldErrors.postal_code && touched.postal_code 
+                          ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
+                          : 'focus-visible:ring-primary'
+                      }`}
+                      style={{ minHeight: '44px' }}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Auto-detect lokasi dari poskod
+                    </p>
+                    {renderFieldError('postal_code')}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Singapore: Just postal code */}
+            {formData.country === "SG" && (
+              <div className="space-y-2">
+                <Label htmlFor="postal_code">
+                  Postal Code <span className="text-red-600">*</span>
+                </Label>
+                <Input
+                  id="postal_code"
+                  name="postal_code"
+                  placeholder="123456"
+                  value={formData.postal_code}
+                  onChange={handleChange}
+                  onBlur={() => handleBlur('postal_code')}
+                  disabled={isLoading}
+                  maxLength={6}
+                  required
+                  className={`transition-colors ${
+                    fieldErrors.postal_code && touched.postal_code 
+                      ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
+                      : 'focus-visible:ring-primary'
+                  }`}
+                  style={{ minHeight: '44px' }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  6 digit postal code
+                </p>
+                {renderFieldError('postal_code')}
+              </div>
+            )}
+
+            {/* Postal Code for Brunei (after location fields) */}
+            {formData.country === "BN" && (
+              <div className="space-y-2">
+                <Label htmlFor="postal_code">
+                  Poskod <span className="text-red-600">*</span>
+                </Label>
+                <Input
+                  id="postal_code"
+                  name="postal_code"
+                  placeholder="BB3713"
+                  value={formData.postal_code}
+                  onChange={handleChange}
+                  onBlur={() => handleBlur('postal_code')}
+                  disabled={isLoading}
+                  maxLength={6}
+                  required
+                  className={`transition-colors ${
+                    fieldErrors.postal_code && touched.postal_code 
+                      ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
+                      : 'focus-visible:ring-primary'
+                  }`}
+                  style={{ minHeight: '44px' }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Format: XX1234 (contoh: BB3713)
+                </p>
+                {renderFieldError('postal_code')}
+              </div>
+            )}
           </div>
         )}
       </div>

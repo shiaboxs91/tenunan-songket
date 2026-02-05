@@ -731,108 +731,58 @@ export function AddressForm({ address, onSuccess, onCancel }: AddressFormProps) 
               {renderFieldError('country')}
             </div>
 
-            {/* Address Line 1 - Requirements 11.1, 15.5 */}
-            <div className="space-y-2">
-              <Label htmlFor="address_line1">
-                Address Line 1 <span className="text-red-600">*</span>
-              </Label>
-              <Input
-                id="address_line1"
-                name="address_line1"
-                placeholder="Street name, house number"
-                value={formData.address_line1}
-                onChange={handleChange}
-                onBlur={() => handleBlur('address_line1')}
-                disabled={isLoading}
-                required
-                className={`transition-colors ${
-                  fieldErrors.address_line1 && touched.address_line1 
-                    ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
-                    : 'focus-visible:ring-primary'
-                }`}
-                style={{ minHeight: '44px' }} // Requirement 9.3
-              />
-              {renderFieldError('address_line1')}
-            </div>
-
-            {/* Address Line 2 - Requirement 15.5 */}
-            <div className="space-y-2">
-              <Label htmlFor="address_line2">Address Line 2 (optional)</Label>
-              <Input
-                id="address_line2"
-                name="address_line2"
-                placeholder="Apartment, suite, unit, building, floor, etc."
-                value={formData.address_line2}
-                onChange={handleChange}
-                onBlur={() => handleBlur('address_line2')}
-                disabled={isLoading}
-                className={`transition-colors ${
-                  fieldErrors.address_line2 && touched.address_line2 
-                    ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
-                    : 'focus-visible:ring-primary'
-                }`}
-                style={{ minHeight: '44px' }} // Requirement 9.3
-              />
-              {renderFieldError('address_line2')}
-            </div>
-
-            {/* Country-specific location fields */}
-            
-            {/* Brunei: District > Mukim > Kampong */}
+            {/* Brunei: District > Mukim > Kampong > Address > Detail > Poskod */}
             {formData.country === "BN" && (
               <>
-                {/* District & Mukim - 2 column on desktop */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* District */}
-                  <div className="space-y-2">
-                    <Label htmlFor="state">
-                      Daerah <span className="text-red-600">*</span>
-                    </Label>
-                    <Select
-                      value={formData.state}
-                      onValueChange={handleStateChange}
-                      disabled={isLoading}
+                {/* District */}
+                <div className="space-y-2">
+                  <Label htmlFor="state">
+                    Daerah <span className="text-red-600">*</span>
+                  </Label>
+                  <Select
+                    value={formData.state}
+                    onValueChange={handleStateChange}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger
+                      id="state"
+                      style={{ minHeight: '44px' }}
+                      className={fieldErrors.state && touched.state ? 'border-[#DC2626]' : ''}
                     >
-                      <SelectTrigger
-                        id="state"
-                        style={{ minHeight: '44px' }}
-                        className={fieldErrors.state && touched.state ? 'border-[#DC2626]' : ''}
-                      >
-                        <SelectValue placeholder="Pilih daerah" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {bruneiDistricts.map((district) => (
-                          <SelectItem key={district.code} value={district.code}>
-                            {district.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {renderFieldError('state')}
-                  </div>
+                      <SelectValue placeholder="Pilih daerah" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {bruneiDistricts.map((district) => (
+                        <SelectItem key={district.code} value={district.code}>
+                          {district.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {renderFieldError('state')}
+                </div>
 
-                  {/* Mukim */}
-                  <div className="space-y-2">
-                    <Label htmlFor="mukim">
-                      Mukim <span className="text-red-600">*</span>
-                    </Label>
-                    <Select
-                      value={formData.mukim}
-                      onValueChange={handleMukimChange}
-                      disabled={isLoading || !formData.state}
-                    >
-                      <SelectTrigger id="mukim" style={{ minHeight: '44px' }}>
-                        <SelectValue placeholder={formData.state ? "Pilih mukim" : "Pilih daerah dahulu"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {bruneiMukims.map((mukim) => (
-                          <SelectItem key={mukim.code} value={mukim.code}>
-                            {mukim.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                {/* Mukim */}
+                <div className="space-y-2">
+                  <Label htmlFor="mukim">
+                    Mukim <span className="text-red-600">*</span>
+                  </Label>
+                  <Select
+                    value={formData.mukim}
+                    onValueChange={handleMukimChange}
+                    disabled={isLoading || !formData.state}
+                  >
+                    <SelectTrigger id="mukim" style={{ minHeight: '44px' }}>
+                      <SelectValue placeholder={formData.state ? "Pilih mukim" : "Pilih daerah dahulu"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {bruneiMukims.map((mukim) => (
+                        <SelectItem key={mukim.code} value={mukim.code}>
+                          {mukim.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Kampong (optional) */}
@@ -857,13 +807,86 @@ export function AddressForm({ address, onSuccess, onCancel }: AddressFormProps) 
                     </Select>
                   </div>
                 )}
+
+                {/* Address Line 1 */}
+                <div className="space-y-2">
+                  <Label htmlFor="address_line1">
+                    Alamat <span className="text-red-600">*</span>
+                  </Label>
+                  <Input
+                    id="address_line1"
+                    name="address_line1"
+                    placeholder="Nama jalan, nombor rumah, simpang"
+                    value={formData.address_line1}
+                    onChange={handleChange}
+                    onBlur={() => handleBlur('address_line1')}
+                    disabled={isLoading}
+                    required
+                    className={`transition-colors ${
+                      fieldErrors.address_line1 && touched.address_line1 
+                        ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
+                        : 'focus-visible:ring-primary'
+                    }`}
+                    style={{ minHeight: '44px' }}
+                  />
+                  {renderFieldError('address_line1')}
+                </div>
+
+                {/* Address Line 2 */}
+                <div className="space-y-2">
+                  <Label htmlFor="address_line2">Detail Tambahan (optional)</Label>
+                  <Input
+                    id="address_line2"
+                    name="address_line2"
+                    placeholder="Apartemen, gedung, lantai, dll"
+                    value={formData.address_line2}
+                    onChange={handleChange}
+                    onBlur={() => handleBlur('address_line2')}
+                    disabled={isLoading}
+                    className={`transition-colors ${
+                      fieldErrors.address_line2 && touched.address_line2 
+                        ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
+                        : 'focus-visible:ring-primary'
+                    }`}
+                    style={{ minHeight: '44px' }}
+                  />
+                  {renderFieldError('address_line2')}
+                </div>
+
+                {/* Postal Code */}
+                <div className="space-y-2">
+                  <Label htmlFor="postal_code">
+                    Poskod <span className="text-red-600">*</span>
+                  </Label>
+                  <Input
+                    id="postal_code"
+                    name="postal_code"
+                    placeholder="BB3713"
+                    value={formData.postal_code}
+                    onChange={handleChange}
+                    onBlur={() => handleBlur('postal_code')}
+                    disabled={isLoading}
+                    maxLength={6}
+                    required
+                    className={`transition-colors ${
+                      fieldErrors.postal_code && touched.postal_code 
+                        ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
+                        : 'focus-visible:ring-primary'
+                    }`}
+                    style={{ minHeight: '44px' }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Format: XX1234 (contoh: BB3713)
+                  </p>
+                  {renderFieldError('postal_code')}
+                </div>
               </>
             )}
 
-            {/* Malaysia: State > City > Postcode */}
+            {/* Malaysia: State > City > Address > Detail > Postcode */}
             {formData.country === "MY" && (
               <>
-                {/* State with grouped dropdown - native select for optgroup support */}
+                {/* State with grouped dropdown */}
                 <div className="space-y-2">
                   <Label htmlFor="state">
                     Negeri <span className="text-red-600">*</span>
@@ -892,125 +915,185 @@ export function AddressForm({ address, onSuccess, onCancel }: AddressFormProps) 
                   {renderFieldError('state')}
                 </div>
 
-                {/* City & Postcode - 2 column on desktop */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* City */}
-                  <div className="space-y-2">
-                    <Label htmlFor="city">
-                      Bandar/Pekan <span className="text-red-600">*</span>
-                    </Label>
-                    <Select
-                      value={formData.city}
-                      onValueChange={handleCityChange}
-                      disabled={isLoading || !formData.state}
-                    >
-                      <SelectTrigger
-                        id="city"
-                        style={{ minHeight: '44px' }}
-                        className={fieldErrors.city && touched.city ? 'border-[#DC2626]' : ''}
-                      >
-                        <SelectValue placeholder={formData.state ? "Pilih bandar/pekan" : "Pilih negeri dahulu"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {malaysiaCities.map((city) => (
-                          <SelectItem key={city.name} value={city.name}>
-                            {city.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {renderFieldError('city')}
-                  </div>
-
-                  {/* Postal Code */}
-                  <div className="space-y-2">
-                    <Label htmlFor="postal_code">
-                      Poskod <span className="text-red-600">*</span>
-                    </Label>
-                    <Input
-                      id="postal_code"
-                      name="postal_code"
-                      placeholder="50000"
-                      value={formData.postal_code}
-                      onChange={handleChange}
-                      onBlur={() => handleBlur('postal_code')}
-                      disabled={isLoading}
-                      maxLength={5}
-                      required
-                      className={`transition-colors ${
-                        fieldErrors.postal_code && touched.postal_code 
-                          ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
-                          : 'focus-visible:ring-primary'
-                      }`}
+                {/* City */}
+                <div className="space-y-2">
+                  <Label htmlFor="city">
+                    Bandar/Pekan <span className="text-red-600">*</span>
+                  </Label>
+                  <Select
+                    value={formData.city}
+                    onValueChange={handleCityChange}
+                    disabled={isLoading || !formData.state}
+                  >
+                    <SelectTrigger
+                      id="city"
                       style={{ minHeight: '44px' }}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Auto-detect lokasi dari poskod
-                    </p>
-                    {renderFieldError('postal_code')}
-                  </div>
+                      className={fieldErrors.city && touched.city ? 'border-[#DC2626]' : ''}
+                    >
+                      <SelectValue placeholder={formData.state ? "Pilih bandar/pekan" : "Pilih negeri dahulu"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {malaysiaCities.map((city) => (
+                        <SelectItem key={city.name} value={city.name}>
+                          {city.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {renderFieldError('city')}
+                </div>
+
+                {/* Address Line 1 */}
+                <div className="space-y-2">
+                  <Label htmlFor="address_line1">
+                    Alamat <span className="text-red-600">*</span>
+                  </Label>
+                  <Input
+                    id="address_line1"
+                    name="address_line1"
+                    placeholder="Nama jalan, nomor rumah"
+                    value={formData.address_line1}
+                    onChange={handleChange}
+                    onBlur={() => handleBlur('address_line1')}
+                    disabled={isLoading}
+                    required
+                    className={`transition-colors ${
+                      fieldErrors.address_line1 && touched.address_line1 
+                        ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
+                        : 'focus-visible:ring-primary'
+                    }`}
+                    style={{ minHeight: '44px' }}
+                  />
+                  {renderFieldError('address_line1')}
+                </div>
+
+                {/* Address Line 2 */}
+                <div className="space-y-2">
+                  <Label htmlFor="address_line2">Detail Tambahan (optional)</Label>
+                  <Input
+                    id="address_line2"
+                    name="address_line2"
+                    placeholder="Apartemen, gedung, lantai, dll"
+                    value={formData.address_line2}
+                    onChange={handleChange}
+                    onBlur={() => handleBlur('address_line2')}
+                    disabled={isLoading}
+                    className={`transition-colors ${
+                      fieldErrors.address_line2 && touched.address_line2 
+                        ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
+                        : 'focus-visible:ring-primary'
+                    }`}
+                    style={{ minHeight: '44px' }}
+                  />
+                  {renderFieldError('address_line2')}
+                </div>
+
+                {/* Postal Code */}
+                <div className="space-y-2">
+                  <Label htmlFor="postal_code">
+                    Poskod <span className="text-red-600">*</span>
+                  </Label>
+                  <Input
+                    id="postal_code"
+                    name="postal_code"
+                    placeholder="50000"
+                    value={formData.postal_code}
+                    onChange={handleChange}
+                    onBlur={() => handleBlur('postal_code')}
+                    disabled={isLoading}
+                    maxLength={5}
+                    required
+                    className={`transition-colors ${
+                      fieldErrors.postal_code && touched.postal_code 
+                        ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
+                        : 'focus-visible:ring-primary'
+                    }`}
+                    style={{ minHeight: '44px' }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Masukkan poskod (5 digit)
+                  </p>
+                  {renderFieldError('postal_code')}
                 </div>
               </>
             )}
 
-            {/* Singapore: Just postal code */}
+            {/* Singapore: Address > Detail > Postal Code */}
             {formData.country === "SG" && (
-              <div className="space-y-2">
-                <Label htmlFor="postal_code">
-                  Postal Code <span className="text-red-600">*</span>
-                </Label>
-                <Input
-                  id="postal_code"
-                  name="postal_code"
-                  placeholder="123456"
-                  value={formData.postal_code}
-                  onChange={handleChange}
-                  onBlur={() => handleBlur('postal_code')}
-                  disabled={isLoading}
-                  maxLength={6}
-                  required
-                  className={`transition-colors ${
-                    fieldErrors.postal_code && touched.postal_code 
-                      ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
-                      : 'focus-visible:ring-primary'
-                  }`}
-                  style={{ minHeight: '44px' }}
-                />
-                <p className="text-xs text-muted-foreground">
-                  6 digit postal code
-                </p>
-                {renderFieldError('postal_code')}
-              </div>
-            )}
+              <>
+                {/* Address Line 1 */}
+                <div className="space-y-2">
+                  <Label htmlFor="address_line1">
+                    Address <span className="text-red-600">*</span>
+                  </Label>
+                  <Input
+                    id="address_line1"
+                    name="address_line1"
+                    placeholder="Street name, house number"
+                    value={formData.address_line1}
+                    onChange={handleChange}
+                    onBlur={() => handleBlur('address_line1')}
+                    disabled={isLoading}
+                    required
+                    className={`transition-colors ${
+                      fieldErrors.address_line1 && touched.address_line1 
+                        ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
+                        : 'focus-visible:ring-primary'
+                    }`}
+                    style={{ minHeight: '44px' }}
+                  />
+                  {renderFieldError('address_line1')}
+                </div>
 
-            {/* Postal Code for Brunei (after location fields) */}
-            {formData.country === "BN" && (
-              <div className="space-y-2">
-                <Label htmlFor="postal_code">
-                  Poskod <span className="text-red-600">*</span>
-                </Label>
-                <Input
-                  id="postal_code"
-                  name="postal_code"
-                  placeholder="BB3713"
-                  value={formData.postal_code}
-                  onChange={handleChange}
-                  onBlur={() => handleBlur('postal_code')}
-                  disabled={isLoading}
-                  maxLength={6}
-                  required
-                  className={`transition-colors ${
-                    fieldErrors.postal_code && touched.postal_code 
-                      ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
-                      : 'focus-visible:ring-primary'
-                  }`}
-                  style={{ minHeight: '44px' }}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Format: XX1234 (contoh: BB3713)
-                </p>
-                {renderFieldError('postal_code')}
-              </div>
+                {/* Address Line 2 */}
+                <div className="space-y-2">
+                  <Label htmlFor="address_line2">Additional Details (optional)</Label>
+                  <Input
+                    id="address_line2"
+                    name="address_line2"
+                    placeholder="Apartment, unit, building, floor, etc."
+                    value={formData.address_line2}
+                    onChange={handleChange}
+                    onBlur={() => handleBlur('address_line2')}
+                    disabled={isLoading}
+                    className={`transition-colors ${
+                      fieldErrors.address_line2 && touched.address_line2 
+                        ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
+                        : 'focus-visible:ring-primary'
+                    }`}
+                    style={{ minHeight: '44px' }}
+                  />
+                  {renderFieldError('address_line2')}
+                </div>
+
+                {/* Postal Code */}
+                <div className="space-y-2">
+                  <Label htmlFor="postal_code">
+                    Postal Code <span className="text-red-600">*</span>
+                  </Label>
+                  <Input
+                    id="postal_code"
+                    name="postal_code"
+                    placeholder="123456"
+                    value={formData.postal_code}
+                    onChange={handleChange}
+                    onBlur={() => handleBlur('postal_code')}
+                    disabled={isLoading}
+                    maxLength={6}
+                    required
+                    className={`transition-colors ${
+                      fieldErrors.postal_code && touched.postal_code 
+                        ? 'border-[#DC2626] focus-visible:ring-[#DC2626]' 
+                        : 'focus-visible:ring-primary'
+                    }`}
+                    style={{ minHeight: '44px' }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    6 digit postal code
+                  </p>
+                  {renderFieldError('postal_code')}
+                </div>
+              </>
             )}
           </div>
         )}

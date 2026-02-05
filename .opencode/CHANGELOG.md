@@ -1,5 +1,47 @@
 # Changelog
 
+## 2026-02-05 - Address Form UX Simplification
+
+### Summary
+Simplified address form layout for better UX - all fields now stack vertically (single column) for clearer flow on both mobile and desktop. Dropdowns come first, then address input, then postal code.
+
+### Field Order
+
+**Malaysia:**
+1. Country
+2. Negeri (grouped dropdown)
+3. Bandar/Pekan
+4. Alamat
+5. Detail Tambahan
+6. Poskod
+
+**Brunei:**
+1. Country
+2. Daerah
+3. Mukim
+4. Kampong (optional)
+5. Alamat
+6. Detail Tambahan
+7. Poskod
+
+**Singapore:**
+1. Country
+2. Address
+3. Additional Details
+4. Postal Code
+
+### Changes Made
+- Removed 2-column grid layouts for simpler flow
+- Moved address/detail/postcode fields AFTER location dropdowns
+- Each country now has its own complete field set in the correct order
+- Profile AddressForm restructured to match GuestAddressForm pattern
+
+### Files Modified
+- `src/components/checkout/GuestAddressForm.tsx`
+- `src/components/profile/AddressForm.tsx`
+
+---
+
 ## 2026-02-05 - Address Form UX Improvements
 
 ### Summary

@@ -467,59 +467,56 @@ export function GuestAddressForm({
       {/* Brunei-specific fields */}
       {formData.country === "BN" && (
         <>
-          {/* District & Mukim - 2 column on desktop */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* District */}
-            <div className="space-y-2">
-              <Label htmlFor="state">
-                Daerah <span className="text-destructive">*</span>
-              </Label>
-              <Select value={formData.state} onValueChange={handleStateChange}>
-                <SelectTrigger
-                  className={
-                    errors.state && touched.state ? "border-destructive" : ""
-                  }
-                >
-                  <SelectValue placeholder="Pilih daerah" />
-                </SelectTrigger>
-                <SelectContent>
-                  {bruneiDistricts.map((district) => (
-                    <SelectItem key={district.code} value={district.code}>
-                      {district.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {renderError("state")}
-            </div>
-
-            {/* Mukim */}
-            <div className="space-y-2">
-              <Label htmlFor="mukim">
-                Mukim <span className="text-destructive">*</span>
-              </Label>
-              <Select 
-                value={formData.mukim} 
-                onValueChange={handleMukimChange}
-                disabled={!formData.state}
+          {/* District */}
+          <div className="space-y-2">
+            <Label htmlFor="state">
+              Daerah <span className="text-destructive">*</span>
+            </Label>
+            <Select value={formData.state} onValueChange={handleStateChange}>
+              <SelectTrigger
+                className={
+                  errors.state && touched.state ? "border-destructive" : ""
+                }
               >
-                <SelectTrigger
-                  className={
-                    errors.mukim && touched.mukim ? "border-destructive" : ""
-                  }
-                >
-                  <SelectValue placeholder={formData.state ? "Pilih mukim" : "Pilih daerah dahulu"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {bruneiMukims.map((mukim) => (
-                    <SelectItem key={mukim.code} value={mukim.code}>
-                      {mukim.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {renderError("mukim")}
-            </div>
+                <SelectValue placeholder="Pilih daerah" />
+              </SelectTrigger>
+              <SelectContent>
+                {bruneiDistricts.map((district) => (
+                  <SelectItem key={district.code} value={district.code}>
+                    {district.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {renderError("state")}
+          </div>
+
+          {/* Mukim */}
+          <div className="space-y-2">
+            <Label htmlFor="mukim">
+              Mukim <span className="text-destructive">*</span>
+            </Label>
+            <Select 
+              value={formData.mukim} 
+              onValueChange={handleMukimChange}
+              disabled={!formData.state}
+            >
+              <SelectTrigger
+                className={
+                  errors.mukim && touched.mukim ? "border-destructive" : ""
+                }
+              >
+                <SelectValue placeholder={formData.state ? "Pilih mukim" : "Pilih daerah dahulu"} />
+              </SelectTrigger>
+              <SelectContent>
+                {bruneiMukims.map((mukim) => (
+                  <SelectItem key={mukim.code} value={mukim.code}>
+                    {mukim.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {renderError("mukim")}
           </div>
 
           {/* Kampong */}
@@ -608,7 +605,7 @@ export function GuestAddressForm({
       {/* Malaysia-specific fields */}
       {formData.country === "MY" && (
         <>
-          {/* State with grouped dropdown - native select for optgroup support */}
+          {/* State with grouped dropdown */}
           <div className="space-y-2">
             <Label htmlFor="state">
               Negeri <span className="text-destructive">*</span>
@@ -635,60 +632,32 @@ export function GuestAddressForm({
             {renderError("state")}
           </div>
 
-          {/* City & Postcode - 2 column on desktop */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* City */}
-            <div className="space-y-2">
-              <Label htmlFor="city">
-                Bandar/Pekan <span className="text-destructive">*</span>
-              </Label>
-              <Select 
-                value={formData.city} 
-                onValueChange={handleCityChange}
-                disabled={!formData.state}
-              >
-                <SelectTrigger
-                  className={
-                    errors.city && touched.city ? "border-destructive" : ""
-                  }
-                >
-                  <SelectValue placeholder={formData.state ? "Pilih bandar/pekan" : "Pilih negeri dahulu"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {malaysiaCities.map((city) => (
-                    <SelectItem key={city.name} value={city.name}>
-                      {city.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {renderError("city")}
-            </div>
-
-            {/* Postal Code */}
-            <div className="space-y-2">
-              <Label htmlFor="postal_code">
-                Poskod <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="postal_code"
-                name="postal_code"
-                value={formData.postal_code}
-                onChange={handleChange}
-                onBlur={() => handleBlur("postal_code")}
-                placeholder={getPostalPlaceholder(formData.country)}
-                maxLength={5}
+          {/* City */}
+          <div className="space-y-2">
+            <Label htmlFor="city">
+              Bandar/Pekan <span className="text-destructive">*</span>
+            </Label>
+            <Select 
+              value={formData.city} 
+              onValueChange={handleCityChange}
+              disabled={!formData.state}
+            >
+              <SelectTrigger
                 className={
-                  errors.postal_code && touched.postal_code
-                    ? "border-destructive"
-                    : ""
+                  errors.city && touched.city ? "border-destructive" : ""
                 }
-              />
-              <p className="text-xs text-muted-foreground">
-                Auto-detect lokasi dari poskod
-              </p>
-              {renderError("postal_code")}
-            </div>
+              >
+                <SelectValue placeholder={formData.state ? "Pilih bandar/pekan" : "Pilih negeri dahulu"} />
+              </SelectTrigger>
+              <SelectContent>
+                {malaysiaCities.map((city) => (
+                  <SelectItem key={city.name} value={city.name}>
+                    {city.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {renderError("city")}
           </div>
 
           {/* Address Line 1 */}
@@ -723,6 +692,31 @@ export function GuestAddressForm({
               onChange={handleChange}
               placeholder="Apartemen, gedung, lantai, dll"
             />
+          </div>
+
+          {/* Postal Code */}
+          <div className="space-y-2">
+            <Label htmlFor="postal_code">
+              Poskod <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="postal_code"
+              name="postal_code"
+              value={formData.postal_code}
+              onChange={handleChange}
+              onBlur={() => handleBlur("postal_code")}
+              placeholder={getPostalPlaceholder(formData.country)}
+              maxLength={5}
+              className={
+                errors.postal_code && touched.postal_code
+                  ? "border-destructive"
+                  : ""
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              Masukkan poskod (5 digit)
+            </p>
+            {renderError("postal_code")}
           </div>
         </>
       )}

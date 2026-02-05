@@ -158,6 +158,15 @@ export async function calculateShipping(
     .eq('is_active', true)
     .order('display_order', { ascending: true })
 
+  // Filter providers by destination country
+  const filteredProviders = providers?.filter(p => {
+    const countries = p.countries as string[] | null
+    // If no countries specified, provider is available everywhere
+    if (!countries || countries.length === 0) return true
+    // Otherwise, check if destination country is in the list
+    return countries.includes(destination.country)
+  }) || []
+
   // Calculate actual weight vs volumetric weight
   let chargeableWeight = weight
   if (dimensions) {
@@ -171,13 +180,13 @@ export async function calculateShipping(
   const options: ShippingOption[] = []
 
   // If we have providers from database, use them with regional pricing
-  if (providers && providers.length > 0) {
+  if (filteredProviders.length > 0) {
     // Detect region from destination
     const region = stateToRegion(destination.state || '')
     
     // Convert database providers to ShippingProvider format
     
-    const formattedProviders = providers.map(p => {
+    const formattedProviders = filteredProviders.map(p => {
       const dbServices = (p.services as unknown as Array<{
         id?: string;
         name?: string;

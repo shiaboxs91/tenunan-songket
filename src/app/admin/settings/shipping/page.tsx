@@ -9,25 +9,81 @@ import {
   X,
   Loader2,
   Check,
-  AlertTriangle
+  AlertTriangle,
+  Globe,
+  ChevronDown,
+  ChevronUp,
+  DollarSign
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import type { ShippingProvider, ShippingService, Json } from '@/lib/supabase/types'
+import type { Json } from '@/lib/supabase/types'
+
+const SUPPORTED_COUNTRIES = [
+  { code: 'MY', name: 'Malaysia' },
+  { code: 'SG', name: 'Singapore' },
+  { code: 'BN', name: 'Brunei' },
+  { code: 'ID', name: 'Indonesia' },
+  { code: 'TH', name: 'Thailand' },
+  { code: 'PH', name: 'Philippines' },
+  { code: 'VN', name: 'Vietnam' },
+]
+
+const SUPPORTED_REGIONS = [
+  { code: 'semenanjung', name: 'Semenanjung Malaysia', country: 'MY' },
+  { code: 'sabah', name: 'Sabah', country: 'MY' },
+  { code: 'sarawak', name: 'Sarawak', country: 'MY' },
+  { code: 'singapore', name: 'Singapore', country: 'SG' },
+  { code: 'brunei', name: 'Brunei', country: 'BN' },
+]
+
+interface RegionalPricing {
+  region: string
+  cost_per_kg: number
+  min_cost?: number
+}
+
+interface ServiceForm {
+  id: string
+  code?: string
+  name: string
+  estimated_days: string
+  base_cost: number
+  cost_per_kg?: number
+  tracking_available: boolean
+  includes_insurance: boolean
+  regional_pricing: RegionalPricing[]
+  display_order: number
+}
+
+interface ProviderState {
+  id: string
+  name: string
+  code: string
+  logo_url: string | null
+  services: ServiceForm[]
+  countries: string[]
+  is_active: boolean
+  display_order: number
+  created_at: string | null
+  updated_at: string | null
+}
 
 export default function ShippingSettingsPage() {
-  const [providers, setProviders] = useState<ShippingProvider[]>([])
+  const [providers, setProviders] = useState<ProviderState[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [editingProvider, setEditingProvider] = useState<ShippingProvider | null>(null)
+  const [editingProvider, setEditingProvider] = useState<ProviderState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [expandedServices, setExpandedServices] = useState<number[]>([])
   
   const [formData, setFormData] = useState({
     name: '',
     code: '',
     logo_url: '',
     is_active: true,
-    services: [] as ShippingService[]
+    countries: [] as string[],
+    services: [] as ServiceForm[]
   })
   const [formLoading, setFormLoading] = useState(false)
 
@@ -47,10 +103,10 @@ export default function ShippingSettingsPage() {
 
       if (error) throw error
       
-      // Transform data to match ShippingProvider type
-      const transformedData: ShippingProvider[] = (data || []).map(item => ({
+      const transformedData: ProviderState[] = (data || []).map(item => ({
         ...item,
-        services: (item.services as unknown as ShippingService[]) || [],
+        services: (item.services as unknown as ServiceForm[]) || [],
+        countries: (item.countries as string[]) || [],
         is_active: item.is_active ?? true,
         display_order: item.display_order ?? 0
       }))
@@ -70,6 +126,13 @@ export default function ShippingSettingsPage() {
     setError(null)
 
     try {
+      const servicesData = formData.services.map((s, idx) => ({
+        ...s,
+        id: s.id || `${formData.code}-${idx}`,
+        display_order: idx,
+        regional_pricing: s.regional_pricing.filter(rp => rp.cost_per_kg > 0)
+      }))
+
       if (editingProvider) {
         const { error } = await supabase
           .from('shipping_providers')
@@ -78,7 +141,8 @@ export default function ShippingSettingsPage() {
             code: formData.code,
             logo_url: formData.logo_url || null,
             is_active: formData.is_active,
-            services: formData.services as unknown as Json
+            countries: formData.countries,
+            services: servicesData as unknown as Json
           })
           .eq('id', editingProvider.id)
 
@@ -92,7 +156,8 @@ export default function ShippingSettingsPage() {
             code: formData.code,
             logo_url: formData.logo_url || null,
             is_active: formData.is_active,
-            services: formData.services as unknown as Json,
+            countries: formData.countries,
+            services: servicesData as unknown as Json,
             display_order: providers.length
           })
 
@@ -104,14 +169,15 @@ export default function ShippingSettingsPage() {
       setEditingProvider(null)
       resetForm()
       fetchProviders()
-    } catch (err: any) {
-      setError(err.message || 'Gagal menyimpan ekspedisi')
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Gagal menyimpan ekspedisi'
+      setError(errorMessage)
     } finally {
       setFormLoading(false)
     }
   }
 
-  const handleToggleActive = async (provider: ShippingProvider) => {
+  const handleToggleActive = async (provider: ProviderState) => {
     try {
       const { error } = await supabase
         .from('shipping_providers')
@@ -120,7 +186,7 @@ export default function ShippingSettingsPage() {
 
       if (error) throw error
       fetchProviders()
-    } catch (err) {
+    } catch {
       setError('Gagal mengubah status')
     }
   }
@@ -137,20 +203,26 @@ export default function ShippingSettingsPage() {
       if (error) throw error
       setSuccess('Ekspedisi berhasil dihapus')
       fetchProviders()
-    } catch (err) {
+    } catch {
       setError('Gagal menghapus ekspedisi')
     }
   }
 
-  const handleEdit = (provider: ShippingProvider) => {
+  const handleEdit = (provider: ProviderState) => {
     setEditingProvider(provider)
+    const services = (provider.services || []).map(s => ({
+      ...s,
+      regional_pricing: s.regional_pricing || []
+    }))
     setFormData({
       name: provider.name,
       code: provider.code,
       logo_url: provider.logo_url || '',
       is_active: provider.is_active,
-      services: provider.services || []
+      countries: provider.countries || [],
+      services
     })
+    setExpandedServices([])
     setShowForm(true)
   }
 
@@ -160,18 +232,41 @@ export default function ShippingSettingsPage() {
       code: '',
       logo_url: '',
       is_active: true,
+      countries: [],
       services: []
     })
+    setExpandedServices([])
+  }
+
+  const toggleCountry = (countryCode: string) => {
+    setFormData(prev => ({
+      ...prev,
+      countries: prev.countries.includes(countryCode)
+        ? prev.countries.filter(c => c !== countryCode)
+        : [...prev.countries, countryCode]
+    }))
   }
 
   const addService = () => {
-    setFormData({
-      ...formData,
-      services: [...formData.services, { code: '', name: '', estimated_days: '', base_cost: 0, cost_per_kg: 0 }]
-    })
+    const newService: ServiceForm = {
+      id: '',
+      name: '',
+      estimated_days: '3-5 hari',
+      base_cost: 0,
+      cost_per_kg: 0,
+      tracking_available: true,
+      includes_insurance: false,
+      regional_pricing: [],
+      display_order: formData.services.length
+    }
+    setFormData(prev => ({
+      ...prev,
+      services: [...prev.services, newService]
+    }))
+    setExpandedServices(prev => [...prev, formData.services.length])
   }
 
-  const updateService = (index: number, field: keyof ShippingService, value: string | number) => {
+  const updateService = (index: number, field: keyof ServiceForm, value: unknown) => {
     const newServices = [...formData.services]
     newServices[index] = { ...newServices[index], [field]: value }
     setFormData({ ...formData, services: newServices })
@@ -182,6 +277,55 @@ export default function ShippingSettingsPage() {
       ...formData,
       services: formData.services.filter((_, i) => i !== index)
     })
+    setExpandedServices(prev => prev.filter(i => i !== index))
+  }
+
+  const toggleServiceExpand = (index: number) => {
+    setExpandedServices(prev => 
+      prev.includes(index) 
+        ? prev.filter(i => i !== index) 
+        : [...prev, index]
+    )
+  }
+
+  const updateRegionalPricing = (serviceIndex: number, region: string, field: 'cost_per_kg' | 'min_cost', value: number) => {
+    const newServices = [...formData.services]
+    const service = newServices[serviceIndex]
+    const existingIndex = service.regional_pricing.findIndex(rp => rp.region === region)
+    
+    if (existingIndex >= 0) {
+      service.regional_pricing[existingIndex] = {
+        ...service.regional_pricing[existingIndex],
+        [field]: value
+      }
+    } else {
+      service.regional_pricing.push({
+        region,
+        cost_per_kg: field === 'cost_per_kg' ? value : 0,
+        min_cost: field === 'min_cost' ? value : undefined
+      })
+    }
+    
+    setFormData({ ...formData, services: newServices })
+  }
+
+  const getRegionalPrice = (service: ServiceForm, region: string, field: 'cost_per_kg' | 'min_cost'): number => {
+    const rp = service.regional_pricing.find(r => r.region === region)
+    if (!rp) return 0
+    return field === 'cost_per_kg' ? rp.cost_per_kg : (rp.min_cost || 0)
+  }
+
+  const getCountryNames = (codes: string[]) => {
+    if (!codes || codes.length === 0) return 'Semua negara'
+    return codes.map(code => {
+      const country = SUPPORTED_COUNTRIES.find(c => c.code === code)
+      return country?.name || code
+    }).join(', ')
+  }
+
+  const getAvailableRegions = () => {
+    if (formData.countries.length === 0) return SUPPORTED_REGIONS
+    return SUPPORTED_REGIONS.filter(r => formData.countries.includes(r.country))
   }
 
   return (
@@ -190,7 +334,7 @@ export default function ShippingSettingsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Pengaturan Ekspedisi</h1>
-          <p className="text-gray-500">Kelola penyedia jasa pengiriman</p>
+          <p className="text-gray-500">Kelola penyedia jasa pengiriman dan harga per region</p>
         </div>
         <button
           onClick={() => { resetForm(); setEditingProvider(null); setShowForm(true) }}
@@ -244,7 +388,11 @@ export default function ShippingSettingsPage() {
                   <div>
                     <h3 className="font-medium text-gray-900">{provider.name}</h3>
                     <p className="text-sm text-gray-500">
-                      Kode: {provider.code} | {provider.services?.length || 0} layanan
+                      Kode: {provider.code} | {((provider.services as unknown as ServiceForm[]) || []).length} layanan
+                    </p>
+                    <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                      <Globe className="h-3 w-3" />
+                      {getCountryNames(provider.countries)}
                     </p>
                   </div>
                 </div>
@@ -263,12 +411,14 @@ export default function ShippingSettingsPage() {
                   <button
                     onClick={() => handleEdit(provider)}
                     className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"
+                    aria-label="Edit ekspedisi"
                   >
                     <Edit2 className="h-5 w-5" />
                   </button>
                   <button
                     onClick={() => handleDelete(provider.id)}
                     className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                    aria-label="Hapus ekspedisi"
                   >
                     <Trash2 className="h-5 w-5" />
                   </button>
@@ -281,9 +431,9 @@ export default function ShippingSettingsPage() {
 
       {/* Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto py-8">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4">
-            <div className="p-6 border-b border-gray-200">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+            <div className="p-4 border-b border-gray-200 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold">
                   {editingProvider ? 'Edit Ekspedisi' : 'Tambah Ekspedisi Baru'}
@@ -294,120 +444,272 @@ export default function ShippingSettingsPage() {
               </div>
             </div>
             
-            <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+              <div className="p-4 space-y-4">
+                {/* Basic Info */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nama Ekspedisi</label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Contoh: Skynet Express"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Kode</label>
+                    <input
+                      type="text"
+                      value={formData.code}
+                      onChange={(e) => setFormData({ ...formData, code: e.target.value.toLowerCase() })}
+                      placeholder="Contoh: skynet"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                      required
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nama</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">URL Logo (opsional)</label>
                   <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    required
+                    type="url"
+                    value={formData.logo_url}
+                    onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
+                    placeholder="https://..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
                   />
                 </div>
+
+                {/* Countries Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Kode</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Negara Tujuan
+                    <span className="text-gray-400 font-normal ml-1">(kosongkan untuk semua negara)</span>
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {SUPPORTED_COUNTRIES.map((country) => (
+                      <button
+                        key={country.code}
+                        type="button"
+                        onClick={() => toggleCountry(country.code)}
+                        className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                          formData.countries.includes(country.code)
+                            ? 'bg-amber-50 border-amber-300 text-amber-700'
+                            : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                        }`}
+                      >
+                        {formData.countries.includes(country.code) && (
+                          <Check className="h-3 w-3 inline mr-1" />
+                        )}
+                        {country.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
                   <input
-                    type="text"
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value.toLowerCase() })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    required
+                    type="checkbox"
+                    id="is_active"
+                    checked={formData.is_active}
+                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                    className="rounded border-gray-300 text-amber-500 focus:ring-amber-500"
                   />
+                  <label htmlFor="is_active" className="text-sm text-gray-700">Aktif</label>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">URL Logo (opsional)</label>
-                <input
-                  type="url"
-                  value={formData.logo_url}
-                  onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="is_active"
-                  checked={formData.is_active}
-                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                  className="rounded border-gray-300 text-amber-500 focus:ring-amber-500"
-                />
-                <label htmlFor="is_active" className="text-sm text-gray-700">Aktif</label>
-              </div>
-
-              {/* Services */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">Layanan</label>
-                  <button
-                    type="button"
-                    onClick={addService}
-                    className="text-sm text-amber-600 hover:text-amber-700"
-                  >
-                    + Tambah Layanan
-                  </button>
-                </div>
-                
-                <div className="space-y-3">
-                  {formData.services.map((service, index) => (
-                    <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
-                        <input
-                          type="text"
-                          placeholder="Kode"
-                          value={service.code}
-                          onChange={(e) => updateService(index, 'code', e.target.value)}
-                          className="px-2 py-1 text-sm border border-gray-300 rounded"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Nama"
-                          value={service.name}
-                          onChange={(e) => updateService(index, 'name', e.target.value)}
-                          className="px-2 py-1 text-sm border border-gray-300 rounded"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Est. Hari"
-                          value={service.estimated_days}
-                          onChange={(e) => updateService(index, 'estimated_days', e.target.value)}
-                          className="px-2 py-1 text-sm border border-gray-300 rounded"
-                        />
-                        <div className="flex gap-1">
-                          <input
-                            type="number"
-                            placeholder="Biaya Dasar"
-                            value={service.base_cost}
-                            onChange={(e) => updateService(index, 'base_cost', parseInt(e.target.value) || 0)}
-                            className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded"
-                          />
-                          <input
-                            type="number"
-                            placeholder="Biaya/Kg"
-                            value={service.cost_per_kg || 0}
-                            onChange={(e) => updateService(index, 'cost_per_kg', parseInt(e.target.value) || 0)}
-                            className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded"
-                            title="Biaya per Kg (Opsional)"
-                          />
+                {/* Services */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Layanan & Harga Regional
+                    </label>
+                    <button
+                      type="button"
+                      onClick={addService}
+                      className="text-sm text-amber-600 hover:text-amber-700 flex items-center gap-1"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Tambah Layanan
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {formData.services.length === 0 && (
+                      <p className="text-sm text-gray-400 italic py-4 text-center border border-dashed border-gray-200 rounded-lg">
+                        Belum ada layanan. Klik &quot;Tambah Layanan&quot; untuk menambahkan.
+                      </p>
+                    )}
+                    {formData.services.map((service, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
+                        {/* Service Header */}
+                        <div 
+                          className="p-3 bg-gray-50 flex items-center justify-between cursor-pointer"
+                          onClick={() => toggleServiceExpand(index)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <button type="button" className="text-gray-400">
+                              {expandedServices.includes(index) ? (
+                                <ChevronUp className="h-5 w-5" />
+                              ) : (
+                                <ChevronDown className="h-5 w-5" />
+                              )}
+                            </button>
+                            <div>
+                              <span className="font-medium text-gray-900">
+                                {service.name || 'Layanan Baru'}
+                              </span>
+                              <span className="text-gray-400 text-sm ml-2">
+                                {service.regional_pricing.length > 0 
+                                  ? `${service.regional_pricing.length} harga regional`
+                                  : 'Harga dasar saja'}
+                              </span>
+                            </div>
+                          </div>
                           <button
                             type="button"
-                            onClick={() => removeService(index)}
-                            className="p-1 text-red-500 hover:bg-red-50 rounded"
+                            onClick={(e) => { e.stopPropagation(); removeService(index); }}
+                            className="p-1.5 text-red-500 hover:bg-red-50 rounded"
                           >
-                            <X className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
+
+                        {/* Service Details */}
+                        {expandedServices.includes(index) && (
+                          <div className="p-4 space-y-4">
+                            {/* Basic Service Info */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-500 mb-1">Nama Layanan</label>
+                                <input
+                                  type="text"
+                                  placeholder="Standard"
+                                  value={service.name}
+                                  onChange={(e) => updateService(index, 'name', e.target.value)}
+                                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-500 mb-1">Est. Pengiriman</label>
+                                <input
+                                  type="text"
+                                  placeholder="3-5 hari"
+                                  value={service.estimated_days}
+                                  onChange={(e) => updateService(index, 'estimated_days', e.target.value)}
+                                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-500 mb-1">Biaya Dasar (BND)</label>
+                                <input
+                                  type="number"
+                                  placeholder="10"
+                                  value={service.base_cost}
+                                  onChange={(e) => updateService(index, 'base_cost', parseFloat(e.target.value) || 0)}
+                                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-500 mb-1">Default /Kg</label>
+                                <input
+                                  type="number"
+                                  placeholder="5"
+                                  value={service.cost_per_kg || ''}
+                                  onChange={(e) => updateService(index, 'cost_per_kg', parseFloat(e.target.value) || 0)}
+                                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="flex gap-4">
+                              <label className="flex items-center gap-2 text-sm">
+                                <input
+                                  type="checkbox"
+                                  checked={service.tracking_available}
+                                  onChange={(e) => updateService(index, 'tracking_available', e.target.checked)}
+                                  className="rounded border-gray-300 text-amber-500 focus:ring-amber-500"
+                                />
+                                Tracking
+                              </label>
+                              <label className="flex items-center gap-2 text-sm">
+                                <input
+                                  type="checkbox"
+                                  checked={service.includes_insurance}
+                                  onChange={(e) => updateService(index, 'includes_insurance', e.target.checked)}
+                                  className="rounded border-gray-300 text-amber-500 focus:ring-amber-500"
+                                />
+                                Asuransi
+                              </label>
+                            </div>
+
+                            {/* Regional Pricing */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <DollarSign className="h-4 w-4 text-amber-500" />
+                                <label className="text-sm font-medium text-gray-700">Harga Per Region</label>
+                                <span className="text-xs text-gray-400">(opsional, override biaya dasar)</span>
+                              </div>
+                              
+                              {getAvailableRegions().length === 0 ? (
+                                <p className="text-sm text-gray-400 italic">
+                                  Pilih negara tujuan terlebih dahulu untuk mengatur harga regional
+                                </p>
+                              ) : (
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-sm">
+                                    <thead>
+                                      <tr className="text-left text-gray-500 border-b">
+                                        <th className="pb-2 font-medium">Region</th>
+                                        <th className="pb-2 font-medium text-right">Biaya/Kg (BND)</th>
+                                        <th className="pb-2 font-medium text-right">Min. Biaya (BND)</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {getAvailableRegions().map((region) => (
+                                        <tr key={region.code} className="border-b border-gray-100">
+                                          <td className="py-2">
+                                            <span className="text-gray-700">{region.name}</span>
+                                          </td>
+                                          <td className="py-2">
+                                            <input
+                                              type="number"
+                                              step="0.01"
+                                              placeholder="0"
+                                              value={getRegionalPrice(service, region.code, 'cost_per_kg') || ''}
+                                              onChange={(e) => updateRegionalPricing(index, region.code, 'cost_per_kg', parseFloat(e.target.value) || 0)}
+                                              className="w-24 px-2 py-1 text-sm border border-gray-300 rounded text-right focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                            />
+                                          </td>
+                                          <td className="py-2">
+                                            <input
+                                              type="number"
+                                              step="0.01"
+                                              placeholder="0"
+                                              value={getRegionalPrice(service, region.code, 'min_cost') || ''}
+                                              onChange={(e) => updateRegionalPricing(index, region.code, 'min_cost', parseFloat(e.target.value) || 0)}
+                                              className="w-24 px-2 py-1 text-sm border border-gray-300 rounded text-right focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                            />
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
               
-              <div className="flex gap-3 pt-4">
+              <div className="p-4 border-t border-gray-200 flex gap-3 flex-shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}

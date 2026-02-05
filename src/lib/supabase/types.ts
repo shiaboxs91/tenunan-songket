@@ -820,6 +820,7 @@ export type Database = {
           code: string
           logo_url: string | null
           services: Json | null
+          countries: string[] | null
           is_active: boolean | null
           display_order: number | null
           created_at: string | null
@@ -831,6 +832,7 @@ export type Database = {
           code: string
           logo_url?: string | null
           services?: Json | null
+          countries?: string[] | null
           is_active?: boolean | null
           display_order?: number | null
           created_at?: string | null
@@ -842,6 +844,7 @@ export type Database = {
           code?: string
           logo_url?: string | null
           services?: Json | null
+          countries?: string[] | null
           is_active?: boolean | null
           display_order?: number | null
           created_at?: string | null
@@ -1069,6 +1072,7 @@ export interface ShippingProvider {
   code: string
   logo_url: string | null
   services: ShippingService[]
+  countries: string[]
   is_active: boolean
   display_order: number
   created_at: string | null
@@ -1080,6 +1084,7 @@ export interface ShippingProviderCreate {
   code: string
   logo_url?: string | null
   services?: ShippingService[]
+  countries?: string[]
   is_active?: boolean
   display_order?: number
 }
@@ -1089,6 +1094,7 @@ export interface ShippingProviderUpdate {
   code?: string
   logo_url?: string | null
   services?: ShippingService[]
+  countries?: string[]
   is_active?: boolean
   display_order?: number
 }

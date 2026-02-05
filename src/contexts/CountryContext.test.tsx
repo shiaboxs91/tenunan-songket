@@ -200,9 +200,9 @@ describe('CountryContext', () => {
       });
 
       const pattern = result.current.getValidationRule('phone');
-      expect(pattern.test('+673-123-4567')).toBe(true);
-      expect(pattern.test('123-4567')).toBe(true);
-      expect(pattern.test('+60-123-4567')).toBe(false);
+      expect(pattern.test('+6731234567')).toBe(true);
+      expect(pattern.test('1234567')).toBe(true);
+      expect(pattern.test('+601234567')).toBe(false);
     });
 
     it('should return Brunei postal code pattern', () => {
@@ -240,7 +240,7 @@ describe('CountryContext', () => {
         wrapper: CountryProvider,
       });
 
-      expect(result.current.getPlaceholder('phone')).toBe('+673-123-4567');
+      expect(result.current.getPlaceholder('phone')).toBe('+6731234567');
       expect(result.current.getPlaceholder('postalCode')).toBe('BB1234');
     });
 
@@ -251,7 +251,7 @@ describe('CountryContext', () => {
         ),
       });
 
-      expect(result.current.getPlaceholder('phone')).toBe('+603-12345678');
+      expect(result.current.getPlaceholder('phone')).toBe('+60312345678');
       expect(result.current.getPlaceholder('postalCode')).toBe('50000');
     });
 
@@ -260,13 +260,13 @@ describe('CountryContext', () => {
         wrapper: CountryProvider,
       });
 
-      expect(result.current.getPlaceholder('phone')).toBe('+673-123-4567');
+      expect(result.current.getPlaceholder('phone')).toBe('+6731234567');
 
       act(() => {
         result.current.setSelectedCountry('SG');
       });
 
-      expect(result.current.getPlaceholder('phone')).toBe('+65-1234-5678');
+      expect(result.current.getPlaceholder('phone')).toBe('+6512345678');
     });
   });
 
@@ -277,7 +277,7 @@ describe('CountryContext', () => {
       });
 
       expect(result.current.getHelperText('phone')).toBe(
-        'Format: +673-XXX-XXXX atau XXX-XXXX'
+        'Format: +673XXXXXXX atau XXXXXXX'
       );
       expect(result.current.getHelperText('postalCode')).toBe(
         'Format: XX1234 (contoh: BB1234)'
@@ -291,7 +291,7 @@ describe('CountryContext', () => {
         ),
       });
 
-      expect(result.current.getHelperText('phone')).toBe('Format: +65-XXXX-XXXX');
+      expect(result.current.getHelperText('phone')).toBe('Format: +65XXXXXXXX');
       expect(result.current.getHelperText('postalCode')).toBe(
         'Format: 6 digits (e.g., 123456)'
       );
@@ -321,7 +321,7 @@ describe('CountryContext', () => {
       const config = result.current.getCountryConfiguration();
       expect(config.code).toBe('BN');
       expect(config.name).toBe('Brunei Darussalam');
-      expect(config.phoneExample).toBe('+673-123-4567');
+      expect(config.phoneExample).toBe('+6731234567');
       expect(config.postalCodeExample).toBe('BB1234');
       expect(config.labels.city).toBe('Bandar');
     });
@@ -367,7 +367,7 @@ describe('CountryContext', () => {
       expect(typeof result.current.getValidationRule).toBe('function');
       expect(result.current.getValidationRule('phone')).toBeDefined();
       expect(typeof result.current.getPlaceholder).toBe('function');
-      expect(result.current.getPlaceholder('phone')).toBe('+603-12345678');
+      expect(result.current.getPlaceholder('phone')).toBe('+60312345678');
       expect(typeof result.current.getHelperText).toBe('function');
       expect(result.current.getHelperText('phone')).toContain('+60');
     });

@@ -293,7 +293,8 @@ export function calculateInsurance(itemValue: number): number {
 }
 
 export function formatShippingCost(cost: number, currency: Currency = 'IDR'): string {
-  if (currency === 'IDR') {
+  // Always display in IDR/Rupiah format (including for BND)
+  if (currency === 'IDR' || currency === 'BND') {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',

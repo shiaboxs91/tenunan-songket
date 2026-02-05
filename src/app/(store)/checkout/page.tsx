@@ -324,9 +324,7 @@ export default function CheckoutPage() {
                     <h4 className="font-medium mb-2">Metode Pembayaran</h4>
                     <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
                       <p className="font-medium text-foreground capitalize">
-                        {selectedPayment === 'intl_transfer' ? 'International Bank Transfer / Wise' : 
-                         selectedPayment === 'brunei_transfer' ? 'Bank Transfer (Brunei)' :
-                         selectedPayment}
+                        {selectedPayment === 'intl_transfer' ? 'International Bank Transfer / Wise' : selectedPayment}
                       </p>
                     </div>
                   </div>

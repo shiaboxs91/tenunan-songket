@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, Landmark, Globe } from "lucide-react";
+import { Globe } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,10 +20,6 @@ export function PaymentMethodSelector({ selectedMethod, onSelect }: PaymentMetho
         "desc": "Pilih metode pembayaran yang aman dan nyaman.",
         "intl_transfer": "International Bank Transfer / Wise",
         "intl_desc": "Transfer via Wise/Remitly ke rekening IDR kami.",
-        "paypal": "PayPal",
-        "paypal_desc": "Pembayaran aman menggunakan saldo PayPal atau Kartu Kredit.",
-        "brunei_transfer": "Bank Transfer (Brunei - BIBD/Baiduri)",
-        "brunei_desc": "Transfer langsung via bank lokal Brunei.",
     };
     return map[key] || key;
   };
@@ -35,18 +31,6 @@ export function PaymentMethodSelector({ selectedMethod, onSelect }: PaymentMetho
       description: t("intl_desc"),
       icon: Globe,
     },
-    {
-      id: "paypal",
-      title: t("paypal"),
-      description: t("paypal_desc"),
-      icon: CreditCard,
-    },
-    {
-        id: "brunei_transfer",
-        title: t("brunei_transfer"),
-        description: t("brunei_desc"),
-        icon: Landmark,
-    }
   ];
 
   return (

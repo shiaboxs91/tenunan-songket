@@ -1,0 +1,457 @@
+{
+  "country": {
+    "code": "BN",
+    "name": "Brunei Darussalam",
+    "phone_code": "+673",
+    "postal_format": "^[A-Z]{2}\\d{4}$",
+    "postal_example": "BB3713"
+  },
+  "districts": [
+    {
+      "code": "brunei-muara",
+      "name": "Brunei-Muara",
+      "mukims": [
+        {
+          "code": "berakas-a",
+          "name": "Berakas A",
+          "kampongs": [
+            "Kg. Anggerek Desa",
+            "Kg. Beribi",
+            "Kg. Jaya Bakti",
+            "Kg. Jaya Setia",
+            "Kg. Lambak Kanan",
+            "Kg. Lambak Kiri",
+            "Kg. Manggis",
+            "Kg. Orang Kaya Besar Imas",
+            "Kg. Pancha Delima",
+            "Kg. Pengiran Siraja Muda 'A'",
+            "Kg. Pengiran Siraja Muda 'B'",
+            "Kg. Perpindahan Lambak",
+            "Kg. Pulaie",
+            "Kg. Salambigar",
+            "Kg. Sungai Akar",
+            "Kg. Sungai Orok",
+            "Kg. Sungai Tilong"
+          ]
+        },
+        {
+          "code": "berakas-b",
+          "name": "Berakas B",
+          "kampongs": [
+            "Kg. Madang",
+            "Kg. Mata-Mata",
+            "Kg. Mentiri",
+            "Kg. Pengkalan Gadong",
+            "Kg. Serusop",
+            "Kg. Tanah Jambu"
+          ]
+        },
+        {
+          "code": "burong-pingai-ayer",
+          "name": "Burong Pingai Ayer",
+          "kampongs": [
+            "Kg. Burong Pingai Ayer",
+            "Kg. Lurong Dalam",
+            "Kg. Lurong Sikuna",
+            "Kg. Pandai Besi 'A'",
+            "Kg. Pandai Besi 'B'",
+            "Kg. Pekilong Muara",
+            "Kg. Saba Lintang",
+            "Kg. Sungai Siamas",
+            "Kg. Ujong Tanjong"
+          ]
+        },
+        {
+          "code": "gadong-a",
+          "name": "Gadong A",
+          "kampongs": [
+            "Kg. Batu Bersurat",
+            "Kg. Kianggeh",
+            "Kg. Kiulap",
+            "Kg. Mabohai",
+            "Kg. Pengiran Bendahara Lama",
+            "Kg. Pengiran Setia Negara",
+            "Kg. Perpindahan Mata-Mata",
+            "Kg. Sengkurong 'A'",
+            "Kg. Sengkurong 'B'"
+          ]
+        },
+        {
+          "code": "gadong-b",
+          "name": "Gadong B",
+          "kampongs": [
+            "Kg. Beribi",
+            "Kg. Gadong",
+            "Kg. Katok 'A'",
+            "Kg. Katok 'B'",
+            "Kg. Mata-Mata",
+            "Kg. Menglait",
+            "Kg. Rimba",
+            "Kg. Salar"
+          ]
+        },
+        {
+          "code": "kianggeh",
+          "name": "Kianggeh",
+          "kampongs": [
+            "Kg. Berangan",
+            "Kg. Bukit Salat",
+            "Kg. Kianggeh",
+            "Kg. Parit",
+            "Kg. Pusar Ulak",
+            "Kg. Sumbiling Lama",
+            "Kg. Tasek Lama"
+          ]
+        },
+        {
+          "code": "kilanas",
+          "name": "Kilanas",
+          "kampongs": [
+            "Kg. Bunut",
+            "Kg. Jangsak",
+            "Kg. Kapok",
+            "Kg. Kilanas",
+            "Kg. Madewa",
+            "Kg. Masin",
+            "Kg. Tagap",
+            "Kg. Tanah Jambu",
+            "Kg. Tanjong Nangka"
+          ]
+        },
+        {
+          "code": "kota-batu",
+          "name": "Kota Batu",
+          "kampongs": [
+            "Kg. Belimbing",
+            "Kg. Buang Tawar",
+            "Kg. Junjongan",
+            "Kg. Kota Batu",
+            "Kg. Manggis Madang",
+            "Kg. Pintu Malim",
+            "Kg. Subok"
+          ]
+        },
+        {
+          "code": "lumapas",
+          "name": "Lumapas",
+          "kampongs": [
+            "Kg. Buang Kepayang",
+            "Kg. Buang Tekurok",
+            "Kg. Lumapas",
+            "Kg. Sungai Buloh",
+            "Kg. Tupak Lupak"
+          ]
+        },
+        {
+          "code": "mentiri",
+          "name": "Mentiri",
+          "kampongs": [
+            "Kg. Masin",
+            "Kg. Mentiri",
+            "Kg. Serdang",
+            "Kg. Sungai Buloh"
+          ]
+        },
+        {
+          "code": "peramu",
+          "name": "Peramu",
+          "kampongs": [
+            "Kg. Bakut Berumput",
+            "Kg. Bakut Pengiran Siraja Muda",
+            "Kg. Bolkiah 'A'",
+            "Kg. Bolkiah 'B'",
+            "Kg. Peramu",
+            "Kg. Saba Ujong",
+            "Kg. Sungai Kedayan 'A'",
+            "Kg. Sungai Kedayan 'B'",
+            "Kg. Tamoi Tengah",
+            "Kg. Tamoi Ujong"
+          ]
+        },
+        {
+          "code": "saba",
+          "name": "Saba",
+          "kampongs": [
+            "Kg. Pelambayan",
+            "Kg. Saba Darat 'A'",
+            "Kg. Saba Darat 'B'",
+            "Kg. Saba Tengah",
+            "Kg. Saba Ujong"
+          ]
+        },
+        {
+          "code": "sengkurong",
+          "name": "Sengkurong",
+          "kampongs": [
+            "Kg. Jerudong",
+            "Kg. Kulapis",
+            "Kg. Lugu",
+            "Kg. Mulaut",
+            "Kg. Sengkurong",
+            "Kg. Sungai Liang",
+            "Kg. Tanjong Bunut"
+          ]
+        },
+        {
+          "code": "serasa",
+          "name": "Serasa",
+          "kampongs": [
+            "Kg. Kapok",
+            "Kg. Meragang",
+            "Kg. Sabun",
+            "Kg. Serasa",
+            "Kg. Sungai Pelumpong"
+          ]
+        },
+        {
+          "code": "sungai-kebun",
+          "name": "Sungai Kebun",
+          "kampongs": [
+            "Kg. Sungai Kebun",
+            "Kg. Setia 'A'",
+            "Kg. Setia 'B'",
+            "Kg. Setia 'C'"
+          ]
+        },
+        {
+          "code": "tamoi",
+          "name": "Tamoi",
+          "kampongs": [
+            "Kg. Pengiran Kerma Indera Lama",
+            "Kg. Sungai Lampai",
+            "Kg. Tamoi Tengah",
+            "Kg. Tamoi Ujong"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "belait",
+      "name": "Belait",
+      "mukims": [
+        {
+          "code": "kuala-balai",
+          "name": "Kuala Balai",
+          "kampongs": [
+            "Kg. Kuala Balai",
+            "Kg. Melilas",
+            "Kg. Sungai Mau"
+          ]
+        },
+        {
+          "code": "labi",
+          "name": "Labi",
+          "kampongs": [
+            "Kg. Labi",
+            "Kg. Mendaram Besar",
+            "Kg. Mendaram Kecil",
+            "Kg. Rampayoh",
+            "Kg. Teraja",
+            "Kg. Sungai Petani"
+          ]
+        },
+        {
+          "code": "liang",
+          "name": "Liang",
+          "kampongs": [
+            "Kg. Badas",
+            "Kg. Bang Baru",
+            "Kg. Bukit Puan",
+            "Kg. Lumut",
+            "Kg. Merangking",
+            "Kg. Pandan",
+            "Kg. Seri Kenangan",
+            "Kg. Sungai Bakong",
+            "Kg. Sungai Liang"
+          ]
+        },
+        {
+          "code": "seria",
+          "name": "Seria",
+          "kampongs": [
+            "Kg. Anduki",
+            "Kg. Badas",
+            "Kg. Lorong Tengah",
+            "Kg. Panaga",
+            "Kg. Seria"
+          ]
+        },
+        {
+          "code": "kuala-belait",
+          "name": "Kuala Belait",
+          "kampongs": [
+            "Kg. Kuala Belait",
+            "Kg. Mumong 'A'",
+            "Kg. Mumong 'B'",
+            "Kg. Pandan 'A'",
+            "Kg. Pandan 'B'",
+            "Kg. Sungai Duhon",
+            "Kg. Sungai Teraban"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "tutong",
+      "name": "Tutong",
+      "mukims": [
+        {
+          "code": "keriam",
+          "name": "Keriam",
+          "kampongs": [
+            "Kg. Bukit Beruang",
+            "Kg. Keriam",
+            "Kg. Kupang",
+            "Kg. Luagan Dudok",
+            "Kg. Mungkom",
+            "Kg. Penabai"
+          ]
+        },
+        {
+          "code": "kiudang",
+          "name": "Kiudang",
+          "kampongs": [
+            "Kg. Kiudang",
+            "Kg. Lalit",
+            "Kg. Layong",
+            "Kg. Maraburong",
+            "Kg. Panchong",
+            "Kg. Sengkarai"
+          ]
+        },
+        {
+          "code": "lamunin",
+          "name": "Lamunin",
+          "kampongs": [
+            "Kg. Batu Apoi",
+            "Kg. Biangkang",
+            "Kg. Bukit Udal",
+            "Kg. Ikas",
+            "Kg. Lamunin",
+            "Kg. Luagan Timbaran",
+            "Kg. Menengah",
+            "Kg. Pak Bidang",
+            "Kg. Sungai Paku"
+          ]
+        },
+        {
+          "code": "pekan-tutong",
+          "name": "Pekan Tutong",
+          "kampongs": [
+            "Kg. Panchor Murai",
+            "Kg. Panchor Papan",
+            "Kg. Penanjong",
+            "Kg. Petani",
+            "Kg. Serambangun",
+            "Kg. Sungai Kelugos",
+            "Kg. Tanjong Maya",
+            "Kg. Tutong"
+          ]
+        },
+        {
+          "code": "tanjong-maya",
+          "name": "Tanjong Maya",
+          "kampongs": [
+            "Kg. Kuala Tutong",
+            "Kg. Sungai Basong",
+            "Kg. Tanjong Maya"
+          ]
+        },
+        {
+          "code": "telisai",
+          "name": "Telisai",
+          "kampongs": [
+            "Kg. Danau",
+            "Kg. Sungai Paku",
+            "Kg. Telamba",
+            "Kg. Telisai"
+          ]
+        },
+        {
+          "code": "ukong",
+          "name": "Ukong",
+          "kampongs": [
+            "Kg. Batang Mitus",
+            "Kg. Birau",
+            "Kg. Merimbun",
+            "Kg. Rambai",
+            "Kg. Sinaut"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "temburong",
+      "name": "Temburong",
+      "mukims": [
+        {
+          "code": "amo",
+          "name": "Amo",
+          "kampongs": [
+            "Kg. Amo 'A'",
+            "Kg. Amo 'B'",
+            "Kg. Amo 'C'",
+            "Kg. Lakiun",
+            "Kg. Luagan Pulau",
+            "Kg. Parit",
+            "Kg. Semabat",
+            "Kg. Senukoh"
+          ]
+        },
+        {
+          "code": "bangar",
+          "name": "Bangar",
+          "kampongs": [
+            "Kg. Bangar",
+            "Kg. Batang Duri",
+            "Kg. Belingos",
+            "Kg. Biang",
+            "Kg. Parit Belayang",
+            "Kg. Piasau-Piasau",
+            "Kg. Selangan",
+            "Kg. Sumbiling Baru",
+            "Kg. Sumbiling Lama"
+          ]
+        },
+        {
+          "code": "batu-apoi",
+          "name": "Batu Apoi",
+          "kampongs": [
+            "Kg. Batu Apoi",
+            "Kg. Belais",
+            "Kg. Selapon"
+          ]
+        },
+        {
+          "code": "bokok",
+          "name": "Bokok",
+          "kampongs": [
+            "Kg. Bokok",
+            "Kg. Lepong Baru",
+            "Kg. Lepong Lama",
+            "Kg. Paya Bagangan",
+            "Kg. Puni"
+          ]
+        },
+        {
+          "code": "labu",
+          "name": "Labu",
+          "kampongs": [
+            "Kg. Labu",
+            "Kg. Labu Estate",
+            "Kg. Paya",
+            "Kg. Sekurop",
+            "Kg. Sibut",
+            "Kg. Tanjong Bungar"
+          ]
+        }
+      ]
+    }
+  ],
+  "postcodes": {
+    "brunei-muara": ["BA", "BB", "BC", "BD", "BE", "BF", "BG", "BH", "BJ", "BK", "BL", "BM", "BN", "BP", "BR", "BS", "BT", "BU"],
+    "belait": ["KA", "KB", "KC", "KD", "KE", "KF", "KG", "KH", "KJ", "KK"],
+    "tutong": ["TA", "TB", "TC", "TD", "TE", "TF", "TG", "TH"],
+    "temburong": ["PA", "PB", "PC", "PD", "PE", "PF", "PG"]
+  }
+}

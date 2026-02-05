@@ -1,0 +1,213 @@
+{
+  "country": {
+    "code": "SG",
+    "name": "Singapore",
+    "phone_code": "+65",
+    "postal_format": "^\\d{6}$",
+    "postal_example": "123456"
+  },
+  "regions": [
+    {
+      "code": "central",
+      "name": "Central Region",
+      "districts": [
+        {
+          "code": "01",
+          "name": "Raffles Place, Cecil, Marina, People's Park",
+          "postal_sectors": ["01", "02", "03", "04", "05", "06"]
+        },
+        {
+          "code": "02",
+          "name": "Anson, Tanjong Pagar",
+          "postal_sectors": ["07", "08"]
+        },
+        {
+          "code": "03",
+          "name": "Queenstown, Tiong Bahru",
+          "postal_sectors": ["14", "15", "16"]
+        },
+        {
+          "code": "04",
+          "name": "Telok Blangah, Harbourfront",
+          "postal_sectors": ["09", "10"]
+        },
+        {
+          "code": "05",
+          "name": "Pasir Panjang, Hong Leong Garden, Clementi New Town",
+          "postal_sectors": ["11", "12", "13"]
+        },
+        {
+          "code": "06",
+          "name": "High Street, Beach Road",
+          "postal_sectors": ["17"]
+        },
+        {
+          "code": "07",
+          "name": "Middle Road, Golden Mile",
+          "postal_sectors": ["18", "19"]
+        },
+        {
+          "code": "08",
+          "name": "Little India",
+          "postal_sectors": ["20", "21"]
+        },
+        {
+          "code": "09",
+          "name": "Orchard, Cairnhill, River Valley",
+          "postal_sectors": ["22", "23"]
+        },
+        {
+          "code": "10",
+          "name": "Ardmore, Bukit Timah, Holland Road, Tanglin",
+          "postal_sectors": ["24", "25", "26", "27"]
+        },
+        {
+          "code": "11",
+          "name": "Watten Estate, Novena, Thomson",
+          "postal_sectors": ["28", "29", "30"]
+        },
+        {
+          "code": "12",
+          "name": "Balestier, Toa Payoh, Serangoon",
+          "postal_sectors": ["31", "32", "33"]
+        },
+        {
+          "code": "13",
+          "name": "Macpherson, Braddell",
+          "postal_sectors": ["34", "35", "36", "37"]
+        },
+        {
+          "code": "14",
+          "name": "Geylang, Eunos",
+          "postal_sectors": ["38", "39", "40", "41"]
+        },
+        {
+          "code": "15",
+          "name": "Katong, Joo Chiat, Amber Road",
+          "postal_sectors": ["42", "43", "44", "45"]
+        },
+        {
+          "code": "21",
+          "name": "Upper Bukit Timah, Clementi Park, Ulu Pandan",
+          "postal_sectors": ["58", "59"]
+        }
+      ]
+    },
+    {
+      "code": "east",
+      "name": "East Region",
+      "districts": [
+        {
+          "code": "16",
+          "name": "Bedok, Upper East Coast, Eastwood, Kew Drive",
+          "postal_sectors": ["46", "47", "48"]
+        },
+        {
+          "code": "17",
+          "name": "Loyang, Changi",
+          "postal_sectors": ["49", "50", "81"]
+        },
+        {
+          "code": "18",
+          "name": "Tampines, Pasir Ris",
+          "postal_sectors": ["51", "52"]
+        }
+      ]
+    },
+    {
+      "code": "north-east",
+      "name": "North-East Region",
+      "districts": [
+        {
+          "code": "19",
+          "name": "Serangoon Garden, Hougang, Punggol",
+          "postal_sectors": ["53", "54", "55", "82"]
+        },
+        {
+          "code": "20",
+          "name": "Bishan, Ang Mo Kio",
+          "postal_sectors": ["56", "57"]
+        },
+        {
+          "code": "28",
+          "name": "Seletar",
+          "postal_sectors": ["79", "80"]
+        }
+      ]
+    },
+    {
+      "code": "north",
+      "name": "North Region",
+      "districts": [
+        {
+          "code": "25",
+          "name": "Kranji, Woodgrove",
+          "postal_sectors": ["73"]
+        },
+        {
+          "code": "26",
+          "name": "Upper Thomson, Springleaf",
+          "postal_sectors": ["77", "78"]
+        },
+        {
+          "code": "27",
+          "name": "Yishun, Sembawang",
+          "postal_sectors": ["75", "76"]
+        }
+      ]
+    },
+    {
+      "code": "west",
+      "name": "West Region",
+      "districts": [
+        {
+          "code": "22",
+          "name": "Jurong",
+          "postal_sectors": ["60", "61", "62", "63", "64"]
+        },
+        {
+          "code": "23",
+          "name": "Hillview, Dairy Farm, Bukit Panjang, Choa Chu Kang",
+          "postal_sectors": ["65", "66", "67", "68"]
+        },
+        {
+          "code": "24",
+          "name": "Lim Chu Kang, Tengah",
+          "postal_sectors": ["69", "70", "71"]
+        }
+      ]
+    }
+  ],
+  "planning_areas": [
+    { "code": "ANG", "name": "Ang Mo Kio" },
+    { "code": "BDK", "name": "Bedok" },
+    { "code": "BSH", "name": "Bishan" },
+    { "code": "BBT", "name": "Bukit Batok" },
+    { "code": "BKM", "name": "Bukit Merah" },
+    { "code": "BKP", "name": "Bukit Panjang" },
+    { "code": "BKT", "name": "Bukit Timah" },
+    { "code": "CTL", "name": "Central Area" },
+    { "code": "CCK", "name": "Choa Chu Kang" },
+    { "code": "CLE", "name": "Clementi" },
+    { "code": "DGE", "name": "Downtown Core" },
+    { "code": "GEY", "name": "Geylang" },
+    { "code": "HGN", "name": "Hougang" },
+    { "code": "JRE", "name": "Jurong East" },
+    { "code": "JRW", "name": "Jurong West" },
+    { "code": "KAL", "name": "Kallang" },
+    { "code": "MRP", "name": "Marine Parade" },
+    { "code": "NOV", "name": "Novena" },
+    { "code": "PSR", "name": "Pasir Ris" },
+    { "code": "PYL", "name": "Paya Lebar" },
+    { "code": "PGL", "name": "Punggol" },
+    { "code": "QUE", "name": "Queenstown" },
+    { "code": "SBW", "name": "Sembawang" },
+    { "code": "SGN", "name": "Serangoon" },
+    { "code": "SKG", "name": "Sengkang" },
+    { "code": "TAM", "name": "Tampines" },
+    { "code": "TAP", "name": "Toa Payoh" },
+    { "code": "WDL", "name": "Woodlands" },
+    { "code": "YIS", "name": "Yishun" }
+  ],
+  "note": "Singapore uses 6-digit postal codes where each code identifies a specific building or block. The first 2 digits indicate the postal sector/district. For address forms, city field should default to 'Singapore' and state/region is not required."
+}

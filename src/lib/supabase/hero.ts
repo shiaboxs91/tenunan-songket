@@ -1,5 +1,6 @@
-// This file is for Server Components only
-import { createClient } from "./server";
+import { unstable_cache } from 'next/cache';
+import { createAnonClient } from './server';
+import type { Tables } from './types';
 
 export interface HeroSlide {
   id: string;
@@ -16,11 +17,9 @@ export interface HeroSlide {
   updated_at: string;
 }
 
-/**
- * Get active hero slides ordered by order_index (Server Side)
- */
-export async function getHeroSlides(): Promise<HeroSlide[]> {
-  const supabase = await createClient();
+// Internal fetch function
+async function fetchHeroSlides(): Promise<HeroSlide[]> {
+  const supabase = createAnonClient();
   
   const { data, error } = await supabase
     .from('hero_slides')
@@ -33,8 +32,7 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
     return [];
   }
   
-  // Transform data to match HeroSlide type (convert null to undefined)
-  // Cast to any because Supabase generated types might be outdated
+  // Transform data to match HeroSlide type
   const transformedData: HeroSlide[] = (data || []).map((item: any) => ({
     id: item.id,
     title: item.title,
@@ -52,3 +50,16 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
   
   return transformedData;
 }
+
+/**
+ * Get active hero slides ordered by order_index (Server Side with caching)
+ * Cache for 5 minutes, revalidate on hero-slides tag
+ */
+export const getHeroSlides = unstable_cache(
+  fetchHeroSlides,
+  ['hero-slides'],
+  { 
+    revalidate: 300, // 5 minutes
+    tags: ['hero-slides']
+  }
+);

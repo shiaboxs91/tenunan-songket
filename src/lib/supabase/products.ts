@@ -1,6 +1,7 @@
-import { createClient } from './server'
+import { createClient, createAnonClient } from './server'
 import { createClient as createClientSide } from './client'
 import type { Tables, PaginatedResponse } from './types'
+import { unstable_cache } from 'next/cache'
 
 export type Product = Tables<'products'> & {
   images?: Tables<'product_images'>[]
@@ -168,8 +169,8 @@ export async function searchProducts(query: string): Promise<Product[]> {
   return (data || []) as unknown as Product[]
 }
 
-export async function getPopularProducts(limit = 4): Promise<Product[]> {
-  const supabase = await createClient()
+async function fetchPopularProducts(limit = 4): Promise<Product[]> {
+  const supabase = createAnonClient()
 
   const { data, error } = await supabase
     .from('products')
@@ -191,8 +192,17 @@ export async function getPopularProducts(limit = 4): Promise<Product[]> {
   return (data || []) as unknown as Product[]
 }
 
-export async function getLatestProducts(limit = 4): Promise<Product[]> {
-  const supabase = await createClient()
+export const getPopularProducts = unstable_cache(
+  fetchPopularProducts,
+  ['popular-products'],
+  {
+    revalidate: 300, // 5 minutes
+    tags: ['products', 'popular-products']
+  }
+)
+
+async function fetchLatestProducts(limit = 4): Promise<Product[]> {
+  const supabase = createAnonClient()
 
   const { data, error } = await supabase
     .from('products')
@@ -213,6 +223,15 @@ export async function getLatestProducts(limit = 4): Promise<Product[]> {
 
   return (data || []) as unknown as Product[]
 }
+
+export const getLatestProducts = unstable_cache(
+  fetchLatestProducts,
+  ['latest-products'],
+  {
+    revalidate: 300, // 5 minutes
+    tags: ['products', 'latest-products']
+  }
+)
 
 export async function getProductById(productId: string): Promise<Product | null> {
   const supabase = await createClient()

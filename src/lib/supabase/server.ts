@@ -1,4 +1,5 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, createBrowserClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import type { Database } from './types'
 
@@ -26,5 +27,17 @@ export async function createClient() {
         },
       },
     }
+  )
+}
+
+/**
+ * Create an anonymous Supabase client that doesn't use cookies.
+ * Use this for cached functions (unstable_cache) where cookies() is not allowed.
+ * This client can only access public data (RLS anon role).
+ */
+export function createAnonClient() {
+  return createSupabaseClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 }

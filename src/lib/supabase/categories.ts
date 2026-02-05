@@ -1,6 +1,7 @@
-import { createClient } from './server'
+import { createClient, createAnonClient } from './server'
 import { createClient as createClientSide } from './client'
 import type { Tables } from './types'
+import { unstable_cache } from 'next/cache'
 
 export type Category = Tables<'categories'>
 
@@ -40,39 +41,58 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
   return data
 }
 
-export async function getCategoriesWithProductCount(): Promise<(Category & { product_count: number })[]> {
-  const supabase = await createClient()
+async function fetchCategoriesWithProductCount(): Promise<(Category & { product_count: number })[]> {
+  const supabase = createAnonClient()
 
-  const { data: categories, error: catError } = await supabase
-    .from('categories')
-    .select('*')
-    .eq('is_active', true)
-    .order('display_order', { ascending: true })
+  // Execute both queries in parallel - 2 queries total instead of N+1
+  const [categoriesResult, productCountsResult] = await Promise.all([
+    // Query 1: Get all active categories
+    supabase
+      .from('categories')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order', { ascending: true }),
+    
+    // Query 2: Get product counts grouped by category using raw count
+    supabase
+      .from('products')
+      .select('category_id')
+      .eq('is_active', true)
+      .eq('is_deleted', false)
+  ])
 
-  if (catError || !categories) {
-    console.error('Error fetching categories:', catError)
+  if (categoriesResult.error || !categoriesResult.data) {
+    console.error('Error fetching categories:', categoriesResult.error)
     return []
   }
 
-  // Get product counts for each category
-  const categoriesWithCount = await Promise.all(
-    categories.map(async (category) => {
-      const { count } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true })
-        .eq('category_id', category.id)
-        .eq('is_active', true)
-        .eq('is_deleted', false)
-
-      return {
-        ...category,
-        product_count: count || 0
+  // Build count map from products
+  const countMap = new Map<string, number>()
+  if (productCountsResult.data) {
+    for (const product of productCountsResult.data) {
+      if (product.category_id) {
+        countMap.set(product.category_id, (countMap.get(product.category_id) || 0) + 1)
       }
-    })
-  )
+    }
+  }
+
+  // Merge counts with categories
+  const categoriesWithCount = categoriesResult.data.map((category) => ({
+    ...category,
+    product_count: countMap.get(category.id) || 0
+  }))
 
   return categoriesWithCount
 }
+
+export const getCategoriesWithProductCount = unstable_cache(
+  fetchCategoriesWithProductCount,
+  ['categories-with-product-count'],
+  {
+    revalidate: 300, // 5 minutes
+    tags: ['categories', 'products']
+  }
+)
 
 // Client-side functions (for client components like admin)
 export async function getCategoriesClient(): Promise<Category[]> {

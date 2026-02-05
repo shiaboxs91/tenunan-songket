@@ -22,10 +22,6 @@ const SUPPORTED_COUNTRIES = [
   { code: 'MY', name: 'Malaysia' },
   { code: 'SG', name: 'Singapore' },
   { code: 'BN', name: 'Brunei' },
-  { code: 'ID', name: 'Indonesia' },
-  { code: 'TH', name: 'Thailand' },
-  { code: 'PH', name: 'Philippines' },
-  { code: 'VN', name: 'Vietnam' },
 ]
 
 const SUPPORTED_REGIONS = [

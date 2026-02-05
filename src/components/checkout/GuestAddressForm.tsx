@@ -52,8 +52,68 @@ const COUNTRIES = [
   { code: "BN", name: "Brunei Darussalam" },
   { code: "MY", name: "Malaysia" },
   { code: "SG", name: "Singapore" },
-  { code: "ID", name: "Indonesia" },
 ];
+
+// Brunei Districts
+const BRUNEI_DISTRICTS = [
+  { code: "brunei-muara", name: "Brunei-Muara" },
+  { code: "belait", name: "Belait" },
+  { code: "tutong", name: "Tutong" },
+  { code: "temburong", name: "Temburong" },
+];
+
+// Malaysia States
+const MALAYSIA_STATES = [
+  { code: "johor", name: "Johor" },
+  { code: "kedah", name: "Kedah" },
+  { code: "kelantan", name: "Kelantan" },
+  { code: "melaka", name: "Melaka" },
+  { code: "negeri-sembilan", name: "Negeri Sembilan" },
+  { code: "pahang", name: "Pahang" },
+  { code: "perak", name: "Perak" },
+  { code: "perlis", name: "Perlis" },
+  { code: "pulau-pinang", name: "Pulau Pinang" },
+  { code: "sabah", name: "Sabah" },
+  { code: "sarawak", name: "Sarawak" },
+  { code: "selangor", name: "Selangor" },
+  { code: "terengganu", name: "Terengganu" },
+  { code: "kuala-lumpur", name: "Kuala Lumpur" },
+  { code: "labuan", name: "Labuan" },
+  { code: "putrajaya", name: "Putrajaya" },
+];
+
+// Get region/state options based on country
+const getRegionOptions = (country: string) => {
+  switch (country) {
+    case "BN":
+      return BRUNEI_DISTRICTS;
+    case "MY":
+      return MALAYSIA_STATES;
+    case "SG":
+      return []; // Singapore has no states/districts
+    default:
+      return [];
+  }
+};
+
+// Get label for region field based on country
+const getRegionLabel = (country: string) => {
+  switch (country) {
+    case "BN":
+      return "Daerah";
+    case "MY":
+      return "Negeri";
+    case "SG":
+      return ""; // Not shown for Singapore
+    default:
+      return "Provinsi/Daerah";
+  }
+};
+
+// Check if region field is required
+const isRegionRequired = (country: string) => {
+  return country !== "SG"; // Singapore doesn't need state
+};
 
 export function GuestAddressForm({
   initialData,
@@ -98,7 +158,9 @@ export function GuestAddressForm({
         if (!value.trim()) return "Kota wajib diisi";
         break;
       case "state":
-        if (!value.trim()) return "Provinsi/Daerah wajib diisi";
+        if (isRegionRequired(formData.country) && !value.trim()) {
+          return `${getRegionLabel(formData.country)} wajib diisi`;
+        }
         break;
       case "postal_code":
         if (!value.trim()) return "Kode pos wajib diisi";
@@ -127,7 +189,17 @@ export function GuestAddressForm({
   };
 
   const handleCountryChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, country: value }));
+    // Reset state when country changes
+    setFormData((prev) => ({ ...prev, country: value, state: "" }));
+    // Clear state error
+    setErrors((prev) => ({ ...prev, state: undefined }));
+  };
+
+  const handleStateChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, state: value }));
+    if (errors.state) {
+      setErrors((prev) => ({ ...prev, state: undefined }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -260,8 +332,8 @@ export function GuestAddressForm({
         />
       </div>
 
-      {/* City & State */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* City & State/District */}
+      <div className={`grid gap-4 ${isRegionRequired(formData.country) ? 'grid-cols-2' : 'grid-cols-1'}`}>
         <div className="space-y-2">
           <Label htmlFor="city">
             Kota <span className="text-destructive">*</span>
@@ -272,27 +344,32 @@ export function GuestAddressForm({
             value={formData.city}
             onChange={handleChange}
             onBlur={() => handleBlur("city")}
-            placeholder="Nama kota"
+            placeholder={formData.country === "BN" ? "Bandar Seri Begawan" : formData.country === "SG" ? "Singapore" : "Nama kota"}
             className={errors.city && touched.city ? "border-destructive" : ""}
           />
           {renderError("city")}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="state">
-            Provinsi/Daerah <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="state"
-            name="state"
-            value={formData.state}
-            onChange={handleChange}
-            onBlur={() => handleBlur("state")}
-            placeholder="Nama provinsi"
-            className={errors.state && touched.state ? "border-destructive" : ""}
-          />
-          {renderError("state")}
-        </div>
+        {isRegionRequired(formData.country) && (
+          <div className="space-y-2">
+            <Label htmlFor="state">
+              {getRegionLabel(formData.country)} <span className="text-destructive">*</span>
+            </Label>
+            <Select value={formData.state} onValueChange={handleStateChange}>
+              <SelectTrigger className={errors.state && touched.state ? "border-destructive" : ""}>
+                <SelectValue placeholder={`Pilih ${getRegionLabel(formData.country).toLowerCase()}`} />
+              </SelectTrigger>
+              <SelectContent>
+                {getRegionOptions(formData.country).map((region) => (
+                  <SelectItem key={region.code} value={region.code}>
+                    {region.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {renderError("state")}
+          </div>
+        )}
       </div>
 
       {/* Postal Code & Country */}

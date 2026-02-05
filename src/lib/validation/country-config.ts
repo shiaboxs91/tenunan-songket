@@ -6,7 +6,7 @@
 /**
  * Country codes supported by the system
  */
-export type CountryCode = 'BN' | 'MY' | 'SG' | 'ID';
+export type CountryCode = 'BN' | 'MY' | 'SG';
 
 /**
  * Field labels for different countries
@@ -38,24 +38,55 @@ export interface CountryConfig {
   postalCodeExample: string;
   labels: CountryLabels;
   helperText: CountryHelperText;
+  stateRequired: boolean;
+  states?: Array<{ code: string; name: string }>;
 }
 
 /**
+ * Brunei Districts
+ */
+export const BRUNEI_DISTRICTS = [
+  { code: 'brunei-muara', name: 'Brunei-Muara' },
+  { code: 'belait', name: 'Belait' },
+  { code: 'tutong', name: 'Tutong' },
+  { code: 'temburong', name: 'Temburong' },
+];
+
+/**
+ * Malaysia States
+ */
+export const MALAYSIA_STATES = [
+  { code: 'johor', name: 'Johor' },
+  { code: 'kedah', name: 'Kedah' },
+  { code: 'kelantan', name: 'Kelantan' },
+  { code: 'melaka', name: 'Melaka' },
+  { code: 'negeri-sembilan', name: 'Negeri Sembilan' },
+  { code: 'pahang', name: 'Pahang' },
+  { code: 'perak', name: 'Perak' },
+  { code: 'perlis', name: 'Perlis' },
+  { code: 'pulau-pinang', name: 'Pulau Pinang' },
+  { code: 'sabah', name: 'Sabah' },
+  { code: 'sarawak', name: 'Sarawak' },
+  { code: 'selangor', name: 'Selangor' },
+  { code: 'terengganu', name: 'Terengganu' },
+  { code: 'kuala-lumpur', name: 'Kuala Lumpur' },
+  { code: 'labuan', name: 'Labuan' },
+  { code: 'putrajaya', name: 'Putrajaya' },
+];
+
+/**
  * Brunei Darussalam configuration
- * Requirements: 1.1, 2.1, 5.1, 5.2, 5.3, 5.4, 6.1, 6.2
  */
 export const bruneiConfig: CountryConfig = {
   code: 'BN',
   name: 'Brunei Darussalam',
-  // Phone: +673XXXXXXX or XXXXXXX (7 digits)
   phonePattern: /^\+673\d{7}$|^\d{7}$/,
   phoneExample: '+6731234567',
-  // Postal code: XX1234 (2 letters + 4 digits)
   postalCodePattern: /^[A-Z]{2}\d{4}$/,
   postalCodeExample: 'BB1234',
   labels: {
     city: 'Bandar',
-    state: 'Daerah/Mukim',
+    state: 'Daerah',
     postalCode: 'Poskod',
     phone: 'Nombor Telefon',
   },
@@ -63,19 +94,18 @@ export const bruneiConfig: CountryConfig = {
     phone: 'Format: +673XXXXXXX atau XXXXXXX',
     postalCode: 'Format: XX1234 (contoh: BB1234)',
   },
+  stateRequired: true,
+  states: BRUNEI_DISTRICTS,
 };
 
 /**
  * Malaysia configuration
- * Requirements: 7.2, 8.1
  */
 export const malaysiaConfig: CountryConfig = {
   code: 'MY',
   name: 'Malaysia',
-  // Phone: +60XXXXXXXXX (10-11 digits after +60)
   phonePattern: /^\+60\d{9,10}$/,
   phoneExample: '+60312345678',
-  // Postal code: 5 digits
   postalCodePattern: /^\d{5}$/,
   postalCodeExample: '50000',
   labels: {
@@ -88,24 +118,23 @@ export const malaysiaConfig: CountryConfig = {
     phone: 'Format: +60XXXXXXXXX',
     postalCode: 'Format: 5 digit (contoh: 50000)',
   },
+  stateRequired: true,
+  states: MALAYSIA_STATES,
 };
 
 /**
  * Singapore configuration
- * Requirements: 7.2, 8.2
  */
 export const singaporeConfig: CountryConfig = {
   code: 'SG',
   name: 'Singapore',
-  // Phone: +65XXXXXXXX (8 digits after +65)
   phonePattern: /^\+65\d{8}$/,
   phoneExample: '+6512345678',
-  // Postal code: 6 digits
   postalCodePattern: /^\d{6}$/,
   postalCodeExample: '123456',
   labels: {
     city: 'City',
-    state: 'District',
+    state: '', // Not used for Singapore
     postalCode: 'Postal Code',
     phone: 'Phone Number',
   },
@@ -113,31 +142,8 @@ export const singaporeConfig: CountryConfig = {
     phone: 'Format: +65XXXXXXXX',
     postalCode: 'Format: 6 digits (e.g., 123456)',
   },
-};
-
-/**
- * Indonesia configuration
- * Requirements: 7.2, 8.3
- */
-export const indonesiaConfig: CountryConfig = {
-  code: 'ID',
-  name: 'Indonesia',
-  // Phone: +62XXXXXXXXXX (9-12 digits after +62)
-  phonePattern: /^\+62\d{9,12}$/,
-  phoneExample: '+622112345678',
-  // Postal code: 5 digits
-  postalCodePattern: /^\d{5}$/,
-  postalCodeExample: '12345',
-  labels: {
-    city: 'Kota',
-    state: 'Provinsi',
-    postalCode: 'Kode Pos',
-    phone: 'Nomor Telepon',
-  },
-  helperText: {
-    phone: 'Format: +62XXXXXXXXXX',
-    postalCode: 'Format: 5 digit (contoh: 12345)',
-  },
+  stateRequired: false, // Singapore doesn't have states
+  states: undefined,
 };
 
 /**
@@ -147,7 +153,6 @@ export const countryConfigs: Record<CountryCode, CountryConfig> = {
   BN: bruneiConfig,
   MY: malaysiaConfig,
   SG: singaporeConfig,
-  ID: indonesiaConfig,
 };
 
 /**
@@ -214,4 +219,20 @@ export function getHelperText(
 ): string {
   const config = getCountryConfig(countryCode);
   return config.helperText[field];
+}
+
+/**
+ * Get state/region options for a specific country
+ */
+export function getStateOptions(countryCode: string): Array<{ code: string; name: string }> {
+  const config = getCountryConfig(countryCode);
+  return config.states || [];
+}
+
+/**
+ * Check if state field is required for a country
+ */
+export function isStateRequired(countryCode: string): boolean {
+  const config = getCountryConfig(countryCode);
+  return config.stateRequired;
 }

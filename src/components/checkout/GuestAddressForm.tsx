@@ -3,9 +3,15 @@
 /**
  * GuestAddressForm - Form alamat untuk guest checkout
  * Alamat disimpan di state/order saja, tidak ke database
+ * 
+ * Features:
+ * - Cascading dropdowns for Brunei (District > Mukim > Kampong)
+ * - Cascading dropdowns for Malaysia (State > City)
+ * - Singapore simplified (no state/region needed)
+ * - Auto-detect location from Malaysia postcode
  */
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +25,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Import address data
+import {
+  SUPPORTED_COUNTRIES,
+  getBruneiDistricts,
+  getBruneiMukims,
+  getBruneiKampongs,
+  getMalaysiaStates,
+  getMalaysiaCities,
+  findMalaysiaLocationByPostcode,
+} from "@/lib/data/address";
+
 export interface GuestAddress {
   recipient_name: string;
   phone: string;
@@ -29,6 +46,9 @@ export interface GuestAddress {
   state: string;
   postal_code: string;
   country: string;
+  // Brunei specific
+  mukim?: string;
+  kampong?: string;
 }
 
 interface GuestAddressFormProps {
@@ -46,55 +66,8 @@ interface FormErrors {
   city?: string;
   state?: string;
   postal_code?: string;
+  mukim?: string;
 }
-
-const COUNTRIES = [
-  { code: "BN", name: "Brunei Darussalam" },
-  { code: "MY", name: "Malaysia" },
-  { code: "SG", name: "Singapore" },
-];
-
-// Brunei Districts
-const BRUNEI_DISTRICTS = [
-  { code: "brunei-muara", name: "Brunei-Muara" },
-  { code: "belait", name: "Belait" },
-  { code: "tutong", name: "Tutong" },
-  { code: "temburong", name: "Temburong" },
-];
-
-// Malaysia States
-const MALAYSIA_STATES = [
-  { code: "johor", name: "Johor" },
-  { code: "kedah", name: "Kedah" },
-  { code: "kelantan", name: "Kelantan" },
-  { code: "melaka", name: "Melaka" },
-  { code: "negeri-sembilan", name: "Negeri Sembilan" },
-  { code: "pahang", name: "Pahang" },
-  { code: "perak", name: "Perak" },
-  { code: "perlis", name: "Perlis" },
-  { code: "pulau-pinang", name: "Pulau Pinang" },
-  { code: "sabah", name: "Sabah" },
-  { code: "sarawak", name: "Sarawak" },
-  { code: "selangor", name: "Selangor" },
-  { code: "terengganu", name: "Terengganu" },
-  { code: "kuala-lumpur", name: "Kuala Lumpur" },
-  { code: "labuan", name: "Labuan" },
-  { code: "putrajaya", name: "Putrajaya" },
-];
-
-// Get region/state options based on country
-const getRegionOptions = (country: string) => {
-  switch (country) {
-    case "BN":
-      return BRUNEI_DISTRICTS;
-    case "MY":
-      return MALAYSIA_STATES;
-    case "SG":
-      return []; // Singapore has no states/districts
-    default:
-      return [];
-  }
-};
 
 // Get label for region field based on country
 const getRegionLabel = (country: string) => {
@@ -104,15 +77,57 @@ const getRegionLabel = (country: string) => {
     case "MY":
       return "Negeri";
     case "SG":
-      return ""; // Not shown for Singapore
+      return "";
     default:
       return "Provinsi/Daerah";
   }
 };
 
+// Get city label based on country
+const getCityLabel = (country: string) => {
+  switch (country) {
+    case "BN":
+      return "Mukim";
+    case "MY":
+      return "Bandar/Pekan";
+    case "SG":
+      return "Kota";
+    default:
+      return "Kota";
+  }
+};
+
 // Check if region field is required
 const isRegionRequired = (country: string) => {
-  return country !== "SG"; // Singapore doesn't need state
+  return country !== "SG";
+};
+
+// Get phone placeholder based on country
+const getPhonePlaceholder = (country: string) => {
+  switch (country) {
+    case "BN":
+      return "+6731234567";
+    case "MY":
+      return "+60123456789";
+    case "SG":
+      return "+6591234567";
+    default:
+      return "+6731234567";
+  }
+};
+
+// Get postal code placeholder based on country
+const getPostalPlaceholder = (country: string) => {
+  switch (country) {
+    case "BN":
+      return "BB3713";
+    case "MY":
+      return "50000";
+    case "SG":
+      return "123456";
+    default:
+      return "12345";
+  }
 };
 
 export function GuestAddressForm({
@@ -132,10 +147,49 @@ export function GuestAddressForm({
       state: "",
       postal_code: "",
       country: "BN",
+      mukim: "",
+      kampong: "",
     }
   );
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  // Memoized data for dropdowns
+  const bruneiDistricts = useMemo(() => getBruneiDistricts(), []);
+  const bruneiMukims = useMemo(
+    () => (formData.state ? getBruneiMukims(formData.state) : []),
+    [formData.state]
+  );
+  const bruneiKampongs = useMemo(
+    () =>
+      formData.state && formData.mukim
+        ? getBruneiKampongs(formData.state, formData.mukim)
+        : [],
+    [formData.state, formData.mukim]
+  );
+
+  const malaysiaStates = useMemo(() => getMalaysiaStates(), []);
+  const malaysiaCities = useMemo(
+    () => (formData.state ? getMalaysiaCities(formData.state) : []),
+    [formData.state]
+  );
+
+  // Auto-detect Malaysia location from postcode
+  useEffect(() => {
+    if (formData.country === "MY" && formData.postal_code.length === 5) {
+      const location = findMalaysiaLocationByPostcode(formData.postal_code);
+      if (location) {
+        const state = malaysiaStates.find((s) => s.name === location.state);
+        if (state) {
+          setFormData((prev) => ({
+            ...prev,
+            state: state.code,
+            city: location.city,
+          }));
+        }
+      }
+    }
+  }, [formData.country, formData.postal_code, malaysiaStates]);
 
   const validateField = (name: string, value: string): string | undefined => {
     switch (name) {
@@ -145,25 +199,42 @@ export function GuestAddressForm({
         break;
       case "phone":
         if (!value.trim()) return "Nomor telepon wajib diisi";
-        if (!/^[0-9+]{8,15}$/.test(value.trim())) return "Format nomor tidak valid";
+        if (!/^[0-9+]{8,15}$/.test(value.trim()))
+          return "Format nomor tidak valid";
         break;
       case "email":
         if (!value.trim()) return "Email wajib diisi";
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) return "Format email tidak valid";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()))
+          return "Format email tidak valid";
         break;
       case "address_line1":
         if (!value.trim()) return "Alamat wajib diisi";
         break;
       case "city":
-        if (!value.trim()) return "Kota wajib diisi";
+        if (formData.country !== "BN" && !value.trim()) return "Kota wajib diisi";
         break;
       case "state":
         if (isRegionRequired(formData.country) && !value.trim()) {
           return `${getRegionLabel(formData.country)} wajib diisi`;
         }
         break;
+      case "mukim":
+        if (formData.country === "BN" && !value.trim()) {
+          return "Mukim wajib diisi";
+        }
+        break;
       case "postal_code":
         if (!value.trim()) return "Kode pos wajib diisi";
+        // Validate format based on country
+        if (formData.country === "BN" && !/^[A-Z]{2}\d{4}$/i.test(value.trim())) {
+          return "Format: XX1234 (contoh: BB3713)";
+        }
+        if (formData.country === "MY" && !/^\d{5}$/.test(value.trim())) {
+          return "Format: 5 digit (contoh: 50000)";
+        }
+        if (formData.country === "SG" && !/^\d{6}$/.test(value.trim())) {
+          return "Format: 6 digit (contoh: 123456)";
+        }
         break;
     }
     return undefined;
@@ -174,8 +245,7 @@ export function GuestAddressForm({
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
-    // Clear error when user types
+
     if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
@@ -189,16 +259,57 @@ export function GuestAddressForm({
   };
 
   const handleCountryChange = (value: string) => {
-    // Reset state when country changes
-    setFormData((prev) => ({ ...prev, country: value, state: "" }));
-    // Clear state error
-    setErrors((prev) => ({ ...prev, state: undefined }));
+    // Reset location fields when country changes
+    setFormData((prev) => ({
+      ...prev,
+      country: value,
+      state: "",
+      city: value === "SG" ? "Singapore" : "",
+      mukim: "",
+      kampong: "",
+      postal_code: "",
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      state: undefined,
+      city: undefined,
+      mukim: undefined,
+      postal_code: undefined,
+    }));
   };
 
   const handleStateChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, state: value }));
+    setFormData((prev) => ({
+      ...prev,
+      state: value,
+      city: "",
+      mukim: "",
+      kampong: "",
+    }));
     if (errors.state) {
       setErrors((prev) => ({ ...prev, state: undefined }));
+    }
+  };
+
+  const handleMukimChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      mukim: value,
+      kampong: "",
+    }));
+    if (errors.mukim) {
+      setErrors((prev) => ({ ...prev, mukim: undefined }));
+    }
+  };
+
+  const handleKampongChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, kampong: value }));
+  };
+
+  const handleCityChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, city: value }));
+    if (errors.city) {
+      setErrors((prev) => ({ ...prev, city: undefined }));
     }
   };
 
@@ -217,6 +328,11 @@ export function GuestAddressForm({
       "postal_code",
     ];
 
+    // Add mukim for Brunei
+    if (formData.country === "BN") {
+      fieldsToValidate.push("mukim");
+    }
+
     fieldsToValidate.forEach((field) => {
       const error = validateField(field, formData[field] || "");
       if (error) {
@@ -226,14 +342,30 @@ export function GuestAddressForm({
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      // Mark all as touched
       const allTouched: Record<string, boolean> = {};
       fieldsToValidate.forEach((f) => (allTouched[f] = true));
       setTouched(allTouched);
       return;
     }
 
-    onSubmit(formData);
+    // Format address for submission
+    const submittedAddress = { ...formData };
+    
+    // For Brunei, construct city from mukim and kampong
+    if (formData.country === "BN") {
+      const mukimData = bruneiMukims.find((m) => m.code === formData.mukim);
+      const districtData = bruneiDistricts.find((d) => d.code === formData.state);
+      submittedAddress.city = mukimData?.name || formData.mukim || "";
+      submittedAddress.state = districtData?.name || formData.state || "";
+    }
+    
+    // For Malaysia, get proper state name
+    if (formData.country === "MY") {
+      const stateData = malaysiaStates.find((s) => s.code === formData.state);
+      submittedAddress.state = stateData?.name || formData.state || "";
+    }
+
+    onSubmit(submittedAddress);
   };
 
   const renderError = (fieldName: keyof FormErrors) => {
@@ -260,7 +392,11 @@ export function GuestAddressForm({
           onChange={handleChange}
           onBlur={() => handleBlur("recipient_name")}
           placeholder="Nama lengkap penerima"
-          className={errors.recipient_name && touched.recipient_name ? "border-destructive" : ""}
+          className={
+            errors.recipient_name && touched.recipient_name
+              ? "border-destructive"
+              : ""
+          }
         />
         {renderError("recipient_name")}
       </div>
@@ -276,10 +412,12 @@ export function GuestAddressForm({
           value={formData.phone}
           onChange={handleChange}
           onBlur={() => handleBlur("phone")}
-          placeholder="+6731234567"
+          placeholder={getPhonePlaceholder(formData.country)}
           className={errors.phone && touched.phone ? "border-destructive" : ""}
         />
-        <p className="text-xs text-muted-foreground">Format: +673XXXXXXX</p>
+        <p className="text-xs text-muted-foreground">
+          Format: {getPhonePlaceholder(formData.country)}
+        </p>
         {renderError("phone")}
       </div>
 
@@ -298,8 +436,27 @@ export function GuestAddressForm({
           placeholder="email@contoh.com"
           className={errors.email && touched.email ? "border-destructive" : ""}
         />
-        <p className="text-xs text-muted-foreground">Untuk konfirmasi pesanan dan tracking</p>
+        <p className="text-xs text-muted-foreground">
+          Untuk konfirmasi pesanan dan tracking
+        </p>
         {renderError("email")}
+      </div>
+
+      {/* Country */}
+      <div className="space-y-2">
+        <Label htmlFor="country">Negara</Label>
+        <Select value={formData.country} onValueChange={handleCountryChange}>
+          <SelectTrigger>
+            <SelectValue placeholder="Pilih negara" />
+          </SelectTrigger>
+          <SelectContent>
+            {SUPPORTED_COUNTRIES.map((country) => (
+              <SelectItem key={country.code} value={country.code}>
+                {country.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Address Line 1 */}
@@ -313,9 +470,17 @@ export function GuestAddressForm({
           value={formData.address_line1}
           onChange={handleChange}
           onBlur={() => handleBlur("address_line1")}
-          placeholder="Nama jalan, nomor rumah, RT/RW"
+          placeholder={
+            formData.country === "BN"
+              ? "Nama jalan, nombor rumah, simpang"
+              : "Nama jalan, nomor rumah"
+          }
           rows={2}
-          className={errors.address_line1 && touched.address_line1 ? "border-destructive" : ""}
+          className={
+            errors.address_line1 && touched.address_line1
+              ? "border-destructive"
+              : ""
+          }
         />
         {renderError("address_line1")}
       </div>
@@ -332,51 +497,198 @@ export function GuestAddressForm({
         />
       </div>
 
-      {/* City & State/District */}
-      <div className={`grid gap-4 ${isRegionRequired(formData.country) ? 'grid-cols-2' : 'grid-cols-1'}`}>
-        <div className="space-y-2">
-          <Label htmlFor="city">
-            Kota <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="city"
-            name="city"
-            value={formData.city}
-            onChange={handleChange}
-            onBlur={() => handleBlur("city")}
-            placeholder={formData.country === "BN" ? "Bandar Seri Begawan" : formData.country === "SG" ? "Singapore" : "Nama kota"}
-            className={errors.city && touched.city ? "border-destructive" : ""}
-          />
-          {renderError("city")}
-        </div>
-
-        {isRegionRequired(formData.country) && (
+      {/* Brunei-specific fields */}
+      {formData.country === "BN" && (
+        <>
+          {/* District */}
           <div className="space-y-2">
             <Label htmlFor="state">
-              {getRegionLabel(formData.country)} <span className="text-destructive">*</span>
+              Daerah <span className="text-destructive">*</span>
             </Label>
             <Select value={formData.state} onValueChange={handleStateChange}>
-              <SelectTrigger className={errors.state && touched.state ? "border-destructive" : ""}>
-                <SelectValue placeholder={`Pilih ${getRegionLabel(formData.country).toLowerCase()}`} />
+              <SelectTrigger
+                className={
+                  errors.state && touched.state ? "border-destructive" : ""
+                }
+              >
+                <SelectValue placeholder="Pilih daerah" />
               </SelectTrigger>
               <SelectContent>
-                {getRegionOptions(formData.country).map((region) => (
-                  <SelectItem key={region.code} value={region.code}>
-                    {region.name}
+                {bruneiDistricts.map((district) => (
+                  <SelectItem key={district.code} value={district.code}>
+                    {district.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {renderError("state")}
           </div>
-        )}
-      </div>
 
-      {/* Postal Code & Country */}
-      <div className="grid grid-cols-2 gap-4">
+          {/* Mukim */}
+          {formData.state && (
+            <div className="space-y-2">
+              <Label htmlFor="mukim">
+                Mukim <span className="text-destructive">*</span>
+              </Label>
+              <Select value={formData.mukim} onValueChange={handleMukimChange}>
+                <SelectTrigger
+                  className={
+                    errors.mukim && touched.mukim ? "border-destructive" : ""
+                  }
+                >
+                  <SelectValue placeholder="Pilih mukim" />
+                </SelectTrigger>
+                <SelectContent>
+                  {bruneiMukims.map((mukim) => (
+                    <SelectItem key={mukim.code} value={mukim.code}>
+                      {mukim.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {renderError("mukim")}
+            </div>
+          )}
+
+          {/* Kampong */}
+          {formData.mukim && bruneiKampongs.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="kampong">Kampong (Opsional)</Label>
+              <Select
+                value={formData.kampong}
+                onValueChange={handleKampongChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih kampong" />
+                </SelectTrigger>
+                <SelectContent>
+                  {bruneiKampongs.map((kampong) => (
+                    <SelectItem key={kampong} value={kampong}>
+                      {kampong}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Malaysia-specific fields */}
+      {formData.country === "MY" && (
+        <>
+          {/* Postal Code first (for auto-detect) */}
+          <div className="space-y-2">
+            <Label htmlFor="postal_code">
+              Poskod <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="postal_code"
+              name="postal_code"
+              value={formData.postal_code}
+              onChange={handleChange}
+              onBlur={() => handleBlur("postal_code")}
+              placeholder={getPostalPlaceholder(formData.country)}
+              maxLength={5}
+              className={
+                errors.postal_code && touched.postal_code
+                  ? "border-destructive"
+                  : ""
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              Masukkan poskod untuk auto-detect lokasi
+            </p>
+            {renderError("postal_code")}
+          </div>
+
+          {/* State */}
+          <div className="space-y-2">
+            <Label htmlFor="state">
+              Negeri <span className="text-destructive">*</span>
+            </Label>
+            <Select value={formData.state} onValueChange={handleStateChange}>
+              <SelectTrigger
+                className={
+                  errors.state && touched.state ? "border-destructive" : ""
+                }
+              >
+                <SelectValue placeholder="Pilih negeri" />
+              </SelectTrigger>
+              <SelectContent>
+                {malaysiaStates.map((state) => (
+                  <SelectItem key={state.code} value={state.code}>
+                    {state.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {renderError("state")}
+          </div>
+
+          {/* City */}
+          {formData.state && (
+            <div className="space-y-2">
+              <Label htmlFor="city">
+                Bandar/Pekan <span className="text-destructive">*</span>
+              </Label>
+              <Select value={formData.city} onValueChange={handleCityChange}>
+                <SelectTrigger
+                  className={
+                    errors.city && touched.city ? "border-destructive" : ""
+                  }
+                >
+                  <SelectValue placeholder="Pilih bandar/pekan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {malaysiaCities.map((city) => (
+                    <SelectItem key={city.name} value={city.name}>
+                      {city.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {renderError("city")}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Singapore-specific fields */}
+      {formData.country === "SG" && (
+        <>
+          {/* Postal Code */}
+          <div className="space-y-2">
+            <Label htmlFor="postal_code">
+              Postal Code <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="postal_code"
+              name="postal_code"
+              value={formData.postal_code}
+              onChange={handleChange}
+              onBlur={() => handleBlur("postal_code")}
+              placeholder={getPostalPlaceholder(formData.country)}
+              maxLength={6}
+              className={
+                errors.postal_code && touched.postal_code
+                  ? "border-destructive"
+                  : ""
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              6 digit postal code
+            </p>
+            {renderError("postal_code")}
+          </div>
+        </>
+      )}
+
+      {/* Postal Code for Brunei */}
+      {formData.country === "BN" && (
         <div className="space-y-2">
           <Label htmlFor="postal_code">
-            Kode Pos <span className="text-destructive">*</span>
+            Poskod <span className="text-destructive">*</span>
           </Label>
           <Input
             id="postal_code"
@@ -384,33 +696,30 @@ export function GuestAddressForm({
             value={formData.postal_code}
             onChange={handleChange}
             onBlur={() => handleBlur("postal_code")}
-            placeholder="12345"
-            className={errors.postal_code && touched.postal_code ? "border-destructive" : ""}
+            placeholder={getPostalPlaceholder(formData.country)}
+            maxLength={6}
+            className={
+              errors.postal_code && touched.postal_code
+                ? "border-destructive"
+                : ""
+            }
           />
+          <p className="text-xs text-muted-foreground">
+            Format: XX1234 (contoh: BB3713)
+          </p>
           {renderError("postal_code")}
         </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="country">Negara</Label>
-          <Select value={formData.country} onValueChange={handleCountryChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Pilih negara" />
-            </SelectTrigger>
-            <SelectContent>
-              {COUNTRIES.map((country) => (
-                <SelectItem key={country.code} value={country.code}>
-                  {country.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      )}
 
       {/* Actions */}
       <div className="flex gap-3 pt-4">
         {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            className="flex-1"
+          >
             Batal
           </Button>
         )}

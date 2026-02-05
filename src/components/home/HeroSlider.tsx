@@ -107,16 +107,19 @@ export function HeroSlider({ slides }: HeroSliderProps) {
       <div className="absolute bottom-6 left-0 right-0 z-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             {/* Minimalist Dots */}
-            <div className="flex gap-2">
+            <div className="flex gap-2" role="tablist" aria-label="Slide navigation">
                 {slides.map((_, index) => (
                 <button
                     key={index}
                     onClick={() => scrollTo(index)}
                     className={cn(
-                    "h-1 rounded-full transition-all duration-500",
-                    index === selectedIndex ? "w-8 bg-amber-500" : "w-2 bg-white/40 hover:bg-white/60"
+                    "h-3 min-h-[24px] rounded-full transition-all duration-500",
+                    index === selectedIndex ? "w-10 bg-amber-500" : "w-6 bg-white/40 hover:bg-white/60"
                     )}
-                    aria-label={`Go to slide ${index + 1}`}
+                    aria-label={`Ke slide ${index + 1} dari ${slides.length}`}
+                    aria-current={index === selectedIndex ? "true" : undefined}
+                    role="tab"
+                    aria-selected={index === selectedIndex}
                 />
                 ))}
             </div>
@@ -128,6 +131,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                     size="icon"
                     className="rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white backdrop-blur-sm transition-all hover:scale-105"
                     onClick={scrollPrev}
+                    aria-label="Slide sebelumnya"
                 >
                     <ChevronLeft className="h-5 w-5" />
                 </Button>
@@ -136,6 +140,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                     size="icon"
                     className="rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white backdrop-blur-sm transition-all hover:scale-105"
                     onClick={scrollNext}
+                    aria-label="Slide berikutnya"
                 >
                     <ChevronRight className="h-5 w-5" />
                 </Button>

@@ -206,7 +206,12 @@ export function Header() {
 
             {!mobileSearchExpanded && (
               <Link href="/cart" className="relative">
-                <Button variant="ghost" size="icon" className="text-amber-700">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="text-amber-700"
+                  aria-label={`${t("common.cart")}${totalItems > 0 ? `, ${totalItems} item` : ''}`}
+                >
                   <ShoppingCart className="h-5 w-5" />
                   {totalItems > 0 && (
                     <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-amber-500 text-xs text-white flex items-center justify-center font-medium">
@@ -223,6 +228,8 @@ export function Header() {
                 size="icon" 
                 className="text-amber-700"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label={mobileMenuOpen ? "Tutup menu" : "Buka menu"}
+                aria-expanded={mobileMenuOpen}
               >
                 <Menu className="h-5 w-5" />
               </Button>
@@ -248,6 +255,7 @@ export function Header() {
                       type="button"
                       onClick={() => setSearchQuery("")}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                      aria-label="Hapus pencarian"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -291,6 +299,7 @@ export function Header() {
             size="icon"
             onClick={() => setMobileMenuOpen(false)}
             className="text-slate-500 hover:text-slate-700"
+            aria-label="Tutup menu"
           >
             <X className="h-5 w-5" />
           </Button>

@@ -80,12 +80,17 @@ export default async function HomePage() {
 
           <div className="flex flex-wrap justify-center gap-4 md:gap-6 lg:gap-10">
             {jenisCorak.map((corak) => (
-              <Link key={corak.name} href={`/products?q=${encodeURIComponent(corak.name)}`} className="group flex flex-col items-center text-center">
+              <Link 
+                key={corak.name} 
+                href={`/products?q=${encodeURIComponent(corak.name)}`} 
+                className="group flex flex-col items-center text-center"
+                aria-label={`Lihat ${corak.items} produk ${corak.name}`}
+              >
                 <div className="relative w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full overflow-hidden mb-2 md:mb-3 ring-2 ring-amber-200 group-hover:ring-amber-400 transition-all shadow-sm group-hover:shadow-md">
                   <Image src={corak.image} alt={corak.name} fill className="object-cover group-hover:scale-110 transition-transform duration-300" sizes="96px" />
                 </div>
                 <span className="text-xs md:text-sm font-medium text-slate-700 group-hover:text-amber-700 transition-colors">{corak.name}</span>
-                <span className="text-xs text-slate-400">{corak.items} {t("items")}</span>
+                <span className="text-xs text-slate-500">{corak.items} {t("items")}</span>
               </Link>
             ))}
           </div>

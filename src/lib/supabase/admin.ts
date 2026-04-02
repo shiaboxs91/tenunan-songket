@@ -391,28 +391,36 @@ export async function updateOrderStatus(
 
   try {
     // Get order details first
-    const { data: orderData } = await supabase
+    const { data: orderData, error: fetchError } = await supabase
       .from('orders')
       .select('user_id, order_number')
       .eq('id', orderId)
       .single()
 
-    if (!orderData) {
+    if (fetchError) {
+      console.error('Error fetching order:', fetchError)
       return false
     }
 
-    const updateData: any = { status }
-    // Note: tracking_number column doesn't exist yet in database
-    // Will be added in future migration
+    if (!orderData) {
+      console.error('Order not found:', orderId)
+      return false
+    }
 
-    const { error } = await supabase
+    const updateData: any = { status, updated_at: new Date().toISOString() }
+
+    const { data: updateResult, error: updateError } = await supabase
       .from('orders')
       .update(updateData)
       .eq('id', orderId)
+      .select()
 
-    if (error) {
+    if (updateError) {
+      console.error('Error updating order status:', updateError)
       return false
     }
+
+    console.log('Order status updated:', updateResult)
 
     // Create notification for order status change (only for registered users)
     if (orderData.user_id) {
@@ -426,7 +434,7 @@ export async function updateOrderStatus(
 
     return true
   } catch (error) {
-    console.error('Error updating order status:', error)
+    console.error('Error in updateOrderStatus:', error)
     return false
   }
 }

@@ -10,22 +10,26 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Search, Eye, Package, Clock, CheckCircle, XCircle, Truck } from 'lucide-react'
 import Link from 'next/link'
 
-const statusColors = {
+const statusColors: Record<string, string> = {
+  pending_payment: 'bg-yellow-100 text-yellow-800',
   pending: 'bg-yellow-100 text-yellow-800',
   paid: 'bg-blue-100 text-blue-800',
   processing: 'bg-purple-100 text-purple-800',
   shipped: 'bg-indigo-100 text-indigo-800',
   delivered: 'bg-green-100 text-green-800',
+  completed: 'bg-green-100 text-green-800',
   cancelled: 'bg-red-100 text-red-800',
   refunded: 'bg-gray-100 text-gray-800'
 }
 
-const statusIcons = {
+const statusIcons: Record<string, typeof Clock> = {
+  pending_payment: Clock,
   pending: Clock,
   paid: CheckCircle,
   processing: Package,
   shipped: Truck,
   delivered: CheckCircle,
+  completed: CheckCircle,
   cancelled: XCircle,
   refunded: XCircle
 }
@@ -151,7 +155,8 @@ export default function AdminOrdersPage() {
           ) : (
             <div className="space-y-4">
               {orders.map((order) => {
-                const StatusIcon = statusIcons[order.status as keyof typeof statusIcons]
+                const StatusIcon = statusIcons[order.status || 'pending'] || Clock
+                const statusColor = statusColors[order.status || 'pending'] || 'bg-gray-100 text-gray-800'
                 return (
                   <div
                     key={order.id}
@@ -163,9 +168,9 @@ export default function AdminOrdersPage() {
                           <h3 className="font-semibold text-lg">
                             {order.order_number}
                           </h3>
-                          <Badge className={statusColors[order.status as keyof typeof statusColors]}>
+                          <Badge className={statusColor}>
                             <StatusIcon className="h-3 w-3 mr-1" />
-                            {order.status}
+                            {order.status || 'pending'}
                           </Badge>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600">

@@ -9,7 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { Search, Plus, Edit, Trash2, Tag, Calendar, Percent, DollarSign } from 'lucide-react'
+import { Search, Plus, Edit, Trash2, Tag, Calendar, Percent, DollarSign, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface CouponFormData {
   code: string
@@ -103,6 +104,8 @@ export default function AdminCouponsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    const loadingToast = toast.loading(editingCoupon ? 'Memperbarui kupon...' : 'Membuat kupon...')
+    
     try {
       const couponData = {
         ...formData,
@@ -120,34 +123,66 @@ export default function AdminCouponsPage() {
         success = await createCoupon(couponData)
       }
 
+      toast.dismiss(loadingToast)
+      
       if (success) {
         setShowForm(false)
         await loadCoupons()
-        alert(editingCoupon ? 'Kupon berhasil diperbarui!' : 'Kupon berhasil dibuat!')
+        toast.success(editingCoupon ? 'Kupon berhasil diperbarui!' : 'Kupon berhasil dibuat!', {
+          description: `Kode: ${formData.code}`
+        })
       } else {
-        alert('Gagal menyimpan kupon')
+        toast.error('Gagal menyimpan kupon', {
+          description: 'Silakan periksa data dan coba lagi'
+        })
       }
     } catch (error) {
       console.error('Error saving coupon:', error)
-      alert('Terjadi kesalahan saat menyimpan kupon')
+      toast.dismiss(loadingToast)
+      toast.error('Terjadi kesalahan', {
+        description: 'Tidak dapat terhubung ke server'
+      })
     }
   }
 
   const handleDeleteCoupon = async (couponId: string) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus kupon ini?')) return
-
-    try {
-      const success = await deleteCoupon(couponId)
-      if (success) {
-        await loadCoupons()
-        alert('Kupon berhasil dihapus!')
-      } else {
-        alert('Gagal menghapus kupon')
-      }
-    } catch (error) {
-      console.error('Error deleting coupon:', error)
-      alert('Terjadi kesalahan saat menghapus kupon')
-    }
+    toast.custom((t) => (
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-4 border max-w-md">
+        <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Hapus Kupon?</h3>
+        <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
+          Kupon yang dihapus tidak dapat dikembalikan.
+        </p>
+        <div className="flex gap-2 justify-end">
+          <Button variant="outline" size="sm" onClick={() => toast.dismiss(t)}>
+            Batal
+          </Button>
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={async () => {
+              toast.dismiss(t)
+              const loadingToast = toast.loading('Menghapus kupon...')
+              try {
+                const success = await deleteCoupon(couponId)
+                toast.dismiss(loadingToast)
+                if (success) {
+                  await loadCoupons()
+                  toast.success('Kupon berhasil dihapus!')
+                } else {
+                  toast.error('Gagal menghapus kupon')
+                }
+              } catch (error) {
+                console.error('Error deleting coupon:', error)
+                toast.dismiss(loadingToast)
+                toast.error('Terjadi kesalahan')
+              }
+            }}
+          >
+            Hapus
+          </Button>
+        </div>
+      </div>
+    ), { duration: Infinity })
   }
 
   const totalPages = Math.ceil(total / limit)

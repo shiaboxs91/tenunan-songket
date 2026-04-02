@@ -9,18 +9,33 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { ArrowLeft, Package, User, MapPin, CreditCard, Truck, Save } from 'lucide-react'
+import { ArrowLeft, Package, User, MapPin, CreditCard, Truck, Save, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { toast } from 'sonner'
 
-const statusColors = {
+const statusColors: Record<string, string> = {
+  pending_payment: 'bg-yellow-100 text-yellow-800',
   pending: 'bg-yellow-100 text-yellow-800',
   paid: 'bg-blue-100 text-blue-800',
   processing: 'bg-purple-100 text-purple-800',
   shipped: 'bg-indigo-100 text-indigo-800',
   delivered: 'bg-green-100 text-green-800',
+  completed: 'bg-emerald-100 text-emerald-800',
   cancelled: 'bg-red-100 text-red-800',
   refunded: 'bg-gray-100 text-gray-800'
+}
+
+const statusLabels: Record<string, string> = {
+  pending_payment: 'Menunggu Bayar',
+  pending: 'Menunggu',
+  paid: 'Dibayar',
+  processing: 'Diproses',
+  shipped: 'Dikirim',
+  delivered: 'Diterima',
+  completed: 'Selesai',
+  cancelled: 'Dibatalkan',
+  refunded: 'Dikembalikan'
 }
 
 type OrderDetail = Awaited<ReturnType<typeof getAdminOrderDetail>>
@@ -57,20 +72,40 @@ export default function AdminOrderDetailPage() {
   }
 
   const handleUpdateStatus = async () => {
-    if (!order || newStatus === order.status) return
+    if (!order || newStatus === order.status) {
+      toast.info('Status tidak berubah')
+      return
+    }
 
     setUpdating(true)
+    
+    // Show loading toast
+    const loadingToast = toast.loading('Memperbarui status pesanan...')
+    
     try {
       const success = await updateOrderStatus(orderId, newStatus)
+      
       if (success) {
+        toast.dismiss(loadingToast)
+        toast.success('Status berhasil diperbarui!', {
+          description: `Pesanan ${order.order_number} sekarang: ${statusLabels[newStatus] || newStatus}`,
+          icon: <CheckCircle className="h-5 w-5 text-green-500" />,
+          duration: 4000
+        })
         await loadOrderDetail()
-        alert('Status pesanan berhasil diperbarui!')
       } else {
-        alert('Gagal memperbarui status pesanan')
+        toast.dismiss(loadingToast)
+        toast.error('Gagal memperbarui status', {
+          description: 'Silakan coba lagi atau hubungi developer',
+          icon: <AlertCircle className="h-5 w-5 text-red-500" />
+        })
       }
     } catch (error) {
       console.error('Error updating order status:', error)
-      alert('Terjadi kesalahan saat memperbarui status')
+      toast.dismiss(loadingToast)
+      toast.error('Terjadi kesalahan', {
+        description: 'Tidak dapat terhubung ke server'
+      })
     } finally {
       setUpdating(false)
     }
@@ -134,8 +169,8 @@ export default function AdminOrderDetailPage() {
             <p className="text-gray-600">{order.order_number}</p>
           </div>
         </div>
-        <Badge className={statusColors[order.status as keyof typeof statusColors]}>
-          {order.status}
+        <Badge className={statusColors[order.status || 'pending'] || 'bg-gray-100 text-gray-800'}>
+          {statusLabels[order.status || 'pending'] || order.status}
         </Badge>
       </div>
 
@@ -274,10 +309,19 @@ export default function AdminOrderDetailPage() {
               <Button
                 onClick={handleUpdateStatus}
                 disabled={updating || newStatus === order.status}
-                className="w-full"
+                className="w-full bg-amber-600 hover:bg-amber-700"
               >
-                <Save className="h-4 w-4 mr-2" />
-                {updating ? 'Menyimpan...' : 'Perbarui Status'}
+                {updating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Menyimpan...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Perbarui Status
+                  </>
+                )}
               </Button>
             </CardContent>
           </Card>

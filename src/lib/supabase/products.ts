@@ -9,7 +9,9 @@ export type Product = Tables<'products'> & {
 }
 
 export interface ProductFilters {
-  category?: string
+  category?: string          // category_id (UUID)
+  categoryName?: string      // category name (for frontend filter)
+  categoryNames?: string[]   // multiple category names
   minPrice?: number
   maxPrice?: number
   inStock?: boolean
@@ -26,6 +28,8 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Paginat
   
   const {
     category,
+    categoryName,
+    categoryNames,
     minPrice,
     maxPrice,
     inStock,
@@ -35,6 +39,29 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Paginat
     page = 1,
     limit = 12
   } = filters
+
+  // If filtering by category names, first get category IDs
+  let categoryIds: string[] = []
+  if (categoryNames && categoryNames.length > 0) {
+    const { data: cats } = await supabase
+      .from('categories')
+      .select('id, name')
+      .in('name', categoryNames)
+    
+    if (cats && cats.length > 0) {
+      categoryIds = cats.map(c => c.id)
+    }
+  } else if (categoryName) {
+    const { data: cat } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('name', categoryName)
+      .single()
+    
+    if (cat) {
+      categoryIds = [cat.id]
+    }
+  }
 
   let query = supabase
     .from('products')
@@ -49,6 +76,10 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Paginat
   // Apply filters
   if (category) {
     query = query.eq('category_id', category)
+  } else if (categoryIds.length === 1) {
+    query = query.eq('category_id', categoryIds[0])
+  } else if (categoryIds.length > 1) {
+    query = query.in('category_id', categoryIds)
   }
 
   if (minPrice !== undefined) {

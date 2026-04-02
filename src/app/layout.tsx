@@ -102,7 +102,7 @@ export default async function RootLayout({
       </head>
       <body className="antialiased" suppressHydrationWarning>
         {/* <NuqsAdapter> */}
-          <IntlProvider locale={locale} messages={messages as Record<string, unknown>}>
+          <IntlProvider locale={locale} messages={messages as Record<string, unknown>} timeZone="Asia/Kuala_Lumpur">
             {children}
           </IntlProvider>
         {/* </NuqsAdapter> */}

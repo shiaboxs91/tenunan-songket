@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     const { sortBy, sortOrder } = mapSortToSupabase(sort);
     
     const supabaseResult = await getSupabaseProducts({
-      category: categories[0], // Supabase currently supports single category
+      categoryNames: categories.length > 0 ? categories : undefined,
       minPrice,
       maxPrice,
       inStock: inStock || undefined,
@@ -68,14 +68,8 @@ export async function GET(request: NextRequest) {
     // Convert to frontend format
     const products = toFrontendProducts(supabaseResult.data);
 
-    // If multiple categories selected, filter client-side
-    let filteredProducts = products;
-    if (categories.length > 1) {
-      filteredProducts = products.filter(p => categories.includes(p.category));
-    }
-
     const response: ProductsResponse = {
-      products: filteredProducts,
+      products,
       total: supabaseResult.total,
       page: supabaseResult.page,
       pageSize: supabaseResult.limit,

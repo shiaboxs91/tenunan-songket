@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ShoppingCart, Star, Eye } from "lucide-react";
 import { Product } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
@@ -45,6 +46,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, density = "comfortable", onQuickView }: ProductCardProps) {
   const { addItem } = useCart();
+  const router = useRouter();
   const isCompact = density === "compact";
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -56,7 +58,8 @@ export function ProductCard({ product, density = "comfortable", onQuickView }: P
   const handleQuickView = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onQuickView?.(product);
+    // Navigate to product detail page (since QuickViewModal is disabled)
+    router.push(`/products/${product.slug}`);
   };
 
   return (
@@ -109,21 +112,19 @@ export function ProductCard({ product, density = "comfortable", onQuickView }: P
 
         {/* Quick Add Button */}
         <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5 z-20">
-          {/* Quick View Button - Desktop only */}
-          {onQuickView && (
-            <Button
-              size="icon"
-              variant="secondary"
-              onClick={handleQuickView}
-              className={cn(
-                "rounded-full shadow-lg hidden md:flex",
-                isCompact ? "h-6 w-6" : "h-8 w-8"
-              )}
-              aria-label={`Lihat cepat ${product.title}`}
-            >
-              <Eye className={isCompact ? "h-3 w-3" : "h-3.5 w-3.5"} />
-            </Button>
-          )}
+          {/* Quick View Button - Navigates to product detail */}
+          <Button
+            size="icon"
+            variant="secondary"
+            onClick={handleQuickView}
+            className={cn(
+              "rounded-full shadow-lg hidden md:flex",
+              isCompact ? "h-6 w-6" : "h-8 w-8"
+            )}
+            aria-label={`Lihat detail ${product.title}`}
+          >
+            <Eye className={isCompact ? "h-3 w-3" : "h-3.5 w-3.5"} />
+          </Button>
           <Button
             size="icon"
             variant="secondary"

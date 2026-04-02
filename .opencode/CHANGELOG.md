@@ -1,5 +1,120 @@
 # Changelog
 
+## 2026-04-03 - Fix next-intl TimeZone Warning
+
+### Summary
+Fixed `ENVIRONMENT_FALLBACK` error from next-intl where timeZone was not configured for client-side provider.
+
+### Error Fixed
+```
+IntlError: ENVIRONMENT_FALLBACK: There is no `timeZone` configured, 
+this can lead to markup mismatches caused by environment differences.
+```
+
+### Changes
+- `src/components/providers/IntlProvider.tsx` - Added `timeZone` prop with default `"Asia/Kuala_Lumpur"`
+- `src/app/layout.tsx` - Explicitly pass `timeZone="Asia/Kuala_Lumpur"` to IntlProvider
+
+### Notes
+- PWA icons (`/icons/icon-*.png`) are missing but not critical for development
+- The icons can be generated later using a tool like `pwa-asset-generator`
+
+---
+
+## 2026-04-03 - E-Commerce Modules Enhancement Plan
+
+### Summary
+Created comprehensive implementation plan for professional e-commerce modules based on codebase audit.
+
+### Plan Document
+Full implementation plan: `docs/plans/2026-04-03-ecommerce-modules-enhancement.md`
+
+### Module Status (After Audit)
+
+| Module | Current Status | Action Needed |
+|--------|---------------|---------------|
+| Product Reviews & Ratings | COMPLETE | None |
+| Wishlist & Save for Later | COMPLETE | None |
+| Product Variants | PARTIAL (UI only) | Backend implementation |
+| Loyalty Program & Points | MISSING | Full implementation |
+| Product Recommendations | PARTIAL | Enhancement |
+| Order Tracking | PARTIAL | Courier API integration |
+| Blog & Content | MISSING | Full implementation |
+
+### Implementation Phases
+
+1. **Phase 1: Product Variants** (2-3 weeks)
+   - Database schema for variants
+   - Admin variant management
+   - Cart/order variant support
+
+2. **Phase 2: Order Tracking** (1-2 weeks)
+   - Courier API integration
+   - Tracking timeline UI
+   - WhatsApp/Email notifications
+
+3. **Phase 3: Loyalty Program** (2-3 weeks)
+   - Points earning/redemption
+   - Tier system
+   - Referral program
+
+4. **Phase 4: Recommendations** (1-2 weeks)
+   - "Frequently bought together"
+   - Recently viewed
+   - Personalized picks
+
+5. **Phase 5: Blog CMS** (2 weeks)
+   - Blog posts with rich editor
+   - Categories & tags
+   - Product embeds in articles
+
+---
+
+## 2026-04-03 - Product Filter & Quick View Fixes
+
+### Summary
+Fixed critical bugs on the `/products` page where category filters and quick view button were not working.
+
+### Issues Fixed
+
+#### 1. Category Filter Not Working
+**Problem:** Selecting categories (e.g., "Bertabur [5]") showed "Tidak ada produk ditemukan" instead of filtering products.
+
+**Root Cause:** The frontend sends category **names** (e.g., "Si Pugut") but the Supabase `getProducts` function expected **category_id** (UUID).
+
+**Fix:** Updated `src/lib/supabase/products.ts`:
+- Added `categoryName` and `categoryNames` to `ProductFilters` interface
+- Modified `getProducts()` to lookup category IDs by name before filtering
+- Supports both single and multiple category selection
+
+**Fix:** Updated `src/app/api/products/route.ts`:
+- Now passes `categoryNames` array instead of single `category` ID
+- Removed client-side filtering hack for multiple categories
+
+#### 2. Eye Button (Quick View) Not Working
+**Problem:** Clicking the eye icon on product cards did nothing.
+
+**Root Cause:** The `QuickViewModal` component was disabled/commented out, and the eye button only appeared when `onQuickView` prop was provided.
+
+**Fix:** Updated `src/components/product/ProductCard.tsx`:
+- Eye button now navigates directly to product detail page (`/products/[slug]`)
+- Removed `onQuickView` prop dependency - button always shows on desktop
+- Uses `useRouter` for programmatic navigation
+
+### Files Modified
+- `src/lib/supabase/products.ts` - Added categoryNames filter support
+- `src/app/api/products/route.ts` - Use categoryNames for filtering
+- `src/components/product/ProductCard.tsx` - Eye button navigates to detail page
+
+### Verification
+- Build successful with `npm run build`
+- Category filter now properly filters products by name
+- Eye button navigates to product detail on click
+- Price range filter confirmed working (minPrice/maxPrice → API min/max params)
+- In-stock filter confirmed working (inStockOnly → inStock=true → stock > 0)
+
+---
+
 ## 2026-04-02 - SEO, Performance & Facebook Shop Integration (COMPLETED)
 
 ### Summary

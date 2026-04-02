@@ -23,6 +23,9 @@ export const metadata: Metadata = {
   title: "Tenunan Songket - Warisan Budaya Melayu",
   description: "Belanja kain songket asli berkualitas tinggi. Warisan budaya Melayu dengan benang emas asli, 100% handmade.",
   manifest: "/manifest.json",
+  verification: {
+    google: "lxZ8EnZcFwecB9McFjKZWexOjGlS_Adyq9piJQN_AdM",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

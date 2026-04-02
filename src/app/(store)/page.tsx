@@ -11,6 +11,9 @@ import { getHeroSlides } from "@/lib/supabase/hero";
 import { toFrontendProducts } from "@/lib/supabase/adapters";
 import { getTranslations } from "next-intl/server";
 
+// ISR: Revalidate homepage every 5 minutes (300 seconds)
+export const revalidate = 300;
+
 // Simple Section Divider - optimized for performance
 const SectionDivider = () => (
   <div className="relative h-6 flex items-center justify-center overflow-hidden" aria-hidden="true">

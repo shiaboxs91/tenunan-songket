@@ -1,5 +1,86 @@
 # Changelog
 
+## 2026-04-02 - SEO, Performance & Facebook Shop Integration (COMPLETED)
+
+### Summary
+Major update to optimize the website for Google search ranking, improve loading performance, and integrate Facebook Shop for product synchronization.
+
+### Plan Document
+Full implementation plan: `docs/plans/2026-04-02-seo-performance-facebook-shop.md`
+
+### Phase 1: SEO Optimization
+**Status: COMPLETE (8/8 tasks)**
+
+**Target Keywords:**
+- Primary: "beli kain songket online", "kain songket asli brunei", "kain tenunan melayu", "songket sarawak asli"
+- Long-tail: "kain songket untuk majlis perkahwinan", "songket handmade berkualiti"
+- Category: "songket brunei", "songket sarawak", "songket sambas", "kain sinjang", "kain betabur"
+
+**Tasks:**
+- [x] 1.1 Create robots.txt
+- [x] 1.2 Create dynamic sitemap.ts
+- [x] 1.3 Add generateMetadata for product pages
+- [x] 1.4 Create JSON-LD components (Product, Breadcrumb, Organization)
+- [x] 1.5 Integrate JSON-LD to product pages
+- [x] 1.6 Add Organization JSON-LD to root layout
+- [x] 1.7 Create Meta Pixel integration
+- [x] 1.8 Update admin SEO settings (Meta Pixel ID + Google Analytics ID fields)
+
+### Phase 2: Performance Optimization
+**Status: COMPLETE**
+
+**Tasks:**
+- [x] 2.1 Convert product detail to ISR (revalidate: 60)
+- [x] 2.2 Add ISR to homepage (revalidate: 300)
+- [x] 2.3 Add preconnect hints for Supabase CDN, Vercel, Meta Pixel
+- [x] 2.4 Image optimization already configured in next.config.mjs
+
+### Phase 3: Facebook Shop Integration
+**Status: COMPLETE (7/7 tasks)**
+
+**Tasks:**
+- [x] 3.1 Create database schema (fb_catalog_config, fb_catalog_products, fb_sync_logs)
+- [x] 3.2 Create admin Facebook Shop module UI
+- [x] 3.3 Create product sync component
+- [x] 3.4 Create Supabase Edge Function for FB API (supabase/functions/fb-catalog-sync)
+- [x] 3.5 Add Facebook Shop to admin sidebar
+- [x] 3.6 Create sync API route (/api/admin/facebook-sync)
+- [x] 3.7 Add auto-sync trigger on product update (migration: 20260402_fb_auto_sync_triggers.sql)
+
+### Files Created This Session
+- `src/app/admin/settings/page.tsx` - Updated with Meta Pixel ID & Google Analytics fields
+- `src/lib/supabase/types.ts` - Updated SiteSettingsSEO interface
+- `src/components/product/ProductReviewsSkeleton.tsx` - Skeleton for lazy loading
+- `supabase/functions/fb-catalog-sync/index.ts` - Edge Function for Facebook API
+- `src/app/api/admin/facebook-sync/route.ts` - API route for sync
+- `supabase/migrations/20260402_fb_auto_sync_triggers.sql` - Auto-sync DB triggers
+- `src/components/ui/alert.tsx` - shadcn Alert component
+- `src/components/ui/table.tsx` - shadcn Table component
+
+### Files Modified This Session
+- `src/app/(store)/products/[slug]/page.tsx` - Changed force-dynamic to ISR (revalidate: 60)
+- `src/app/(store)/page.tsx` - Added ISR (revalidate: 300)
+- `src/app/layout.tsx` - Added preconnect hints for Supabase CDN, Vercel, Meta
+- `src/lib/supabase/client.ts` - Import Database from database.types.ts
+- `src/lib/supabase/server.ts` - Import Database from database.types.ts
+- `src/components/admin/facebook/FacebookShopSettings.tsx` - Fixed null vs undefined types
+- `src/components/admin/facebook/FacebookProductSync.tsx` - Fixed type issues
+- `src/components/admin/facebook/FacebookSyncLogs.tsx` - Fixed type issues
+
+### Environment Variables Required
+```env
+NEXT_PUBLIC_META_PIXEL_ID=your_pixel_id
+NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=xxxxx
+SUPABASE_SERVICE_ROLE_KEY=xxxxx (for Edge Function calls)
+```
+
+### Deployment Notes
+1. Deploy Supabase Edge Function: `supabase functions deploy fb-catalog-sync`
+2. Apply migration: `supabase migration up`
+3. Set environment variables in Vercel/production
+
+---
+
 ## 2026-02-05 - Address Form UX Simplification
 
 ### Summary

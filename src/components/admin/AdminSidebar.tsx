@@ -17,7 +17,8 @@ import {
   Shield,
   LogOut,
   ChevronDown,
-  Images
+  Images,
+  Store
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
@@ -70,6 +71,7 @@ const menuGroups: MenuGroup[] = [
       { name: 'Pembayaran', href: '/admin/settings/payments', icon: CreditCard },
       { name: 'Situs', href: '/admin/settings', icon: Settings, exactMatch: true },
       { name: 'Slider', href: '/admin/settings/hero', icon: Images },
+      { name: 'Facebook Shop', href: '/admin/facebook-shop', icon: Store },
       { name: 'Versi', href: '/admin/settings/version', icon: GitBranch }
     ]
   }

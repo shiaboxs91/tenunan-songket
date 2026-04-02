@@ -6,16 +6,12 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-// Shared pagination response type
-export interface PaginatedResponse<T> {
-  data: T[]
-  total: number
-  page: number
-  limit: number
-  totalPages: number
-}
-
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.1"
+  }
   public: {
     Tables: {
       addresses: {
@@ -66,6 +62,36 @@ export type Database = {
           recipient_name?: string
           state?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      app_versions: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_current: boolean | null
+          is_mandatory: boolean | null
+          release_notes: string | null
+          released_at: string | null
+          version: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_current?: boolean | null
+          is_mandatory?: boolean | null
+          release_notes?: string | null
+          released_at?: string | null
+          version: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_current?: boolean | null
+          is_mandatory?: boolean | null
+          release_notes?: string | null
+          released_at?: string | null
+          version?: string
         }
         Relationships: []
       }
@@ -130,7 +156,22 @@ export type Database = {
           quantity?: number
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       carts: {
         Row: {
@@ -157,7 +198,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "carts_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       categories: {
         Row: {
@@ -193,7 +242,15 @@ export type Database = {
           parent_id?: string | null
           slug?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       coupon_usages: {
         Row: {
@@ -217,7 +274,22 @@ export type Database = {
           order_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "coupon_usages_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_usages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       coupons: {
         Row: {
@@ -265,6 +337,184 @@ export type Database = {
           used_count?: number | null
           value?: number
         }
+        Relationships: [
+          {
+            foreignKeyName: "coupons_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fb_catalog_config: {
+        Row: {
+          access_token: string | null
+          auto_sync_enabled: boolean | null
+          business_id: string | null
+          catalog_id: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          last_sync_at: string | null
+          page_access_token: string | null
+          pixel_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          auto_sync_enabled?: boolean | null
+          business_id?: string | null
+          catalog_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          page_access_token?: string | null
+          pixel_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          auto_sync_enabled?: boolean | null
+          business_id?: string | null
+          catalog_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          page_access_token?: string | null
+          pixel_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      fb_catalog_products: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          fb_product_id: string | null
+          id: string
+          last_sync_at: string | null
+          product_id: string | null
+          retry_count: number | null
+          sync_status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          fb_product_id?: string | null
+          id?: string
+          last_sync_at?: string | null
+          product_id?: string | null
+          retry_count?: number | null
+          sync_status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          fb_product_id?: string | null
+          id?: string
+          last_sync_at?: string | null
+          product_id?: string | null
+          retry_count?: number | null
+          sync_status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fb_catalog_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fb_sync_logs: {
+        Row: {
+          action: string
+          completed_at: string | null
+          created_by: string | null
+          duration_ms: number | null
+          error_count: number | null
+          error_details: Json | null
+          id: string
+          product_count: number | null
+          started_at: string | null
+          success_count: number | null
+        }
+        Insert: {
+          action: string
+          completed_at?: string | null
+          created_by?: string | null
+          duration_ms?: number | null
+          error_count?: number | null
+          error_details?: Json | null
+          id?: string
+          product_count?: number | null
+          started_at?: string | null
+          success_count?: number | null
+        }
+        Update: {
+          action?: string
+          completed_at?: string | null
+          created_by?: string | null
+          duration_ms?: number | null
+          error_count?: number | null
+          error_details?: Json | null
+          id?: string
+          product_count?: number | null
+          started_at?: string | null
+          success_count?: number | null
+        }
+        Relationships: []
+      }
+      hero_slides: {
+        Row: {
+          created_at: string | null
+          cta_link: string | null
+          cta_text: string | null
+          description: string | null
+          id: string
+          image_url: string
+          is_active: boolean | null
+          link_url: string | null
+          order_index: number
+          subtitle: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          cta_link?: string | null
+          cta_text?: string | null
+          description?: string | null
+          id?: string
+          image_url: string
+          is_active?: boolean | null
+          link_url?: string | null
+          order_index?: number
+          subtitle?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          cta_link?: string | null
+          cta_text?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean | null
+          link_url?: string | null
+          order_index?: number
+          subtitle?: string | null
+          title?: string
+          updated_at?: string | null
+        }
         Relationships: []
       }
       inventory_logs: {
@@ -304,7 +554,15 @@ export type Database = {
           stock_before?: number
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "inventory_logs_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -373,7 +631,22 @@ export type Database = {
           quantity?: number
           subtotal?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       orders: {
         Row: {
@@ -419,7 +692,7 @@ export type Database = {
           id?: string
           insurance_cost?: number | null
           notes?: string | null
-          order_number?: string
+          order_number: string
           paid_at?: string | null
           shipped_at?: string | null
           shipping_address: Json
@@ -456,6 +729,53 @@ export type Database = {
           total?: number
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_methods: {
+        Row: {
+          code: string
+          config: Json | null
+          created_at: string | null
+          display_order: number | null
+          id: string
+          instructions: string | null
+          is_active: boolean | null
+          name: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          config?: Json | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          instructions?: string | null
+          is_active?: boolean | null
+          name: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          config?: Json | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          instructions?: string | null
+          is_active?: boolean | null
+          name?: string
+          type?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -523,7 +843,15 @@ export type Database = {
           status?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_images: {
         Row: {
@@ -550,7 +878,15 @@ export type Database = {
           product_id?: string
           url?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "product_images_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
@@ -622,7 +958,15 @@ export type Database = {
           updated_at?: string | null
           weight?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -700,6 +1044,60 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shipping_providers: {
+        Row: {
+          code: string
+          countries: string[] | null
+          created_at: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          name: string
+          services: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          countries?: string[] | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name: string
+          services?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          countries?: string[] | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string
+          services?: Json | null
+          updated_at?: string | null
+        }
         Relationships: []
       }
       shippings: {
@@ -766,6 +1164,38 @@ export type Database = {
           updated_at?: string | null
           weight_kg?: number | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "shippings_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          key: string
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          key: string
+          updated_at?: string | null
+          value: Json
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          key?: string
+          updated_at?: string | null
+          value?: Json
+        }
         Relationships: []
       }
       wishlists: {
@@ -787,175 +1217,15 @@ export type Database = {
           product_id?: string
           user_id?: string
         }
-        Relationships: []
-      }
-      site_settings: {
-        Row: {
-          id: string
-          key: string
-          value: Json
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          key: string
-          value: Json
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          key?: string
-          value?: Json
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      shipping_providers: {
-        Row: {
-          id: string
-          name: string
-          code: string
-          logo_url: string | null
-          services: Json | null
-          countries: string[] | null
-          is_active: boolean | null
-          display_order: number | null
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          name: string
-          code: string
-          logo_url?: string | null
-          services?: Json | null
-          countries?: string[] | null
-          is_active?: boolean | null
-          display_order?: number | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          name?: string
-          code?: string
-          logo_url?: string | null
-          services?: Json | null
-          countries?: string[] | null
-          is_active?: boolean | null
-          display_order?: number | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      payment_methods: {
-        Row: {
-          id: string
-          name: string
-          code: string
-          type: string
-          config: Json | null
-          instructions: string | null
-          is_active: boolean | null
-          display_order: number | null
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          name: string
-          code: string
-          type: string
-          config?: Json | null
-          instructions?: string | null
-          is_active?: boolean | null
-          display_order?: number | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          name?: string
-          code?: string
-          type?: string
-          config?: Json | null
-          instructions?: string | null
-          is_active?: boolean | null
-          display_order?: number | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      app_versions: {
-        Row: {
-          id: string
-          version: string
-          release_notes: string | null
-          is_mandatory: boolean | null
-          is_current: boolean | null
-          released_at: string | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          version: string
-          release_notes?: string | null
-          is_mandatory?: boolean | null
-          is_current?: boolean | null
-          released_at?: string | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          version?: string
-          release_notes?: string | null
-          is_mandatory?: boolean | null
-          is_current?: boolean | null
-          released_at?: string | null
-          created_at?: string | null
-        }
-        Relationships: []
-      }
-      hero_slides: {
-        Row: {
-          id: string
-          title: string
-          description: string | null
-          image_url: string
-          link_url: string | null
-          order_index: number
-          is_active: boolean | null
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          title: string
-          description?: string | null
-          image_url: string
-          link_url?: string | null
-          order_index?: number
-          is_active?: boolean | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          title?: string
-          description?: string | null
-          image_url?: string
-          link_url?: string | null
-          order_index?: number
-          is_active?: boolean | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "wishlists_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -972,7 +1242,23 @@ export type Database = {
         }
         Returns: boolean
       }
-      generate_order_number: { Args: Record<string, never>; Returns: string }
+      create_admin_user: {
+        Args: { p_email: string; p_full_name: string; p_password: string }
+        Returns: Json
+      }
+      generate_order_number: { Args: never; Returns: string }
+      get_admins_with_email: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          role: string
+          user_id: string
+        }[]
+      }
+      is_admin: { Args: never; Returns: boolean }
       release_inventory: {
         Args: {
           p_product_id: string
@@ -1011,281 +1297,131 @@ export type Database = {
     Enums: {
       [_ in never]: never
     }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
 
-export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row']
-export type TablesInsert<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Insert']
-export type TablesUpdate<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Update']
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-// ============================================
-// Admin Panel Enhancement Types
-// ============================================
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
-// Site Settings Types
-export interface SiteSettingsGeneral {
-  site_name: string
-  tagline: string
-  logo_url: string
-  favicon_url: string
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
-export interface SiteSettingsContact {
-  email: string
-  phone: string
-  whatsapp: string
-  address: string
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
-export interface SiteSettingsSocial {
-  instagram: string
-  facebook: string
-  twitter: string
-  tiktok: string
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
 
-export interface SiteSettingsSEO {
-  meta_title: string
-  meta_description: string
-  keywords: string[]
-  meta_pixel_id?: string
-  google_analytics_id?: string
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
 
-export interface SiteSettings {
-  general: SiteSettingsGeneral
-  contact: SiteSettingsContact
-  social: SiteSettingsSocial
-  seo: SiteSettingsSEO
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
 
-// Shipping Provider Types
-export interface ShippingService {
-  code: string
-  name: string
-  estimated_days: string
-  base_cost: number
-  cost_per_kg?: number
-}
-
-export interface ShippingProvider {
-  id: string
-  name: string
-  code: string
-  logo_url: string | null
-  services: ShippingService[]
-  countries: string[]
-  is_active: boolean
-  display_order: number
-  created_at: string | null
-  updated_at: string | null
-}
-
-export interface ShippingProviderCreate {
-  name: string
-  code: string
-  logo_url?: string | null
-  services?: ShippingService[]
-  countries?: string[]
-  is_active?: boolean
-  display_order?: number
-}
-
-export interface ShippingProviderUpdate {
-  name?: string
-  code?: string
-  logo_url?: string | null
-  services?: ShippingService[]
-  countries?: string[]
-  is_active?: boolean
-  display_order?: number
-}
-
-// Payment Method Types
-export interface StripeConfig {
-  publishable_key: string
-  secret_key: string
-  webhook_secret?: string
-}
-
-export interface BankAccount {
-  bank_name: string
-  account_number: string
-  account_holder: string
-}
-
-export interface BankTransferConfig {
-  bank_accounts: BankAccount[]
-}
-
-export interface ManualPaymentConfig {
-  max_amount?: number
-  available_areas?: string[]
-}
-
-export type PaymentMethodType = 'stripe' | 'bank_transfer' | 'manual'
-
-export interface PaymentMethod {
-  id: string
-  name: string
-  code: string
-  type: PaymentMethodType
-  config: StripeConfig | BankTransferConfig | ManualPaymentConfig | null
-  instructions: string | null
-  is_active: boolean
-  display_order: number
-  created_at: string | null
-  updated_at: string | null
-}
-
-export interface PaymentMethodCreate {
-  name: string
-  code: string
-  type: PaymentMethodType
-  config?: StripeConfig | BankTransferConfig | ManualPaymentConfig | null
-  instructions?: string | null
-  is_active?: boolean
-  display_order?: number
-}
-
-export interface PaymentMethodUpdate {
-  name?: string
-  code?: string
-  type?: PaymentMethodType
-  config?: StripeConfig | BankTransferConfig | ManualPaymentConfig | null
-  instructions?: string | null
-  is_active?: boolean
-  display_order?: number
-}
-
-// Safe payment method for client (without secret keys)
-export interface PaymentMethodPublic {
-  id: string
-  name: string
-  code: string
-  type: PaymentMethodType
-  config: Omit<StripeConfig, 'secret_key' | 'webhook_secret'> | BankTransferConfig | ManualPaymentConfig | null
-  instructions: string | null
-  is_active: boolean
-  display_order: number
-}
-
-// App Version Types
-export interface AppVersion {
-  id: string
-  version: string
-  release_notes: string | null
-  is_mandatory: boolean
-  is_current: boolean
-  released_at: string | null
-  created_at: string | null
-}
-
-export interface AppVersionCreate {
-  version: string
-  release_notes?: string | null
-  is_mandatory?: boolean
-  is_current?: boolean
-  released_at?: string | null
-}
-
-export interface AppVersionUpdate {
-  version?: string
-  release_notes?: string | null
-  is_mandatory?: boolean
-  is_current?: boolean
-  released_at?: string | null
-}
-
-export interface VersionCheckResult {
-  current_version: string
-  client_version: string
-  requires_update: boolean
-  is_mandatory: boolean
-  release_notes: string | null
-}
-
-// Enhanced Dashboard Types
-export interface LowStockProduct {
-  id: string
-  title: string
-  slug: string
-  stock: number
-  reserved_stock: number
-  available_stock: number
-  image_url: string | null
-}
-
-export interface TopProduct {
-  id: string
-  title: string
-  slug: string
-  sold: number
-  revenue: number
-  image_url: string | null
-}
-
-export interface RevenueComparison {
-  today: number
-  yesterday: number
-  thisWeek: number
-  lastWeek: number
-  thisMonth: number
-  lastMonth: number
-}
-
-export interface OrderStatusCounts {
-  pending_payment: number
-  paid: number
-  processing: number
-  shipped: number
-  delivered: number
-  completed: number
-  cancelled: number
-  refunded: number
-}
-
-export interface EnhancedDashboardStats {
-  totalOrders: number
-  totalRevenue: number
-  totalCustomers: number
-  totalProducts: number
-  revenueComparison: RevenueComparison
-  orderStatusCounts: OrderStatusCounts
-  lowStockProducts: LowStockProduct[]
-  topProducts: TopProduct[]
-}
-
-// Admin User Types
-export interface AdminUser {
-  id: string
-  user_id: string
-  email: string
-  full_name: string | null
-  role: string
-  created_at: string | null
-  is_active: boolean
-}
-
-export interface AdminUserCreate {
-  email: string
-  password: string
-  full_name: string
-}
-
-export interface AdminUserUpdate {
-  full_name?: string
-  is_active?: boolean
-}
-
-// Customer with stats
-export interface CustomerWithStats {
-  id: string
-  user_id: string
-  email: string
-  full_name: string | null
-  phone: string | null
-  created_at: string | null
-  total_orders: number
-  total_spent: number
-}
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const

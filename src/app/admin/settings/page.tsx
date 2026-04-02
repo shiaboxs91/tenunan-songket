@@ -39,7 +39,9 @@ const defaultSettings: SiteSettings = {
   seo: {
     meta_title: '',
     meta_description: '',
-    keywords: []
+    keywords: [],
+    meta_pixel_id: '',
+    google_analytics_id: ''
   }
 }
 
@@ -484,6 +486,39 @@ export default function SiteSettingsPage() {
                   </div>
                   <div className="text-gray-600 text-sm mt-1">
                     {settings.seo.meta_description || 'Deskripsi halaman akan muncul di sini...'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Analytics Section */}
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <h4 className="text-sm font-medium text-gray-900 mb-4">Analitik & Tracking</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Meta Pixel ID (Facebook)</label>
+                    <input
+                      type="text"
+                      value={settings.seo.meta_pixel_id || ''}
+                      onChange={(e) => updateSEO('meta_pixel_id', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      placeholder="123456789012345"
+                    />
+                    <p className="mt-1 text-sm text-gray-500">
+                      ID dari Meta Pixel untuk tracking konversi Facebook/Instagram
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Google Analytics ID</label>
+                    <input
+                      type="text"
+                      value={settings.seo.google_analytics_id || ''}
+                      onChange={(e) => updateSEO('google_analytics_id', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      placeholder="G-XXXXXXXXXX"
+                    />
+                    <p className="mt-1 text-sm text-gray-500">
+                      Measurement ID dari Google Analytics 4
+                    </p>
                   </div>
                 </div>
               </div>

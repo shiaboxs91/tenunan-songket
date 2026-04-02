@@ -1,0 +1,41 @@
+# Robots.txt for Tenunan Songket
+# https://tenunansongket.com
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /checkout/
+Disallow: /account/
+Disallow: /cart/
+Disallow: /login/
+Disallow: /register/
+Disallow: /forgot-password/
+Disallow: /reset-password/
+
+# Block crawlers from query parameters that create duplicate content
+Disallow: /*?*sort=
+Disallow: /*?*page=
+Disallow: /*?*filter=
+
+# Sitemap location
+Sitemap: https://tenunansongket.com/sitemap.xml
+
+# Crawl-delay for polite crawling (optional, respected by some bots)
+Crawl-delay: 1
+
+# Google specific
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /checkout/
+Disallow: /account/
+
+# Bing specific
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /checkout/
+Disallow: /account/

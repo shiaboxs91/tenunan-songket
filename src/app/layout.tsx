@@ -7,6 +7,8 @@ import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
 // import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { IntlProvider } from "@/components/providers/IntlProvider";
+import { OrganizationJsonLd } from "@/components/seo";
+import { MetaPixel } from "@/components/analytics";
 import { defaultLocale, locales, type Locale } from "@/i18n/config";
 import "./globals.css";
 
@@ -75,9 +77,19 @@ export default async function RootLayout({
   return (
     <html lang={locale} className={inter.className}>
       <head>
-        {/* Preconnect to external domains for faster loading */}
-        <link rel="preconnect" href="https://tenunansongket.com" />
-        <link rel="dns-prefetch" href="https://tenunansongket.com" />
+        {/* SEO: Organization JSON-LD Structured Data */}
+        <OrganizationJsonLd />
+        
+        {/* Preconnect to Supabase CDN for faster image loading */}
+        <link rel="preconnect" href="https://bzxfppzdqsjzafucfjyv.supabase.co" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://bzxfppzdqsjzafucfjyv.supabase.co" />
+        
+        {/* Preconnect to Vercel Analytics */}
+        <link rel="preconnect" href="https://vitals.vercel-insights.com" crossOrigin="anonymous" />
+        
+        {/* Preconnect to Meta Pixel (for Facebook tracking) */}
+        <link rel="preconnect" href="https://connect.facebook.net" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://connect.facebook.net" />
         
         {/* PWA meta tags */}
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
@@ -93,6 +105,7 @@ export default async function RootLayout({
         {/* </NuqsAdapter> */}
         <SpeedInsights />
         <Analytics />
+        <MetaPixel />
         {/* Defer service worker registration */}
         <script
           dangerouslySetInnerHTML={{

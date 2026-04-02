@@ -72,18 +72,25 @@ export async function getDashboardStats(): Promise<DashboardStats | null> {
     const recentOrders = []
     if (recentOrdersData) {
       for (const order of recentOrdersData) {
-        const { data: userData } = await supabase.auth.admin.getUserById(order.user_id)
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('user_id', order.user_id)
-          .single()
+        let userEmail = 'Guest'
+        let fullName: string | null = null
+        
+        if (order.user_id) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('user_id', order.user_id)
+            .single()
+          
+          fullName = profileData?.full_name || null
+          userEmail = 'Registered User'
+        }
 
         recentOrders.push({
           ...order,
           user: {
-            full_name: profileData?.full_name || null,
-            email: userData.user?.email || 'Unknown'
+            full_name: fullName,
+            email: userEmail
           }
         })
       }
@@ -220,13 +227,21 @@ export async function getAdminOrders(
     const orders: AdminOrder[] = []
     
     for (const order of ordersData) {
-      // Get user details
-      const { data: userData } = await supabase.auth.admin.getUserById(order.user_id)
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('user_id', order.user_id)
-        .single()
+      let userEmail = 'Guest'
+      let fullName: string | null = null
+      const userId = order.user_id || 'guest'
+      
+      if (order.user_id) {
+        // Get user details from profile only (no auth.admin)
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('user_id', order.user_id)
+          .single()
+        
+        userEmail = 'Registered User'
+        fullName = profileData?.full_name || null
+      }
 
       // Get items count
       const { count: itemsCount } = await supabase
@@ -238,9 +253,9 @@ export async function getAdminOrders(
         ...order,
         tracking_number: undefined,
         user: {
-          id: order.user_id,
-          full_name: profileData?.full_name || null,
-          email: userData.user?.email || 'Unknown'
+          id: userId,
+          full_name: fullName,
+          email: userEmail
         },
         shipping_address: order.shipping_address || {},
         items_count: itemsCount || 0
@@ -293,13 +308,21 @@ export async function getAdminOrderDetail(orderId: string): Promise<AdminOrder &
       return null
     }
 
-    // Get user details
-    const { data: userData } = await supabase.auth.admin.getUserById(orderData.user_id)
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('full_name')
-      .eq('user_id', orderData.user_id)
-      .single()
+    // Get user details (handle guest orders)
+    let userEmail = 'Guest'
+    let fullName: string | null = null
+    const userId = orderData.user_id || 'guest'
+    
+    if (orderData.user_id) {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', orderData.user_id)
+        .single()
+      
+      userEmail = 'Registered User'
+      fullName = profileData?.full_name || null
+    }
 
     // Get order items with product details
     const { data: itemsData } = await supabase
@@ -346,9 +369,9 @@ export async function getAdminOrderDetail(orderId: string): Promise<AdminOrder &
       ...orderData,
       tracking_number: undefined,
       user: {
-        id: orderData.user_id,
-        full_name: profileData?.full_name || null,
-        email: userData.user?.email || 'Unknown'
+        id: userId,
+        full_name: fullName,
+        email: userEmail
       },
       shipping_address: orderData.shipping_address || {},
       items_count: items.length,
@@ -391,13 +414,15 @@ export async function updateOrderStatus(
       return false
     }
 
-    // Create notification for order status change
-    await createOrderStatusNotification(
-      orderData.user_id,
-      orderId,
-      orderData.order_number,
-      status
-    )
+    // Create notification for order status change (only for registered users)
+    if (orderData.user_id) {
+      await createOrderStatusNotification(
+        orderData.user_id,
+        orderId,
+        orderData.order_number,
+        status
+      )
+    }
 
     return true
   } catch (error) {
@@ -423,68 +448,59 @@ export async function getAdminUsers(
   search?: string
 ): Promise<{ users: AdminUser[]; total: number }> {
   const supabase = createClient()
+  const offset = (page - 1) * limit
 
   try {
-    // Get users from auth.users via admin API
-    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers({
-      page,
-      perPage: limit
-    })
+    // Get users from profiles table instead of auth.admin
+    let query = supabase
+      .from('profiles')
+      .select('user_id, full_name, role, created_at', { count: 'exact' })
 
-    if (authError) {
-      console.error('Error fetching auth users:', authError)
+    if (search) {
+      query = query.ilike('full_name', `%${search}%`)
+    }
+
+    const { data: profiles, count, error } = await query
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
+
+    if (error) {
+      console.error('Error fetching profiles:', error)
       return { users: [], total: 0 }
     }
 
     const users: AdminUser[] = []
 
-    for (const authUser of authUsers.users) {
-      // Get profile data
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('full_name, role')
-        .eq('user_id', authUser.id)
-        .single()
-
+    for (const profile of profiles || []) {
       // Get orders count and total spent
       const { count: ordersCount } = await supabase
         .from('orders')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', authUser.id)
+        .eq('user_id', profile.user_id)
 
       const { data: ordersData } = await supabase
         .from('orders')
         .select('total')
-        .eq('user_id', authUser.id)
+        .eq('user_id', profile.user_id)
         .in('status', ['paid', 'processing', 'shipped', 'delivered', 'completed'])
 
       const totalSpent = ordersData?.reduce((sum, order) => sum + Number(order.total), 0) || 0
 
       users.push({
-        id: authUser.id,
-        email: authUser.email || 'Unknown',
-        full_name: profileData?.full_name || null,
-        role: profileData?.role || 'customer',
-        created_at: authUser.created_at,
-        last_sign_in_at: authUser.last_sign_in_at,
+        id: profile.user_id,
+        email: 'Registered User', // Can't get email without auth.admin
+        full_name: profile.full_name || null,
+        role: profile.role || 'customer',
+        created_at: profile.created_at || '',
+        last_sign_in_at: null,
         orders_count: ordersCount || 0,
         total_spent: totalSpent
       })
     }
 
-    // Filter by search if provided
-    let filteredUsers = users
-    if (search) {
-      const searchLower = search.toLowerCase()
-      filteredUsers = users.filter(user => 
-        user.email.toLowerCase().includes(searchLower) ||
-        (user.full_name && user.full_name.toLowerCase().includes(searchLower))
-      )
-    }
-
     return {
-      users: filteredUsers,
-      total: authUsers.total || 0
+      users,
+      total: count || 0
     }
   } catch (error) {
     console.error('Error fetching admin users:', error)
@@ -951,16 +967,14 @@ export async function getAdminUsersList(): Promise<AdminUserType[]> {
     const admins: AdminUserType[] = []
     
     for (const profile of profiles || []) {
-      const { data: userData } = await supabase.auth.admin.getUserById(profile.user_id)
-      
       admins.push({
         id: profile.id,
         user_id: profile.user_id,
-        email: userData.user?.email || 'Unknown',
+        email: 'Admin User', // Can't get email without auth.admin
         full_name: profile.full_name,
         role: profile.role || 'admin',
         created_at: profile.created_at,
-        is_active: true // Could be enhanced with actual status tracking
+        is_active: true
       })
     }
     
@@ -971,39 +985,20 @@ export async function getAdminUsersList(): Promise<AdminUserType[]> {
   }
 }
 
-// Create a new admin user
+// Create a new admin user - This requires API route with service role
 export async function createAdminUser(data: AdminUserCreate): Promise<{ success: boolean; error?: string }> {
-  const supabase = createClient()
-  
   try {
-    // Create user in auth
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email: data.email,
-      password: data.password,
-      email_confirm: true
+    // Call API route instead of using auth.admin directly
+    const response = await fetch('/api/admin/create-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
     })
     
-    if (authError) {
-      return { success: false, error: authError.message }
-    }
+    const result = await response.json()
     
-    if (!authData.user) {
-      return { success: false, error: 'Failed to create user' }
-    }
-    
-    // Create profile with admin role
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert({
-        user_id: authData.user.id,
-        full_name: data.full_name,
-        role: 'admin'
-      })
-    
-    if (profileError) {
-      // Rollback: delete the auth user
-      await supabase.auth.admin.deleteUser(authData.user.id)
-      return { success: false, error: profileError.message }
+    if (!response.ok) {
+      return { success: false, error: result.error || 'Failed to create user' }
     }
     
     return { success: true }
@@ -1013,7 +1008,7 @@ export async function createAdminUser(data: AdminUserCreate): Promise<{ success:
   }
 }
 
-// Delete an admin user
+// Delete an admin user - This requires API route with service role
 export async function deleteAdminUser(userId: string): Promise<{ success: boolean; error?: string }> {
   const supabase = createClient()
   
@@ -1028,21 +1023,17 @@ export async function deleteAdminUser(userId: string): Promise<{ success: boolea
       return { success: false, error: 'Tidak dapat menghapus admin terakhir' }
     }
     
-    // Delete profile first
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('user_id', userId)
+    // Call API route to delete user
+    const response = await fetch('/api/admin/delete-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId })
+    })
     
-    if (profileError) {
-      return { success: false, error: profileError.message }
-    }
+    const result = await response.json()
     
-    // Delete auth user
-    const { error: authError } = await supabase.auth.admin.deleteUser(userId)
-    
-    if (authError) {
-      return { success: false, error: authError.message }
+    if (!response.ok) {
+      return { success: false, error: result.error || 'Failed to delete user' }
     }
     
     return { success: true }
@@ -1100,10 +1091,7 @@ export async function getCustomersWithStats(
     const customers: CustomerWithStats[] = []
     
     for (const profile of profiles || []) {
-      // Get user email
-      const { data: userData } = await supabase.auth.admin.getUserById(profile.user_id)
-      
-      // Get order stats
+      // Get order stats (no auth.admin needed)
       const { count: orderCount } = await supabase
         .from('orders')
         .select('*', { count: 'exact', head: true })
@@ -1120,7 +1108,7 @@ export async function getCustomersWithStats(
       customers.push({
         id: profile.id,
         user_id: profile.user_id,
-        email: userData.user?.email || 'Unknown',
+        email: 'Registered User', // Can't get email without auth.admin
         full_name: profile.full_name,
         phone: profile.phone,
         created_at: profile.created_at,
@@ -1171,16 +1159,12 @@ export async function searchUsers(query: string, role?: string): Promise<AdminUs
     const users: AdminUserType[] = []
     
     for (const profile of profiles || []) {
-      const { data: userData } = await supabase.auth.admin.getUserById(profile.user_id)
-      
-      // Also check if email matches
-      const email = userData.user?.email || ''
-      if (email.toLowerCase().includes(query.toLowerCase()) || 
-          (profile.full_name && profile.full_name.toLowerCase().includes(query.toLowerCase()))) {
+      // Match by full_name only (no auth.admin)
+      if (profile.full_name && profile.full_name.toLowerCase().includes(query.toLowerCase())) {
         users.push({
           id: profile.id,
           user_id: profile.user_id,
-          email,
+          email: 'Registered User',
           full_name: profile.full_name,
           role: profile.role || 'customer',
           created_at: profile.created_at,

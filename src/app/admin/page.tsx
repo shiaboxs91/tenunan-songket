@@ -1,11 +1,10 @@
 import { 
-  getEnhancedDashboardStats, 
-  getDashboardStats,
-  getLowStockProducts,
-  getTopProducts,
-  getRevenueComparison,
-  getOrderStatusCountsEnhanced
-} from '@/lib/supabase/admin'
+  getServerDashboardStats,
+  getServerLowStockProducts,
+  getServerTopProducts,
+  getServerRevenueComparison,
+  getServerOrderStatusCounts
+} from '@/lib/supabase/admin-server'
 import { DashboardStats } from '@/components/admin/DashboardStats'
 import { RecentOrders } from '@/components/admin/RecentOrders'
 import { SalesChart } from '@/components/admin/SalesChart'
@@ -26,11 +25,11 @@ export default async function AdminDashboard() {
     lowStockProducts,
     topProducts
   ] = await Promise.all([
-    getDashboardStats(),
-    getRevenueComparison(),
-    getOrderStatusCountsEnhanced(),
-    getLowStockProducts(10),
-    getTopProducts(5, '30d')
+    getServerDashboardStats(),
+    getServerRevenueComparison(),
+    getServerOrderStatusCounts(),
+    getServerLowStockProducts(10),
+    getServerTopProducts(5, '30d')
   ])
 
   if (!basicStats) {

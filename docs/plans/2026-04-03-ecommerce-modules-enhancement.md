@@ -16,10 +16,15 @@ Plan lengkap untuk mengimplementasikan dan meningkatkan modul-modul e-commerce a
 | # | Module | Current Status | Priority | Effort |
 |---|--------|---------------|----------|--------|
 | 3 | Product Variants | Partial (UI only) | HIGH | Large |
+| 4 | Advanced Search | Partial (basic) | HIGH | Medium |
 | 5 | Loyalty Program & Points | Missing | MEDIUM | Large |
+| 6 | Live Chat & Customer Support | Partial (WhatsApp mobile) | MEDIUM | Medium |
 | 7 | Product Recommendations | Partial (basic) | MEDIUM | Medium |
+| 8 | Flash Sales & Promotions | Partial (coupons only) | MEDIUM | Medium |
 | 9 | Order Tracking | Partial (manual) | HIGH | Medium |
+| 11 | Product Bundles | Missing | MEDIUM | Medium |
 | 12 | Blog & Content | Missing | LOW | Medium |
+| 14 | Analytics Dashboard | Partial (basic) | LOW | Medium |
 
 ### Implementation Timeline
 
@@ -30,8 +35,13 @@ Plan lengkap untuk mengimplementasikan dan meningkatkan modul-modul e-commerce a
 | Phase 3 | 2-3 minggu | Loyalty Program & Points |
 | Phase 4 | 1-2 minggu | Product Recommendations Enhancement |
 | Phase 5 | 2 minggu | Blog & Content CMS |
+| Phase 6 | 1-2 minggu | Advanced Search |
+| Phase 7 | 1 minggu | Live Chat & Customer Support |
+| Phase 8 | 1-2 minggu | Flash Sales & Promotions |
+| Phase 9 | 1-2 minggu | Product Bundles |
+| Phase 10 | 1 minggu | Analytics Dashboard Enhancement |
 
-**Total Estimated:** 8-12 minggu
+**Total Estimated:** 14-20 minggu
 
 ---
 
@@ -1375,6 +1385,1391 @@ const articleJsonLd = {
 
 ---
 
+## Phase 6: Advanced Search
+
+### Current State
+- Basic search input di Header
+- Search query diteruskan ke `/products?q=xxx`
+- Filter kategori, harga, stok sudah ada di ProductFilters
+- Tidak ada autocomplete, history, atau voice search
+
+### Goals
+- Autocomplete suggestions saat mengetik
+- Search history untuk user (localStorage + database untuk logged in)
+- Voice search support (Web Speech API)
+- Popular/trending searches
+- Recent searches display
+
+### Database Schema
+
+```sql
+-- Migration: create_search_tables
+
+-- Search History (untuk logged-in users)
+CREATE TABLE search_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  query VARCHAR(255) NOT NULL,
+  results_count INT DEFAULT 0,
+  searched_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Popular Searches (aggregated)
+CREATE TABLE popular_searches (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  query VARCHAR(255) NOT NULL UNIQUE,
+  search_count INT DEFAULT 1,
+  last_searched_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Search Suggestions (curated by admin)
+CREATE TABLE search_suggestions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  keyword VARCHAR(255) NOT NULL,
+  display_text VARCHAR(255),          -- Optional display text
+  category_id UUID REFERENCES categories(id),
+  priority INT DEFAULT 0,             -- Higher = shown first
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_search_history_user ON search_history(user_id);
+CREATE INDEX idx_search_history_query ON search_history(query);
+CREATE INDEX idx_popular_searches_count ON popular_searches(search_count DESC);
+CREATE INDEX idx_search_suggestions_keyword ON search_suggestions(keyword);
+
+-- Function to update popular searches
+CREATE OR REPLACE FUNCTION update_popular_search(search_query VARCHAR)
+RETURNS void AS $$
+BEGIN
+  INSERT INTO popular_searches (query, search_count, last_searched_at)
+  VALUES (LOWER(TRIM(search_query)), 1, NOW())
+  ON CONFLICT (query)
+  DO UPDATE SET 
+    search_count = popular_searches.search_count + 1,
+    last_searched_at = NOW(),
+    updated_at = NOW();
+END;
+$$ LANGUAGE plpgsql;
+```
+
+### Components to Create
+
+```
+src/components/search/
+├── SearchAutocomplete.tsx    # Main search with autocomplete dropdown
+├── SearchSuggestions.tsx     # Dropdown showing suggestions
+├── SearchHistory.tsx         # Recent searches list
+├── PopularSearches.tsx       # Trending/popular searches
+├── VoiceSearchButton.tsx     # Microphone button for voice input
+└── SearchResultsFilter.tsx   # Filters within search results
+
+src/hooks/
+├── useSearchHistory.ts       # Manage search history (localStorage + API)
+├── useSearchSuggestions.ts   # Fetch autocomplete suggestions
+└── useVoiceSearch.ts         # Voice recognition hook
+```
+
+### API Endpoints
+
+```typescript
+// src/lib/supabase/search.ts
+
+// Get autocomplete suggestions
+getSearchSuggestions(query: string, limit?: number): Promise<SearchSuggestion[]>
+
+// Get popular searches
+getPopularSearches(limit?: number): Promise<PopularSearch[]>
+
+// Save search to history
+saveSearchHistory(userId: string | null, query: string, resultsCount: number): Promise<void>
+
+// Get user's search history
+getUserSearchHistory(userId: string, limit?: number): Promise<SearchHistory[]>
+
+// Clear user's search history
+clearSearchHistory(userId: string): Promise<void>
+
+// Admin: Manage curated suggestions
+createSearchSuggestion(data: CreateSuggestionInput): Promise<SearchSuggestion>
+updateSearchSuggestion(id: string, data: UpdateSuggestionInput): Promise<void>
+deleteSearchSuggestion(id: string): Promise<void>
+```
+
+### UI Specifications
+
+#### Search Autocomplete
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 🔍 [Cari songket...                        ] [🎤] [Search] │
+├─────────────────────────────────────────────────────────────┤
+│ Pencarian Terakhir:                          [Hapus Semua] │
+│ • songket merah                                             │
+│ • kain bertabur                                             │
+│ • si pugut                                                  │
+├─────────────────────────────────────────────────────────────┤
+│ Pencarian Populer:                                          │
+│ • songket perkahwinan    🔥 120 pencarian                  │
+│ • kain tenunan emas      🔥 98 pencarian                   │
+│ • songket brunei         🔥 87 pencarian                   │
+├─────────────────────────────────────────────────────────────┤
+│ Saran:                                                      │
+│ • "songket" dalam Kategori Bertabur                        │
+│ • "songket" dalam Kategori Si Pugut                        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Voice Search Flow
+
+```
+┌──────────────────────────────────────┐
+│          🎤 Mendengarkan...          │
+│                                      │
+│     [Animated sound waves]           │
+│                                      │
+│     "songket merah"                  │
+│     (transcription preview)          │
+│                                      │
+│     [Batal]                          │
+└──────────────────────────────────────┘
+```
+
+### Voice Search Implementation
+
+```typescript
+// src/hooks/useVoiceSearch.ts
+import { useState, useCallback, useEffect } from 'react';
+
+interface UseVoiceSearchReturn {
+  isListening: boolean;
+  transcript: string;
+  isSupported: boolean;
+  startListening: () => void;
+  stopListening: () => void;
+  error: string | null;
+}
+
+export function useVoiceSearch(): UseVoiceSearchReturn {
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  
+  const isSupported = typeof window !== 'undefined' && 
+    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+
+  const startListening = useCallback(() => {
+    if (!isSupported) {
+      setError('Voice search tidak didukung di browser ini');
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    
+    recognition.lang = 'ms-MY'; // Malay
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setTranscript(transcript);
+    };
+    recognition.onerror = (event) => {
+      setError(event.error);
+      setIsListening(false);
+    };
+
+    recognition.start();
+  }, [isSupported]);
+
+  const stopListening = useCallback(() => {
+    setIsListening(false);
+  }, []);
+
+  return { isListening, transcript, isSupported, startListening, stopListening, error };
+}
+```
+
+### Tasks Checklist
+
+#### Database (Day 1)
+- [ ] Create search_history table
+- [ ] Create popular_searches table
+- [ ] Create search_suggestions table
+- [ ] Add RLS policies
+- [ ] Create update_popular_search function
+
+#### Backend (Day 2-3)
+- [ ] Create search service (`src/lib/supabase/search.ts`)
+- [ ] Create API endpoints for suggestions
+- [ ] Implement search history tracking
+- [ ] Add search analytics trigger
+
+#### Frontend (Day 4-7)
+- [ ] Create SearchAutocomplete component
+- [ ] Create SearchSuggestions dropdown
+- [ ] Create SearchHistory component
+- [ ] Create VoiceSearchButton component
+- [ ] Implement useVoiceSearch hook
+- [ ] Implement useSearchHistory hook
+- [ ] Integrate with Header search
+
+#### Admin (Day 8)
+- [ ] Create search suggestions management page
+- [ ] Create popular searches analytics view
+
+---
+
+## Phase 7: Live Chat & Customer Support
+
+### Current State
+- WhatsApp button exists di mobile (`WhatsAppButton.tsx`)
+- Tidak ada live chat widget
+- Tidak ada chatbot atau FAQ bot
+- Tidak ada support ticket system
+
+### Goals
+- WhatsApp integration untuk desktop juga
+- Live chat widget (Tawk.to / Crisp / custom)
+- Simple FAQ chatbot
+- Contact form dengan ticket system
+
+### Options Analysis
+
+| Solution | Cost | Effort | Features |
+|----------|------|--------|----------|
+| Tawk.to | Free | Low | Live chat, mobile app, triggers |
+| Crisp | Free-$25/mo | Low | Live chat, chatbot, CRM |
+| WhatsApp Business API | Pay-per-msg | Medium | Official API, templates |
+| Custom WebSocket Chat | Free | High | Full control, complex |
+
+**Recommendation:** Tawk.to (free) + WhatsApp button enhancement
+
+### Components to Create
+
+```
+src/components/support/
+├── LiveChatWidget.tsx        # Tawk.to/Crisp embed wrapper
+├── WhatsAppButton.tsx        # Enhanced (desktop + mobile)
+├── ContactForm.tsx           # Contact/support form
+├── FAQChatbot.tsx            # Simple FAQ bot (optional)
+└── SupportTicketList.tsx     # User's ticket history
+
+src/app/(store)/
+├── contact/page.tsx          # Contact us page
+└── support/page.tsx          # Support center
+```
+
+### Database Schema (for Contact Form)
+
+```sql
+-- Migration: create_support_tables
+
+-- Support Tickets
+CREATE TABLE support_tickets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ticket_number VARCHAR(20) NOT NULL UNIQUE, -- "TKT-20260403-001"
+  user_id UUID REFERENCES profiles(id),
+  guest_email VARCHAR(255),
+  guest_name VARCHAR(255),
+  subject VARCHAR(255) NOT NULL,
+  message TEXT NOT NULL,
+  category VARCHAR(50),                      -- "order", "product", "shipping", "other"
+  status VARCHAR(20) DEFAULT 'open',         -- "open", "in_progress", "resolved", "closed"
+  priority VARCHAR(10) DEFAULT 'normal',     -- "low", "normal", "high", "urgent"
+  order_id UUID REFERENCES orders(id),       -- Link to related order
+  assigned_to UUID REFERENCES profiles(id),
+  resolved_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Ticket Replies
+CREATE TABLE ticket_replies (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ticket_id UUID NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id),      -- null = admin/system
+  is_admin BOOLEAN DEFAULT false,
+  message TEXT NOT NULL,
+  attachments JSONB,                         -- [{url, filename, size}]
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_support_tickets_user ON support_tickets(user_id);
+CREATE INDEX idx_support_tickets_status ON support_tickets(status);
+CREATE INDEX idx_support_tickets_number ON support_tickets(ticket_number);
+CREATE INDEX idx_ticket_replies_ticket ON ticket_replies(ticket_id);
+
+-- Generate ticket number
+CREATE OR REPLACE FUNCTION generate_ticket_number()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.ticket_number := 'TKT-' || TO_CHAR(NOW(), 'YYYYMMDD') || '-' || 
+    LPAD(NEXTVAL('ticket_number_seq')::TEXT, 3, '0');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE SEQUENCE ticket_number_seq START 1;
+
+CREATE TRIGGER set_ticket_number
+BEFORE INSERT ON support_tickets
+FOR EACH ROW
+EXECUTE FUNCTION generate_ticket_number();
+```
+
+### Tawk.to Integration
+
+```typescript
+// src/components/support/LiveChatWidget.tsx
+"use client";
+
+import { useEffect } from 'react';
+
+interface LiveChatWidgetProps {
+  propertyId: string;    // From Tawk.to dashboard
+  widgetId: string;
+}
+
+export function LiveChatWidget({ propertyId, widgetId }: LiveChatWidgetProps) {
+  useEffect(() => {
+    // Load Tawk.to script
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://embed.tawk.to/${propertyId}/${widgetId}`;
+    script.charset = 'UTF-8';
+    script.setAttribute('crossorigin', '*');
+    document.head.appendChild(script);
+
+    return () => {
+      // Cleanup
+      document.head.removeChild(script);
+    };
+  }, [propertyId, widgetId]);
+
+  return null; // Widget renders itself
+}
+
+// Usage in layout.tsx:
+// <LiveChatWidget propertyId="xxx" widgetId="default" />
+```
+
+### Enhanced WhatsApp Button
+
+```typescript
+// src/components/support/WhatsAppButton.tsx
+"use client";
+
+import { MessageCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+interface WhatsAppButtonProps {
+  phoneNumber: string;      // With country code, e.g., "6281234567890"
+  message?: string;
+  variant?: 'floating' | 'inline';
+  showOnDesktop?: boolean;
+}
+
+export function WhatsAppButton({ 
+  phoneNumber, 
+  message = "Halo, saya ingin bertanya tentang produk Tenunan Songket.",
+  variant = 'floating',
+  showOnDesktop = true
+}: WhatsAppButtonProps) {
+  const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+
+  if (variant === 'floating') {
+    return (
+      <a
+        href={whatsappUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`fixed bottom-6 right-6 z-50 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg transition-all hover:scale-110 ${showOnDesktop ? '' : 'md:hidden'}`}
+        aria-label="Chat via WhatsApp"
+      >
+        <MessageCircle className="h-6 w-6" />
+      </a>
+    );
+  }
+
+  return (
+    <Button asChild variant="outline" className="gap-2">
+      <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+        <MessageCircle className="h-4 w-4" />
+        Chat WhatsApp
+      </a>
+    </Button>
+  );
+}
+```
+
+### UI Specifications
+
+#### Contact Page
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 📞 Hubungi Kami                                             │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│ ┌─────────────────────┐  ┌─────────────────────┐           │
+│ │ 💬 WhatsApp         │  │ 📧 Email            │           │
+│ │ +673 XXX XXXX       │  │ support@tenunan.com │           │
+│ │ [Chat Sekarang]     │  │ [Kirim Email]       │           │
+│ └─────────────────────┘  └─────────────────────┘           │
+│                                                             │
+│ ─────────────────── atau ───────────────────               │
+│                                                             │
+│ Kirim Pesan:                                                │
+│ ┌─────────────────────────────────────────────────────────┐│
+│ │ Nama*          [                                      ] ││
+│ │ Email*         [                                      ] ││
+│ │ Kategori       [ Pilih kategori...               ▼   ] ││
+│ │ No. Pesanan    [                       ] (opsional)   ││
+│ │ Pesan*         [                                      ] ││
+│ │                [                                      ] ││
+│ │                [                                      ] ││
+│ │                                                         ││
+│ │                              [Kirim Pesan]              ││
+│ └─────────────────────────────────────────────────────────┘│
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Tasks Checklist
+
+#### Database (Day 1)
+- [ ] Create support_tickets table
+- [ ] Create ticket_replies table
+- [ ] Add ticket number generator
+- [ ] Add RLS policies
+
+#### Backend (Day 2)
+- [ ] Create support ticket service
+- [ ] Create API for ticket CRUD
+- [ ] Create email notification for new tickets
+
+#### Frontend (Day 3-5)
+- [ ] Enhance WhatsAppButton for desktop
+- [ ] Create ContactForm component
+- [ ] Create contact page
+- [ ] Integrate Tawk.to widget (optional)
+- [ ] Create ticket history for logged-in users
+
+#### Admin (Day 6-7)
+- [ ] Create ticket management page
+- [ ] Create ticket detail/reply page
+- [ ] Add ticket stats to dashboard
+
+---
+
+## Phase 8: Flash Sales & Promotions
+
+### Current State
+- Coupon system exists (percentage/fixed discounts)
+- Hero banner slides untuk promotional banners
+- Tidak ada countdown timer
+- Tidak ada flash sale page
+- Tidak ada urgency indicators (limited stock)
+
+### Goals
+- Flash sale dengan countdown timer
+- Dedicated flash sale page
+- Stock urgency badges ("Sisa 5!")
+- Scheduled promotions
+- Banner dengan countdown
+
+### Database Schema
+
+```sql
+-- Migration: create_flash_sales
+
+-- Flash Sales / Promotions
+CREATE TABLE promotions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL,
+  slug VARCHAR(255) NOT NULL UNIQUE,
+  description TEXT,
+  banner_image_url TEXT,
+  discount_type VARCHAR(20) NOT NULL,    -- "percentage", "fixed"
+  discount_value DECIMAL(12,2) NOT NULL,
+  min_purchase DECIMAL(12,2),
+  max_discount DECIMAL(12,2),            -- Cap for percentage discounts
+  starts_at TIMESTAMPTZ NOT NULL,
+  ends_at TIMESTAMPTZ NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  show_countdown BOOLEAN DEFAULT true,
+  priority INT DEFAULT 0,                 -- Higher = more prominent
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Products in Promotion
+CREATE TABLE promotion_products (
+  promotion_id UUID NOT NULL REFERENCES promotions(id) ON DELETE CASCADE,
+  product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  special_price DECIMAL(12,2),           -- Override promotion discount
+  max_quantity INT,                       -- Limit per customer
+  total_stock INT,                        -- Limited stock for flash sale
+  sold_count INT DEFAULT 0,
+  PRIMARY KEY (promotion_id, product_id)
+);
+
+-- Indexes
+CREATE INDEX idx_promotions_dates ON promotions(starts_at, ends_at);
+CREATE INDEX idx_promotions_active ON promotions(is_active) WHERE is_active = true;
+CREATE INDEX idx_promotion_products_product ON promotion_products(product_id);
+
+-- View for active promotions
+CREATE VIEW active_promotions AS
+SELECT * FROM promotions
+WHERE is_active = true
+  AND starts_at <= NOW()
+  AND ends_at > NOW();
+```
+
+### Components to Create
+
+```
+src/components/promotion/
+├── CountdownTimer.tsx        # Animated countdown component
+├── FlashSaleBanner.tsx       # Banner with countdown
+├── FlashSaleCard.tsx         # Product card with urgency
+├── StockUrgency.tsx          # "Sisa 5 lagi!" badge
+├── PromotionBadge.tsx        # "SALE -50%" badge
+└── PromotionProgress.tsx     # Stock progress bar
+
+src/app/(store)/
+├── flash-sale/page.tsx       # Flash sale listing
+└── promo/[slug]/page.tsx     # Specific promotion page
+
+src/app/admin/
+└── promotions/
+    ├── page.tsx              # Promotions list
+    ├── new/page.tsx          # Create promotion
+    └── [id]/edit/page.tsx    # Edit promotion
+```
+
+### Countdown Timer Component
+
+```typescript
+// src/components/promotion/CountdownTimer.tsx
+"use client";
+
+import { useState, useEffect } from 'react';
+
+interface CountdownTimerProps {
+  endTime: Date;
+  onExpire?: () => void;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+interface TimeLeft {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+}
+
+export function CountdownTimer({ endTime, onExpire, size = 'md' }: CountdownTimerProps) {
+  const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const difference = endTime.getTime() - new Date().getTime();
+      
+      if (difference <= 0) {
+        onExpire?.();
+        return null;
+      }
+
+      return {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60),
+      };
+    };
+
+    setTimeLeft(calculateTimeLeft());
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [endTime, onExpire]);
+
+  if (!timeLeft) {
+    return <span className="text-red-500 font-medium">Berakhir!</span>;
+  }
+
+  const sizeClasses = {
+    sm: 'text-xs gap-1',
+    md: 'text-sm gap-2',
+    lg: 'text-lg gap-3',
+  };
+
+  const boxClasses = {
+    sm: 'w-8 h-8 text-xs',
+    md: 'w-12 h-12 text-base',
+    lg: 'w-16 h-16 text-xl',
+  };
+
+  return (
+    <div className={`flex items-center ${sizeClasses[size]}`}>
+      <TimeBox value={timeLeft.days} label="Hari" className={boxClasses[size]} />
+      <span className="text-muted-foreground">:</span>
+      <TimeBox value={timeLeft.hours} label="Jam" className={boxClasses[size]} />
+      <span className="text-muted-foreground">:</span>
+      <TimeBox value={timeLeft.minutes} label="Min" className={boxClasses[size]} />
+      <span className="text-muted-foreground">:</span>
+      <TimeBox value={timeLeft.seconds} label="Det" className={boxClasses[size]} />
+    </div>
+  );
+}
+
+function TimeBox({ value, label, className }: { value: number; label: string; className: string }) {
+  return (
+    <div className={`flex flex-col items-center justify-center bg-primary text-primary-foreground rounded ${className}`}>
+      <span className="font-bold">{value.toString().padStart(2, '0')}</span>
+      <span className="text-[10px] opacity-80">{label}</span>
+    </div>
+  );
+}
+```
+
+### Stock Urgency Component
+
+```typescript
+// src/components/promotion/StockUrgency.tsx
+"use client";
+
+import { Flame } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface StockUrgencyProps {
+  stock: number;
+  soldCount?: number;
+  totalStock?: number;
+  threshold?: number;    // Show urgency when stock <= threshold
+}
+
+export function StockUrgency({ stock, soldCount, totalStock, threshold = 10 }: StockUrgencyProps) {
+  if (stock > threshold && !totalStock) return null;
+
+  const showProgress = totalStock && soldCount !== undefined;
+  const percentage = showProgress ? (soldCount / totalStock) * 100 : 0;
+
+  return (
+    <div className="space-y-1">
+      {stock <= threshold && stock > 0 && (
+        <div className="flex items-center gap-1 text-orange-600 dark:text-orange-400">
+          <Flame className="h-4 w-4 animate-pulse" />
+          <span className="text-sm font-medium">
+            Sisa {stock} lagi!
+          </span>
+        </div>
+      )}
+      
+      {showProgress && (
+        <div className="space-y-1">
+          <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div 
+              className={cn(
+                "h-full transition-all duration-500",
+                percentage > 80 ? "bg-red-500" : percentage > 50 ? "bg-orange-500" : "bg-green-500"
+              )}
+              style={{ width: `${percentage}%` }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Terjual {soldCount} dari {totalStock}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### UI Specifications
+
+#### Flash Sale Page
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ ⚡ FLASH SALE                                                │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│ ┌─────────────────────────────────────────────────────────┐│
+│ │ [Banner Image - Flash Sale]                             ││
+│ │                                                         ││
+│ │ BERAKHIR DALAM:                                         ││
+│ │ ┌────┐ : ┌────┐ : ┌────┐ : ┌────┐                      ││
+│ │ │ 02 │   │ 14 │   │ 35 │   │ 42 │                      ││
+│ │ │Hari│   │Jam │   │Min │   │Det │                      ││
+│ │ └────┘   └────┘   └────┘   └────┘                      ││
+│ └─────────────────────────────────────────────────────────┘│
+│                                                             │
+│ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐        │
+│ │ [Image]      │ │ [Image]      │ │ [Image]      │        │
+│ │ ┌──────────┐ │ │ ┌──────────┐ │ │ ┌──────────┐ │        │
+│ │ │ -50% OFF │ │ │ │ -30% OFF │ │ │ │ -40% OFF │ │        │
+│ │ └──────────┘ │ │ └──────────┘ │ │ └──────────┘ │        │
+│ │ Product Name │ │ Product Name │ │ Product Name │        │
+│ │ ̶R̶p̶ ̶2̶,̶0̶0̶0̶,̶0̶0̶0̶│ │ ̶R̶p̶ ̶1̶,̶5̶0̶0̶,̶0̶0̶0̶│ │ ̶R̶p̶ ̶1̶,̶8̶0̶0̶,̶0̶0̶0̶│        │
+│ │ Rp 1,000,000 │ │ Rp 1,050,000 │ │ Rp 1,080,000 │        │
+│ │              │ │              │ │              │        │
+│ │ 🔥 Sisa 5!  │ │ ████████░░   │ │ 🔥 Sisa 3!  │        │
+│ │              │ │ 80% terjual  │ │              │        │
+│ │ [Beli]       │ │ [Beli]       │ │ [Beli]       │        │
+│ └──────────────┘ └──────────────┘ └──────────────┘        │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Tasks Checklist
+
+#### Database (Day 1)
+- [ ] Create promotions table
+- [ ] Create promotion_products table
+- [ ] Add active_promotions view
+- [ ] Add RLS policies
+
+#### Backend (Day 2-3)
+- [ ] Create promotions service
+- [ ] Create API for promotions
+- [ ] Add promotion price calculation to products
+- [ ] Add stock validation for flash sale
+
+#### Frontend (Day 4-7)
+- [ ] Create CountdownTimer component
+- [ ] Create StockUrgency component
+- [ ] Create FlashSaleBanner component
+- [ ] Create flash-sale page
+- [ ] Integrate urgency indicators in ProductCard
+- [ ] Add promotion badges
+
+#### Admin (Day 8-10)
+- [ ] Create promotions management page
+- [ ] Create promotion editor
+- [ ] Add product selector for promotions
+- [ ] Add promotion scheduling
+
+---
+
+## Phase 9: Product Bundles
+
+### Current State
+- Tidak ada sistem bundle
+- Tidak ada "Frequently bought together"
+- Tidak ada gift sets
+- Tidak ada bundle discounts
+
+### Goals
+- Bundle products dengan diskon
+- "Sering Dibeli Bersamaan" dengan "Tambah Semua"
+- Gift sets/paket hadiah
+- Admin dapat membuat dan mengelola bundles
+
+### Database Schema
+
+```sql
+-- Migration: create_product_bundles
+
+-- Product Bundles
+CREATE TABLE product_bundles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL,
+  slug VARCHAR(255) NOT NULL UNIQUE,
+  description TEXT,
+  image_url TEXT,
+  bundle_type VARCHAR(20) NOT NULL,       -- "fixed", "gift_set", "dynamic"
+  discount_type VARCHAR(20),              -- "percentage", "fixed"
+  discount_value DECIMAL(12,2),           -- Discount when buying bundle
+  bundle_price DECIMAL(12,2),             -- Or fixed bundle price
+  is_active BOOLEAN DEFAULT true,
+  display_on_product BOOLEAN DEFAULT true, -- Show on product pages
+  starts_at TIMESTAMPTZ,
+  ends_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Bundle Items
+CREATE TABLE bundle_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  bundle_id UUID NOT NULL REFERENCES product_bundles(id) ON DELETE CASCADE,
+  product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  quantity INT DEFAULT 1,
+  is_optional BOOLEAN DEFAULT false,      -- For customizable bundles
+  display_order INT DEFAULT 0,
+  UNIQUE(bundle_id, product_id)
+);
+
+-- Dynamic Bundles (auto-generated from purchase patterns)
+CREATE TABLE dynamic_bundle_suggestions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  suggested_product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  co_purchase_count INT DEFAULT 0,        -- Times bought together
+  score DECIMAL(5,4) DEFAULT 0,           -- Association score
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(product_id, suggested_product_id)
+);
+
+-- Indexes
+CREATE INDEX idx_product_bundles_active ON product_bundles(is_active) WHERE is_active = true;
+CREATE INDEX idx_bundle_items_bundle ON bundle_items(bundle_id);
+CREATE INDEX idx_bundle_items_product ON bundle_items(product_id);
+CREATE INDEX idx_dynamic_bundle_product ON dynamic_bundle_suggestions(product_id);
+
+-- Function to update dynamic bundle suggestions from order data
+CREATE OR REPLACE FUNCTION update_bundle_suggestions()
+RETURNS void AS $$
+BEGIN
+  -- Clear old suggestions
+  TRUNCATE dynamic_bundle_suggestions;
+  
+  -- Calculate co-purchase patterns
+  INSERT INTO dynamic_bundle_suggestions (product_id, suggested_product_id, co_purchase_count, score)
+  SELECT 
+    oi1.product_id,
+    oi2.product_id,
+    COUNT(*) as co_purchase_count,
+    COUNT(*)::decimal / GREATEST(
+      (SELECT COUNT(DISTINCT order_id) FROM order_items WHERE product_id = oi1.product_id),
+      1
+    ) as score
+  FROM order_items oi1
+  JOIN order_items oi2 ON oi1.order_id = oi2.order_id AND oi1.product_id != oi2.product_id
+  JOIN orders o ON o.id = oi1.order_id AND o.status NOT IN ('cancelled')
+  GROUP BY oi1.product_id, oi2.product_id
+  HAVING COUNT(*) >= 3  -- Minimum 3 co-purchases
+  ON CONFLICT (product_id, suggested_product_id)
+  DO UPDATE SET 
+    co_purchase_count = EXCLUDED.co_purchase_count,
+    score = EXCLUDED.score,
+    updated_at = NOW();
+END;
+$$ LANGUAGE plpgsql;
+```
+
+### Components to Create
+
+```
+src/components/bundle/
+├── BundleCard.tsx            # Bundle product card
+├── BundleItems.tsx           # List of items in bundle
+├── BundlePrice.tsx           # Price breakdown & savings
+├── AddBundleToCart.tsx       # "Add All to Cart" button
+├── FrequentlyBoughtTogether.tsx  # Dynamic suggestions
+└── GiftSetCard.tsx           # Special card for gift sets
+
+src/app/(store)/
+├── bundles/page.tsx          # Bundle listing
+└── bundles/[slug]/page.tsx   # Bundle detail
+
+src/app/admin/
+└── bundles/
+    ├── page.tsx              # Bundles list
+    ├── new/page.tsx          # Create bundle
+    └── [id]/edit/page.tsx    # Edit bundle
+```
+
+### Frequently Bought Together Component
+
+```typescript
+// src/components/bundle/FrequentlyBoughtTogether.tsx
+"use client";
+
+import { useState } from 'react';
+import Image from 'next/image';
+import { Plus, Check, ShoppingCart } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { formatPrice } from '@/lib/utils';
+import { useCart } from '@/components/cart/CartProvider';
+import { Product } from '@/lib/types';
+
+interface FrequentlyBoughtTogetherProps {
+  currentProduct: Product;
+  suggestedProducts: Product[];
+  bundleDiscount?: number;  // Percentage discount when buying together
+}
+
+export function FrequentlyBoughtTogether({
+  currentProduct,
+  suggestedProducts,
+  bundleDiscount = 10
+}: FrequentlyBoughtTogetherProps) {
+  const { addItem } = useCart();
+  const [selectedProducts, setSelectedProducts] = useState<string[]>(
+    suggestedProducts.map(p => p.id)
+  );
+
+  if (suggestedProducts.length === 0) return null;
+
+  const allProducts = [currentProduct, ...suggestedProducts.filter(p => selectedProducts.includes(p.id))];
+  const totalPrice = allProducts.reduce((sum, p) => sum + p.price, 0);
+  const discountedPrice = totalPrice * (1 - bundleDiscount / 100);
+  const savings = totalPrice - discountedPrice;
+
+  const handleToggle = (productId: string) => {
+    setSelectedProducts(prev =>
+      prev.includes(productId)
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
+  };
+
+  const handleAddAll = () => {
+    allProducts.forEach(product => {
+      addItem(product, 1);
+    });
+  };
+
+  return (
+    <div className="border rounded-lg p-4 bg-card">
+      <h3 className="font-semibold text-lg mb-4">Sering Dibeli Bersamaan</h3>
+      
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* Current Product */}
+        <div className="relative w-20 h-20 border rounded-lg overflow-hidden">
+          <Image
+            src={currentProduct.image || '/images/placeholder.jpg'}
+            alt={currentProduct.title}
+            fill
+            className="object-cover"
+          />
+          <div className="absolute bottom-0 left-0 right-0 bg-primary text-primary-foreground text-xs text-center py-0.5">
+            Produk ini
+          </div>
+        </div>
+
+        {suggestedProducts.map((product, index) => (
+          <div key={product.id} className="flex items-center gap-2">
+            <Plus className="h-4 w-4 text-muted-foreground" />
+            <div 
+              className={`relative w-20 h-20 border rounded-lg overflow-hidden cursor-pointer ${
+                selectedProducts.includes(product.id) ? 'ring-2 ring-primary' : 'opacity-50'
+              }`}
+              onClick={() => handleToggle(product.id)}
+            >
+              <Image
+                src={product.image || '/images/placeholder.jpg'}
+                alt={product.title}
+                fill
+                className="object-cover"
+              />
+              {selectedProducts.includes(product.id) && (
+                <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full p-0.5">
+                  <Check className="h-3 w-3" />
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Price Summary */}
+      <div className="mt-4 space-y-1">
+        <div className="flex justify-between text-sm">
+          <span>Total ({allProducts.length} produk):</span>
+          <span className="line-through text-muted-foreground">{formatPrice(totalPrice)}</span>
+        </div>
+        <div className="flex justify-between text-sm font-medium text-green-600">
+          <span>Hemat {bundleDiscount}%:</span>
+          <span>-{formatPrice(savings)}</span>
+        </div>
+        <div className="flex justify-between font-bold text-lg">
+          <span>Harga Paket:</span>
+          <span className="text-primary">{formatPrice(discountedPrice)}</span>
+        </div>
+      </div>
+
+      <Button 
+        onClick={handleAddAll} 
+        className="w-full mt-4 gap-2"
+        disabled={allProducts.length < 2}
+      >
+        <ShoppingCart className="h-4 w-4" />
+        Tambah Semua ke Keranjang
+      </Button>
+    </div>
+  );
+}
+```
+
+### UI Specifications
+
+#### Bundle Detail Page
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 🎁 Paket Perkahwinan Lengkap                                │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│ ┌───────────────────────────────────────────────────────┐  │
+│ │ [Bundle Image - All products together]                │  │
+│ └───────────────────────────────────────────────────────┘  │
+│                                                             │
+│ Isi Paket:                                                  │
+│ ┌─────────────────────────────────────────────────────────┐│
+│ │ ☑ 1x Songket Bertabur Emas     Rp 2,500,000            ││
+│ │ ☑ 1x Selendang Matching        Rp 800,000              ││
+│ │ ☑ 1x Kotak Hadiah Premium      Rp 200,000              ││
+│ │ ☑ 1x Kartu Ucapan Custom       Rp 50,000               ││
+│ └─────────────────────────────────────────────────────────┘│
+│                                                             │
+│ ┌─────────────────────────────────────────────────────────┐│
+│ │ Total Normal:     ̶R̶p̶ ̶3̶,̶5̶5̶0̶,̶0̶0̶0̶                        ││
+│ │ Diskon Paket:     -Rp 550,000 (15%)                    ││
+│ │ ─────────────────────────────────────────              ││
+│ │ Harga Paket:      Rp 3,000,000                         ││
+│ │                                                         ││
+│ │ [🛒 Tambah Paket ke Keranjang]                         ││
+│ └─────────────────────────────────────────────────────────┘│
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Tasks Checklist
+
+#### Database (Day 1-2)
+- [ ] Create product_bundles table
+- [ ] Create bundle_items table
+- [ ] Create dynamic_bundle_suggestions table
+- [ ] Add RLS policies
+- [ ] Create update_bundle_suggestions function
+
+#### Backend (Day 3-4)
+- [ ] Create bundle service
+- [ ] Create API for bundles
+- [ ] Implement bundle price calculation
+- [ ] Create cron job for dynamic suggestions
+
+#### Frontend (Day 5-8)
+- [ ] Create BundleCard component
+- [ ] Create FrequentlyBoughtTogether component
+- [ ] Create bundles listing page
+- [ ] Create bundle detail page
+- [ ] Integrate suggestions on product page
+- [ ] Add bundle to cart functionality
+
+#### Admin (Day 9-10)
+- [ ] Create bundle management page
+- [ ] Create bundle editor
+- [ ] Add product selector
+- [ ] Add gift set templates
+
+---
+
+## Phase 10: Analytics Dashboard Enhancement
+
+### Current State
+- Admin dashboard dengan stats dasar (orders, revenue, customers, products)
+- Sales chart (7d/30d/90d)
+- Top products
+- Order status summary (pie chart)
+- Recent orders
+- Stock alerts
+- Meta Pixel tracking untuk Facebook
+
+### Goals
+- Conversion funnel visualization
+- Customer insights & demographics
+- Traffic sources report
+- Product performance analytics
+- Cart abandonment tracking
+- Export reports to Excel/PDF
+
+### Database Schema
+
+```sql
+-- Migration: enhance_analytics
+
+-- Page Views (for traffic analysis)
+CREATE TABLE page_views (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id),
+  session_id VARCHAR(100),
+  page_path VARCHAR(255) NOT NULL,
+  page_title VARCHAR(255),
+  referrer VARCHAR(500),
+  utm_source VARCHAR(100),
+  utm_medium VARCHAR(100),
+  utm_campaign VARCHAR(100),
+  device_type VARCHAR(20),              -- "mobile", "tablet", "desktop"
+  browser VARCHAR(50),
+  country_code VARCHAR(2),
+  viewed_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Conversion Events
+CREATE TABLE conversion_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id),
+  session_id VARCHAR(100),
+  event_type VARCHAR(50) NOT NULL,      -- "view_product", "add_to_cart", "begin_checkout", "purchase"
+  product_id UUID REFERENCES products(id),
+  order_id UUID REFERENCES orders(id),
+  event_value DECIMAL(12,2),
+  metadata JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Daily Aggregated Stats (for faster queries)
+CREATE TABLE daily_stats (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  date DATE NOT NULL UNIQUE,
+  total_orders INT DEFAULT 0,
+  total_revenue DECIMAL(12,2) DEFAULT 0,
+  total_customers INT DEFAULT 0,
+  new_customers INT DEFAULT 0,
+  returning_customers INT DEFAULT 0,
+  total_page_views INT DEFAULT 0,
+  unique_visitors INT DEFAULT 0,
+  product_views INT DEFAULT 0,
+  add_to_carts INT DEFAULT 0,
+  checkouts_started INT DEFAULT 0,
+  checkouts_completed INT DEFAULT 0,
+  cart_abandonment_rate DECIMAL(5,2),
+  average_order_value DECIMAL(12,2),
+  top_products JSONB,                   -- [{product_id, sold, revenue}]
+  top_categories JSONB,
+  traffic_sources JSONB,                -- [{source, count}]
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Cart Abandonment Tracking
+CREATE TABLE abandoned_carts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id),
+  guest_email VARCHAR(255),
+  cart_items JSONB NOT NULL,            -- Snapshot of cart items
+  cart_total DECIMAL(12,2) NOT NULL,
+  abandoned_at TIMESTAMPTZ DEFAULT NOW(),
+  recovery_email_sent BOOLEAN DEFAULT false,
+  recovered BOOLEAN DEFAULT false,
+  recovered_order_id UUID REFERENCES orders(id)
+);
+
+-- Indexes
+CREATE INDEX idx_page_views_date ON page_views(viewed_at);
+CREATE INDEX idx_page_views_session ON page_views(session_id);
+CREATE INDEX idx_conversion_events_type ON conversion_events(event_type);
+CREATE INDEX idx_conversion_events_date ON conversion_events(created_at);
+CREATE INDEX idx_daily_stats_date ON daily_stats(date);
+CREATE INDEX idx_abandoned_carts_date ON abandoned_carts(abandoned_at);
+
+-- Function to aggregate daily stats
+CREATE OR REPLACE FUNCTION aggregate_daily_stats(target_date DATE)
+RETURNS void AS $$
+DECLARE
+  stats RECORD;
+BEGIN
+  -- Calculate stats for the day
+  SELECT
+    COUNT(DISTINCT o.id) as total_orders,
+    COALESCE(SUM(o.total), 0) as total_revenue,
+    COUNT(DISTINCT o.user_id) as total_customers,
+    COUNT(DISTINCT CASE WHEN p.created_at::date = target_date THEN p.id END) as new_customers,
+    AVG(o.total) as avg_order_value
+  INTO stats
+  FROM orders o
+  LEFT JOIN profiles p ON p.id = o.user_id
+  WHERE o.created_at::date = target_date
+    AND o.status NOT IN ('cancelled');
+
+  -- Upsert daily stats
+  INSERT INTO daily_stats (
+    date, total_orders, total_revenue, total_customers, 
+    new_customers, average_order_value
+  )
+  VALUES (
+    target_date, stats.total_orders, stats.total_revenue, 
+    stats.total_customers, stats.new_customers, stats.avg_order_value
+  )
+  ON CONFLICT (date)
+  DO UPDATE SET
+    total_orders = EXCLUDED.total_orders,
+    total_revenue = EXCLUDED.total_revenue,
+    total_customers = EXCLUDED.total_customers,
+    new_customers = EXCLUDED.new_customers,
+    average_order_value = EXCLUDED.average_order_value,
+    updated_at = NOW();
+END;
+$$ LANGUAGE plpgsql;
+```
+
+### Components to Create/Enhance
+
+```
+src/components/admin/analytics/
+├── ConversionFunnel.tsx      # Visual funnel chart
+├── TrafficSources.tsx        # Traffic source breakdown
+├── CustomerInsights.tsx      # Demographics & behavior
+├── ProductPerformance.tsx    # Product-level analytics
+├── CartAbandonment.tsx       # Abandonment tracking
+├── RevenueChart.tsx          # Enhanced revenue chart
+├── ExportButton.tsx          # Export to Excel/PDF
+└── DateRangePicker.tsx       # Custom date range selector
+
+src/app/admin/analytics/
+├── page.tsx                  # Analytics overview
+├── traffic/page.tsx          # Traffic analysis
+├── products/page.tsx         # Product performance
+├── customers/page.tsx        # Customer insights
+└── conversions/page.tsx      # Conversion tracking
+```
+
+### Conversion Funnel Component
+
+```typescript
+// src/components/admin/analytics/ConversionFunnel.tsx
+"use client";
+
+interface FunnelStep {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface ConversionFunnelProps {
+  steps: FunnelStep[];
+}
+
+export function ConversionFunnel({ steps }: ConversionFunnelProps) {
+  const maxValue = Math.max(...steps.map(s => s.value));
+
+  return (
+    <div className="space-y-3">
+      <h3 className="font-semibold">Conversion Funnel</h3>
+      <div className="space-y-2">
+        {steps.map((step, index) => {
+          const width = (step.value / maxValue) * 100;
+          const conversionRate = index > 0 
+            ? ((step.value / steps[index - 1].value) * 100).toFixed(1)
+            : '100';
+
+          return (
+            <div key={step.name} className="space-y-1">
+              <div className="flex justify-between text-sm">
+                <span>{step.name}</span>
+                <span className="font-medium">{step.value.toLocaleString()}</span>
+              </div>
+              <div className="relative h-8 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
+                <div
+                  className="h-full transition-all duration-500 flex items-center justify-end pr-2"
+                  style={{ width: `${width}%`, backgroundColor: step.color }}
+                >
+                  {index > 0 && (
+                    <span className="text-xs text-white font-medium">
+                      {conversionRate}%
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Usage:
+// <ConversionFunnel steps={[
+//   { name: 'Lihat Produk', value: 10000, color: '#3B82F6' },
+//   { name: 'Tambah ke Keranjang', value: 2500, color: '#8B5CF6' },
+//   { name: 'Mulai Checkout', value: 1200, color: '#EC4899' },
+//   { name: 'Selesai Pembelian', value: 800, color: '#10B981' },
+// ]} />
+```
+
+### UI Specifications
+
+#### Analytics Dashboard
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 📊 Analytics Dashboard                    [Export] [7d ▼]   │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────┐│
+│ │ Pengunjung  │ │ Pesanan     │ │ Revenue     │ │ Conv.   ││
+│ │ 12,450      │ │ 342         │ │ Rp 856M     │ │ 2.75%   ││
+│ │ ↑ 12%       │ │ ↑ 8%        │ │ ↑ 15%       │ │ ↑ 0.3%  ││
+│ └─────────────┘ └─────────────┘ └─────────────┘ └─────────┘│
+│                                                             │
+│ ┌─────────────────────────────────┬─────────────────────────┐
+│ │ Conversion Funnel               │ Traffic Sources         │
+│ │                                 │                         │
+│ │ Lihat Produk    ██████████ 10K │ Direct      45%         │
+│ │ Add to Cart     █████ 2.5K     │ Google      30%         │
+│ │ Checkout        ███ 1.2K       │ Facebook    15%         │
+│ │ Purchase        ██ 800         │ Instagram   8%          │
+│ │                                 │ Others      2%          │
+│ └─────────────────────────────────┴─────────────────────────┘
+│                                                             │
+│ ┌─────────────────────────────────────────────────────────┐│
+│ │ Revenue Trend                                           ││
+│ │                    📈                                   ││
+│ │ [Revenue Chart - Line graph over selected period]       ││
+│ │                                                         ││
+│ └─────────────────────────────────────────────────────────┘│
+│                                                             │
+│ ┌─────────────────────────────────┬─────────────────────────┐
+│ │ Top Products                    │ Cart Abandonment        │
+│ │ 1. Songket Bertabur   Rp 125M  │ Rate: 68%               │
+│ │ 2. Si Pugut Emas      Rp 98M   │ ───────────────         │
+│ │ 3. Kain Sinjang       Rp 76M   │ Total: 234 carts        │
+│ │ 4. Songket Perak      Rp 65M   │ Value: Rp 456M          │
+│ │ 5. Selendang          Rp 45M   │ [Send Recovery Emails]  │
+│ └─────────────────────────────────┴─────────────────────────┘
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Tasks Checklist
+
+#### Database (Day 1-2)
+- [ ] Create page_views table
+- [ ] Create conversion_events table
+- [ ] Create daily_stats table
+- [ ] Create abandoned_carts table
+- [ ] Add aggregation function
+
+#### Backend (Day 3-4)
+- [ ] Create analytics service
+- [ ] Create tracking API endpoint
+- [ ] Implement daily aggregation cron
+- [ ] Create export functions (Excel/PDF)
+
+#### Frontend - Tracking (Day 5)
+- [ ] Implement page view tracking
+- [ ] Implement conversion event tracking
+- [ ] Track cart abandonment
+
+#### Frontend - Dashboard (Day 6-8)
+- [ ] Create ConversionFunnel component
+- [ ] Create TrafficSources component
+- [ ] Create CustomerInsights component
+- [ ] Create ProductPerformance page
+- [ ] Enhance existing dashboard
+- [ ] Add export functionality
+- [ ] Add date range picker
+
+---
+
 ## Technical Requirements
 
 ### Dependencies to Install
@@ -1400,6 +2795,22 @@ npm install @tiptap/extension-image @tiptap/extension-link
 npm install @tiptap/extension-placeholder @tiptap/extension-youtube
 npm install gray-matter       # For MDX frontmatter (optional)
 npm install reading-time      # Calculate reading time
+
+# Phase 6 - Advanced Search
+# No new deps needed (Web Speech API is built-in)
+
+# Phase 7 - Live Chat
+# No new deps (Tawk.to is external script)
+
+# Phase 8 - Flash Sales
+# No new deps needed
+
+# Phase 9 - Product Bundles
+# No new deps needed
+
+# Phase 10 - Analytics
+npm install xlsx             # For Excel export
+npm install @react-pdf/renderer  # For PDF export (optional)
 ```
 
 ### Environment Variables
@@ -1499,51 +2910,105 @@ src/
 ├── app/
 │   ├── (store)/
 │   │   ├── account/
-│   │   │   ├── loyalty/page.tsx        # NEW
-│   │   │   └── referrals/page.tsx      # NEW
+│   │   │   ├── loyalty/page.tsx        # Phase 3
+│   │   │   └── referrals/page.tsx      # Phase 3
 │   │   ├── blog/
-│   │   │   ├── page.tsx                # NEW
-│   │   │   ├── [slug]/page.tsx         # NEW
-│   │   │   └── category/[slug]/page.tsx # NEW
-│   │   └── track/
-│   │       └── [orderNumber]/page.tsx  # NEW
+│   │   │   ├── page.tsx                # Phase 5
+│   │   │   ├── [slug]/page.tsx         # Phase 5
+│   │   │   └── category/[slug]/page.tsx # Phase 5
+│   │   ├── track/
+│   │   │   └── [orderNumber]/page.tsx  # Phase 2
+│   │   ├── flash-sale/page.tsx         # Phase 8
+│   │   ├── bundles/
+│   │   │   ├── page.tsx                # Phase 9
+│   │   │   └── [slug]/page.tsx         # Phase 9
+│   │   ├── contact/page.tsx            # Phase 7
+│   │   └── support/page.tsx            # Phase 7
 │   └── admin/
 │       ├── blog/
-│       │   ├── page.tsx                # NEW
-│       │   ├── new/page.tsx            # NEW
-│       │   ├── [id]/edit/page.tsx      # NEW
-│       │   └── categories/page.tsx     # NEW
-│       └── loyalty/
-│           ├── page.tsx                # NEW
-│           ├── tiers/page.tsx          # NEW
-│           └── rules/page.tsx          # NEW
+│       │   ├── page.tsx                # Phase 5
+│       │   ├── new/page.tsx            # Phase 5
+│       │   ├── [id]/edit/page.tsx      # Phase 5
+│       │   └── categories/page.tsx     # Phase 5
+│       ├── loyalty/
+│       │   ├── page.tsx                # Phase 3
+│       │   ├── tiers/page.tsx          # Phase 3
+│       │   └── rules/page.tsx          # Phase 3
+│       ├── promotions/
+│       │   ├── page.tsx                # Phase 8
+│       │   ├── new/page.tsx            # Phase 8
+│       │   └── [id]/edit/page.tsx      # Phase 8
+│       ├── bundles/
+│       │   ├── page.tsx                # Phase 9
+│       │   ├── new/page.tsx            # Phase 9
+│       │   └── [id]/edit/page.tsx      # Phase 9
+│       ├── analytics/
+│       │   ├── page.tsx                # Phase 10
+│       │   ├── traffic/page.tsx        # Phase 10
+│       │   ├── products/page.tsx       # Phase 10
+│       │   ├── customers/page.tsx      # Phase 10
+│       │   └── conversions/page.tsx    # Phase 10
+│       ├── support/
+│       │   ├── page.tsx                # Phase 7
+│       │   └── [id]/page.tsx           # Phase 7
+│       └── search/
+│           └── suggestions/page.tsx    # Phase 6
 ├── components/
 │   ├── product/
-│   │   ├── VariantSelector.tsx         # NEW
-│   │   └── VariantSwatch.tsx           # NEW
+│   │   ├── VariantSelector.tsx         # Phase 1
+│   │   └── VariantSwatch.tsx           # Phase 1
 │   ├── order/
-│   │   └── TrackingTimeline.tsx        # NEW
+│   │   └── TrackingTimeline.tsx        # Phase 2
 │   ├── loyalty/
-│   │   ├── PointsBalance.tsx           # NEW
-│   │   ├── TierBadge.tsx               # NEW
-│   │   └── RedeemPoints.tsx            # NEW
+│   │   ├── PointsBalance.tsx           # Phase 3
+│   │   ├── TierBadge.tsx               # Phase 3
+│   │   └── RedeemPoints.tsx            # Phase 3
 │   ├── recommendations/
-│   │   ├── FrequentlyBoughtTogether.tsx # NEW
-│   │   └── RecentlyViewed.tsx          # NEW
-│   └── blog/
-│       ├── BlogCard.tsx                # NEW
-│       └── BlogContent.tsx             # NEW
+│   │   ├── FrequentlyBoughtTogether.tsx # Phase 4
+│   │   └── RecentlyViewed.tsx          # Phase 4
+│   ├── blog/
+│   │   ├── BlogCard.tsx                # Phase 5
+│   │   └── BlogContent.tsx             # Phase 5
+│   ├── search/
+│   │   ├── SearchAutocomplete.tsx      # Phase 6
+│   │   ├── SearchSuggestions.tsx       # Phase 6
+│   │   ├── VoiceSearchButton.tsx       # Phase 6
+│   │   └── SearchHistory.tsx           # Phase 6
+│   ├── support/
+│   │   ├── LiveChatWidget.tsx          # Phase 7
+│   │   ├── WhatsAppButton.tsx          # Phase 7 (enhanced)
+│   │   └── ContactForm.tsx             # Phase 7
+│   ├── promotion/
+│   │   ├── CountdownTimer.tsx          # Phase 8
+│   │   ├── FlashSaleBanner.tsx         # Phase 8
+│   │   └── StockUrgency.tsx            # Phase 8
+│   ├── bundle/
+│   │   ├── BundleCard.tsx              # Phase 9
+│   │   ├── FrequentlyBoughtTogether.tsx # Phase 9
+│   │   └── AddBundleToCart.tsx         # Phase 9
+│   └── admin/analytics/
+│       ├── ConversionFunnel.tsx        # Phase 10
+│       ├── TrafficSources.tsx          # Phase 10
+│       └── ExportButton.tsx            # Phase 10
 ├── lib/
 │   ├── supabase/
-│   │   ├── variants.ts                 # NEW
-│   │   ├── loyalty.ts                  # NEW
-│   │   ├── recommendations.ts          # NEW
-│   │   └── blog.ts                     # NEW
+│   │   ├── variants.ts                 # Phase 1
+│   │   ├── loyalty.ts                  # Phase 3
+│   │   ├── recommendations.ts          # Phase 4
+│   │   ├── blog.ts                     # Phase 5
+│   │   ├── search.ts                   # Phase 6
+│   │   ├── support.ts                  # Phase 7
+│   │   ├── promotions.ts               # Phase 8
+│   │   ├── bundles.ts                  # Phase 9
+│   │   └── analytics.ts                # Phase 10
 │   └── shipping/
-│       └── tracking.ts                 # NEW
+│       └── tracking.ts                 # Phase 2
 └── hooks/
-    ├── useRecentlyViewed.ts            # NEW
-    └── useTrackProductView.ts          # NEW
+    ├── useRecentlyViewed.ts            # Phase 4
+    ├── useTrackProductView.ts          # Phase 4
+    ├── useSearchHistory.ts             # Phase 6
+    ├── useVoiceSearch.ts               # Phase 6
+    └── useAnalyticsTracking.ts         # Phase 10
 ```
 
 ### B. Database Tables Summary
@@ -1555,9 +3020,32 @@ src/
 | 3 | loyalty_tiers, loyalty_profiles, loyalty_transactions, loyalty_earning_rules, loyalty_redemption_rules |
 | 4 | product_views, product_associations, user_preferences |
 | 5 | blog_categories, blog_tags, blog_posts, blog_post_tags, blog_post_products |
+| 6 | search_history, popular_searches, search_suggestions |
+| 7 | support_tickets, ticket_replies |
+| 8 | promotions, promotion_products |
+| 9 | product_bundles, bundle_items, dynamic_bundle_suggestions |
+| 10 | page_views, conversion_events, daily_stats, abandoned_carts |
+
+### C. Multi-language Notes
+
+**Supported Languages:**
+- Malay (ms) - Default
+- English (en)
+
+**NOT Supported (by design):**
+- Indonesian (id) - Target market is Brunei/Malaysia, not Indonesia
+
+All new components and pages should use `useTranslations()` hook from next-intl and add translations to both `src/i18n/messages/ms.json` and `src/i18n/messages/en.json`.
 
 ---
 
-**Document Version:** 1.0  
+**Document Version:** 1.1  
 **Last Updated:** 2026-04-03  
 **Author:** OpenCode Assistant
+
+## Revision History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0 | 2026-04-03 | Initial document with Phase 1-5 |
+| 1.1 | 2026-04-03 | Added Phase 6-10 (Advanced Search, Live Chat, Flash Sales, Product Bundles, Analytics Enhancement) |

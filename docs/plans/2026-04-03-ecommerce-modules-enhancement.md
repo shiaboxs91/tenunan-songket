@@ -2,14 +2,17 @@
 
 **Project:** Tenunan Songket Online Store  
 **Date:** 2026-04-03  
-**Version:** 1.0  
-**Status:** Planning
+**Version:** 1.1  
+**Status:** Planning  
+**Target Market:** Brunei, Malaysia, Singapore
 
 ---
 
 ## Executive Summary
 
 Plan lengkap untuk mengimplementasikan dan meningkatkan modul-modul e-commerce agar toko online menjadi lebih profesional dan modern. Berdasarkan audit, beberapa modul sudah ada (Reviews, Wishlist), beberapa partial (Variants, Recommendations, Order Tracking), dan beberapa belum ada (Loyalty Program, Blog).
+
+**Target Market:** Brunei, Malaysia, dan Singapore - oleh karena itu bahasa yang didukung adalah Melayu (ms) dan English (en), bukan Indonesian.
 
 ### Module Status Overview
 
@@ -3026,14 +3029,19 @@ src/
 | 9 | product_bundles, bundle_items, dynamic_bundle_suggestions |
 | 10 | page_views, conversion_events, daily_stats, abandoned_carts |
 
-### C. Multi-language Notes
+### C. Multi-language & Target Market Notes
+
+**Target Market:**
+- Brunei Darussalam
+- Malaysia  
+- Singapore
 
 **Supported Languages:**
 - Malay (ms) - Default
 - English (en)
 
 **NOT Supported (by design):**
-- Indonesian (id) - Target market is Brunei/Malaysia, not Indonesia
+- Indonesian (id) - Target market is Brunei/Malaysia/Singapore, not Indonesia
 
 All new components and pages should use `useTranslations()` hook from next-intl and add translations to both `src/i18n/messages/ms.json` and `src/i18n/messages/en.json`.
 

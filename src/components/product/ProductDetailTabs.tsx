@@ -26,9 +26,9 @@ export function ProductDetailTabs({
   details,
 }: ProductDetailTabsProps) {
   return (
-    <Tabs.Root defaultValue="description" className="mt-12">
+    <Tabs.Root defaultValue="description" className="mt-12 mb-4">
       {/* Tab List */}
-      <Tabs.List className="flex border-b border-border overflow-x-auto scrollbar-none -mb-px">
+      <Tabs.List className="flex border-b border-border overflow-x-auto scrollbar-none -mb-px sticky top-[61px] bg-background z-10">
         {/* Deskripsi */}
         <Tabs.Trigger
           value="description"

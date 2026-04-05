@@ -185,7 +185,7 @@ export default async function ProductDetailPage({
         ]}
       />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 pb-36 md:pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Product Gallery */}
           <ProductGallery images={images} productTitle={product.title} />

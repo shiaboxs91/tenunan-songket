@@ -163,7 +163,7 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Paginat
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  const supabase = await createClient()
+  const supabase = createAnonClient()
 
   const { data, error } = await supabase
     .from('products')
@@ -186,7 +186,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 }
 
 export async function getProductsByCategory(categorySlug: string): Promise<Product[]> {
-  const supabase = await createClient()
+  const supabase = createAnonClient()
 
   // First get category ID
   const { data: category } = await supabase
@@ -218,7 +218,7 @@ export async function getProductsByCategory(categorySlug: string): Promise<Produ
 }
 
 export async function searchProducts(query: string): Promise<Product[]> {
-  const supabase = await createClient()
+  const supabase = createAnonClient()
 
   const { data, error } = await supabase
     .from('products')
@@ -305,7 +305,7 @@ export const getLatestProducts = unstable_cache(
 )
 
 export async function getProductById(productId: string): Promise<Product | null> {
-  const supabase = await createClient()
+  const supabase = createAnonClient()
 
   const { data, error } = await supabase
     .from('products')
@@ -448,7 +448,7 @@ export async function getProductsClient(filters: ProductFilters & { includeInact
 }
 
 export async function getCategoryCounts(): Promise<{ name: string; slug: string; count: number }[]> {
-  const supabase = await createClient()
+  const supabase = createAnonClient()
 
   // Get all active categories
   const { data: categories, error: categoryError } = await supabase

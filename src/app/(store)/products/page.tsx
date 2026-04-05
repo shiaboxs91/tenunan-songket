@@ -8,7 +8,9 @@ import { toFrontendProducts } from "@/lib/supabase/adapters";
 import ProductsLoading from "./loading";
 
 // Force dynamic rendering karena halaman ini pakai searchParams
+// Tidak boleh pakai ISR/revalidate karena konflik dengan searchParams
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 
 export const metadata: Metadata = {
   title: "Semua Produk - Tenunan Songket",

@@ -6,6 +6,12 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const nextConfig = {
   // Enable React strict mode for better development
   reactStrictMode: true,
+
+  // Clean URLs & trailing slash
+  trailingSlash: false,
+
+  // Powered by header off (security + minor perf)
+  poweredByHeader: false,
   
   // Optimize production builds
   compiler: {

@@ -1,4 +1,5 @@
 import { createClient } from './client'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import type { Tables, PaginatedResponse } from './types'
 
 export type Review = Tables<'reviews'> & {
@@ -18,7 +19,11 @@ export async function getProductReviews(
   page = 1,
   limit = 10
 ): Promise<PaginatedResponse<Review>> {
-  const supabase = createClient()
+  // Pakai anon client langsung tanpa cookies agar bisa diakses publik
+  const supabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   const from = (page - 1) * limit
   const to = from + limit - 1

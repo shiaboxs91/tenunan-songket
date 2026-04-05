@@ -7,8 +7,8 @@ import { getColors } from "@/lib/supabase/colors.server";
 import { toFrontendProducts } from "@/lib/supabase/adapters";
 import ProductsLoading from "./loading";
 
-// ISR: Revalidate every 5 minutes
-export const revalidate = 300;
+// Force dynamic rendering karena halaman ini pakai searchParams
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: "Semua Produk - Tenunan Songket",

@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import { Star, Truck, Shield, Sparkles } from "lucide-react";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductGrid } from "@/components/product/ProductGrid";
-import { ProductReviews } from "@/components/product/ProductReviews";
+import { ProductDetailTabs } from "@/components/product/ProductDetailTabs";
 import { StickyProductCTA } from "@/components/product/StickyProductCTA";
 import { ProductActions } from "@/components/product/ProductActions";
 import { Badge } from "@/components/ui/badge";
@@ -295,30 +295,17 @@ export default async function ProductDetailPage({
           </div>
         </div>
 
-        {/* Product Description - simplified without Tabs due to Radix UI issue */}
-        <div className="mt-12">
-          <h2 className="text-xl font-bold mb-4">Deskripsi</h2>
-          <div className="prose prose-sm max-w-none">
-            <p className="text-muted-foreground leading-relaxed">
-              {product.description}
-            </p>
-            {product.category && (
-              <p className="text-muted-foreground mt-4">
-                <span className="font-semibold text-foreground">Kategori:</span> {product.category}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Reviews Section */}
-        <div className="mt-12">
-          <h2 className="text-xl font-bold mb-6">Ulasan Pelanggan</h2>
-          <ProductReviews 
-            productId={product.id} 
-            productRating={product.rating} 
-            totalReviews={product.reviewCount} 
-          />
-        </div>
+        {/* Product Detail Tabs: Deskripsi, Ulasan, Detail Produk */}
+        <ProductDetailTabs
+          description={product.description}
+          category={product.category}
+          productId={product.id}
+          productRating={product.rating}
+          totalReviews={product.reviewCount}
+          details={{
+            weight: undefined,
+          }}
+        />
 
         {/* Recommendations */}
         {recommendations.length > 0 && (

@@ -1,4 +1,4 @@
-import { createClient } from './server'
+import { createClient, createAnonClient } from './server'
 import type { Color, ProductColor } from './types'
 import { unstable_cache } from 'next/cache'
 
@@ -13,7 +13,7 @@ import { unstable_cache } from 'next/cache'
  * Get all active colors (for public use)
  */
 async function fetchColors(): Promise<Color[]> {
-  const supabase = await createClient()
+  const supabase = createAnonClient()
 
   const { data, error } = await (supabase as any)
     .from('colors')
@@ -42,7 +42,7 @@ export const getColors = unstable_cache(
  * Get color by slug
  */
 export async function getColorBySlug(slug: string): Promise<Color | null> {
-  const supabase = await createClient()
+  const supabase = createAnonClient()
 
   const { data, error } = await (supabase as any)
     .from('colors')
@@ -63,7 +63,7 @@ export async function getColorBySlug(slug: string): Promise<Color | null> {
  * Get colors for a product
  */
 export async function getProductColors(productId: string): Promise<(ProductColor & { color: Color })[]> {
-  const supabase = await createClient()
+  const supabase = createAnonClient()
 
   const { data, error } = await (supabase as any)
     .from('product_colors')
@@ -94,7 +94,7 @@ export async function getProductColors(productId: string): Promise<(ProductColor
 export async function getProductsColors(productIds: string[]): Promise<Map<string, (ProductColor & { color: Color })[]>> {
   if (productIds.length === 0) return new Map()
   
-  const supabase = await createClient()
+  const supabase = createAnonClient()
 
   const { data, error } = await (supabase as any)
     .from('product_colors')

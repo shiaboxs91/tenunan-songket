@@ -7,7 +7,7 @@ export type Category = Tables<'categories'>
 
 // Server-side functions (for server components)
 export async function getCategories(): Promise<Category[]> {
-  const supabase = await createClient()
+  const supabase = createAnonClient()
 
   const { data, error } = await supabase
     .from('categories')
@@ -24,7 +24,7 @@ export async function getCategories(): Promise<Category[]> {
 }
 
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
-  const supabase = await createClient()
+  const supabase = createAnonClient()
 
   const { data, error } = await supabase
     .from('categories')

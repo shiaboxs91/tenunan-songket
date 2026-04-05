@@ -165,14 +165,18 @@ export function ProductCard({ product, density = "comfortable", colors, onQuickV
           "flex items-center gap-1.5 text-muted-foreground",
           isCompact ? "text-[9px] mb-1" : "text-[11px] mb-1.5"
         )}>
-          <div className="flex items-center gap-0.5">
-            <Star className={cn(
-              "fill-amber-400 text-amber-400",
-              isCompact ? "h-2.5 w-2.5" : "h-3 w-3"
-            )} />
-            <span className="font-medium text-foreground">{product.rating.toFixed(1)}</span>
-          </div>
-          <span className="text-muted-foreground/50">|</span>
+          {product.rating > 0 && (
+            <>
+              <div className="flex items-center gap-0.5">
+                <Star className={cn(
+                  "fill-amber-400 text-amber-400",
+                  isCompact ? "h-2.5 w-2.5" : "h-3 w-3"
+                )} />
+                <span className="font-medium text-foreground">{product.rating.toFixed(1)}</span>
+              </div>
+              <span className="text-muted-foreground/50">|</span>
+            </>
+          )}
           <span>{product.sold} terjual</span>
         </div>
 

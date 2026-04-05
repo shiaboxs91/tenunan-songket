@@ -211,6 +211,7 @@ export function parseRSSToProducts(xml: string): Product[] {
       tags: extractTags(title, cleanDescription),
       inStock: generateConsistentInStock(id),
       rating: generateConsistentRating(id),
+      reviewCount: 0,
       sold: generateConsistentSold(id),
       createdAt: pubDate || undefined,
       sourceUrl: link,

@@ -11,6 +11,7 @@ export type Product = {
   tags: string[];
   inStock: boolean;
   rating: number;
+  reviewCount: number;
   sold: number;
   weight?: number;
   createdAt?: string;

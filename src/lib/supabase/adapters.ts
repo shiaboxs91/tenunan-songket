@@ -27,6 +27,7 @@ export function toFrontendProduct(product: SupabaseProduct): FrontendProduct {
     tags: [], // Supabase doesn't have tags yet
     inStock: (product.stock || 0) > 0,
     rating: Number(product.average_rating) || 0,
+    reviewCount: product.review_count || 0,
     sold: product.sold || 0,
     createdAt: product.created_at || undefined,
     sourceUrl: product.source_url || '',

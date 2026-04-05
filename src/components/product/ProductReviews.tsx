@@ -31,23 +31,7 @@ export function ProductReviews({ productId, productRating, totalReviews = 0 }: P
     setIsLoading(true);
     const result = await getProductReviews(productId, 1, 5);
     setReviews(result.data);
-    
-    // If we have "fake" stats (productRating > 0) but no actual reviews,
-    // we need to fake the distribution to match the visual rating.
-    if (result.data.length === 0 && productRating > 0 && totalReviews > 0) {
-        // Generate a distribution that roughly matches the 4.8 rating
-        // Mostly 5 stars, some 4 stars.
-        setRatingDist({
-            1: 0,
-            2: 0,
-            3: 0,
-            4: Math.floor(totalReviews * 0.2), // 20% 4 stars
-            5: Math.ceil(totalReviews * 0.8)   // 80% 5 stars
-        });
-    } else {
-        setRatingDist(getRatingDistribution(result.data));
-    }
-    
+    setRatingDist(getRatingDistribution(result.data));
     setIsLoading(false);
   };
 
@@ -73,34 +57,40 @@ export function ProductReviews({ productId, productRating, totalReviews = 0 }: P
 
   return (
     <div className="space-y-6">
-      {/* Rating Summary */}
-      <div className="flex flex-col sm:flex-row gap-6 p-4 bg-muted/30 rounded-xl">
-        {/* Overall Rating */}
-        <div className="text-center sm:text-left sm:pr-6 sm:border-r">
-          <div className="text-4xl font-bold text-primary">{productRating.toFixed(1)}</div>
-          <StarRating rating={productRating} size="md" />
-          <p className="text-xs text-muted-foreground mt-1">{totalReviews} ulasan</p>
-        </div>
+      {/* Rating Summary - only show if there are reviews */}
+      {totalReviews > 0 ? (
+        <div className="flex flex-col sm:flex-row gap-6 p-4 bg-muted/30 rounded-xl">
+          {/* Overall Rating */}
+          <div className="text-center sm:text-left sm:pr-6 sm:border-r">
+            <div className="text-4xl font-bold text-primary">{productRating.toFixed(1)}</div>
+            <StarRating rating={productRating} size="md" />
+            <p className="text-xs text-muted-foreground mt-1">{totalReviews} ulasan</p>
+          </div>
 
-        {/* Rating Distribution */}
-        <div className="flex-1 space-y-1.5">
-          {[5, 4, 3, 2, 1].map((stars) => (
-            <div key={stars} className="flex items-center gap-2 text-xs">
-              <span className="w-3 text-muted-foreground">{stars}</span>
-              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-              <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-amber-400 rounded-full"
-                  style={{ width: `${getPercentage(ratingDist[stars])}%` }}
-                />
+          {/* Rating Distribution */}
+          <div className="flex-1 space-y-1.5">
+            {[5, 4, 3, 2, 1].map((stars) => (
+              <div key={stars} className="flex items-center gap-2 text-xs">
+                <span className="w-3 text-muted-foreground">{stars}</span>
+                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-amber-400 rounded-full"
+                    style={{ width: `${getPercentage(ratingDist[stars])}%` }}
+                  />
+                </div>
+                <span className="w-8 text-muted-foreground text-right">
+                  {getPercentage(ratingDist[stars])}%
+                </span>
               </div>
-              <span className="w-8 text-muted-foreground text-right">
-                {getPercentage(ratingDist[stars])}%
-              </span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="p-4 bg-muted/30 rounded-xl text-center">
+          <p className="text-muted-foreground text-sm">Belum ada ulasan untuk produk ini</p>
+        </div>
+      )}
 
       {/* Write Review Button */}
       {isAuthenticated && canReview && !showReviewForm && (

@@ -22,7 +22,8 @@ import {
   BarChart3,
   Sparkles,
   FileText,
-  Palette
+  Palette,
+  MessageSquare
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
@@ -77,7 +78,8 @@ const menuGroups: MenuGroup[] = [
     defaultOpen: true,
     items: [
       { name: 'Pesanan', href: '/admin/orders', icon: ShoppingCart },
-      { name: 'Kupon & Promo', href: '/admin/coupons', icon: Tag }
+      { name: 'Kupon & Promo', href: '/admin/coupons', icon: Tag },
+      { name: 'Ulasan', href: '/admin/reviews', icon: MessageSquare }
     ]
   },
   {

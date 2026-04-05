@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { ThumbsUp, Loader2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "./StarRating";
-import { getProductReviews, markReviewHelpful, type Review } from "@/lib/supabase/reviews";
+import { getProductReviews, toggleReviewHelpful, type Review } from "@/lib/supabase/reviews";
+import { createClient } from "@/lib/supabase/client";
 
 interface ReviewListProps {
   productId: string;
@@ -16,13 +17,24 @@ export function ReviewList({ productId, initialReviews }: ReviewListProps) {
   const [isLoading, setIsLoading] = useState(!initialReviews);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [helpfulClicked, setHelpfulClicked] = useState<Set<string>>(new Set());
+  const [votedReviews, setVotedReviews] = useState<Set<string>>(new Set());
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
 
   useEffect(() => {
     if (!initialReviews) {
       loadReviews();
     }
   }, [productId, page]);
+
+  const checkAuth = async () => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    setIsAuthenticated(!!user);
+  };
 
   const loadReviews = async () => {
     setIsLoading(true);
@@ -33,15 +45,23 @@ export function ReviewList({ productId, initialReviews }: ReviewListProps) {
   };
 
   const handleHelpful = async (reviewId: string) => {
-    if (helpfulClicked.has(reviewId)) return;
-    
-    const success = await markReviewHelpful(reviewId);
-    if (success) {
-      setHelpfulClicked(prev => new Set(prev).add(reviewId));
+    if (!isAuthenticated) return;
+
+    const result = await toggleReviewHelpful(reviewId);
+    if (result) {
+      if (result.voted) {
+        setVotedReviews(prev => new Set(prev).add(reviewId));
+      } else {
+        setVotedReviews(prev => {
+          const next = new Set(prev);
+          next.delete(reviewId);
+          return next;
+        });
+      }
       setReviews(prev =>
         prev.map(r =>
           r.id === reviewId
-            ? { ...r, helpful_count: (r.helpful_count || 0) + 1 }
+            ? { ...r, helpful_count: result.count }
             : r
         )
       );
@@ -79,7 +99,7 @@ export function ReviewList({ productId, initialReviews }: ReviewListProps) {
         <div key={review.id} className="border-b pb-6 last:border-0">
           <div className="flex items-start gap-4">
             {/* Avatar */}
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted flex-shrink-0">
               {review.profile?.avatar_url ? (
                 <img
                   src={review.profile.avatar_url}
@@ -91,7 +111,7 @@ export function ReviewList({ productId, initialReviews }: ReviewListProps) {
               )}
             </div>
 
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div>
@@ -116,14 +136,21 @@ export function ReviewList({ productId, initialReviews }: ReviewListProps) {
 
               {/* Review Images */}
               {review.images && Array.isArray(review.images) && review.images.length > 0 && (
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   {(review.images as string[]).map((image, index) => (
-                    <img
+                    <a
                       key={index}
-                      src={image}
-                      alt={`Review image ${index + 1}`}
-                      className="h-20 w-20 rounded-lg object-cover"
-                    />
+                      href={image}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block"
+                    >
+                      <img
+                        src={image}
+                        alt={`Foto ulasan ${index + 1}`}
+                        className="h-20 w-20 rounded-lg object-cover border hover:opacity-80 transition-opacity"
+                      />
+                    </a>
                   ))}
                 </div>
               )}
@@ -134,10 +161,11 @@ export function ReviewList({ productId, initialReviews }: ReviewListProps) {
                   variant="ghost"
                   size="sm"
                   onClick={() => handleHelpful(review.id)}
-                  disabled={helpfulClicked.has(review.id)}
+                  disabled={!isAuthenticated}
                   className="text-muted-foreground hover:text-foreground"
+                  title={!isAuthenticated ? "Masuk untuk menandai ulasan ini membantu" : undefined}
                 >
-                  <ThumbsUp className={`mr-1 h-4 w-4 ${helpfulClicked.has(review.id) ? 'fill-current' : ''}`} />
+                  <ThumbsUp className={`mr-1 h-4 w-4 ${votedReviews.has(review.id) ? 'fill-current text-primary' : ''}`} />
                   Membantu ({review.helpful_count || 0})
                 </Button>
               </div>

@@ -17,6 +17,7 @@ const productArb = fc.record({
   tags: fc.array(fc.string({ minLength: 1, maxLength: 20 }), { maxLength: 5 }),
   inStock: fc.boolean(),
   rating: fc.float({ min: 0, max: 5, noNaN: true }),
+  reviewCount: fc.integer({ min: 0, max: 500 }),
   sold: fc.integer({ min: 0, max: 1000 }),
   createdAt: fc.option(
     fc.date({ min: new Date("2020-01-01"), max: new Date("2025-12-31") }).map((d) => d.toISOString()),

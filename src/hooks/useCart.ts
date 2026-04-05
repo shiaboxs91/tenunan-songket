@@ -289,6 +289,7 @@ export function useCart(): UseCartReturn {
                  tags: [],
                  inStock: (fetchedProduct.stock || 0) > 0,
                  rating: Number(fetchedProduct.average_rating) || 0,
+                 reviewCount: fetchedProduct.review_count || 0,
                  sold: fetchedProduct.sold || 0,
                  sourceUrl: "",
                  weight: Number(fetchedProduct.weight) || 0.5,
@@ -586,7 +587,7 @@ function convertLocalCartToSupabaseFormat(localCart: LocalCartState): CartWithIt
         weight: (item.product as any).weight || 0.5, // Use stored weight
         dimensions: null,
         average_rating: item.product.rating,
-        review_count: 0,
+        review_count: (item.product as any).reviewCount || 0,
         is_active: true,
         is_deleted: false,
         meta_title: null,

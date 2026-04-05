@@ -168,7 +168,7 @@ export default async function ProductDetailPage({
           sku: product.id,
           inStock: product.inStock,
           rating: product.rating,
-          reviewCount: product.sold > 0 ? Math.floor(product.sold * 0.3) : 0,
+          reviewCount: product.reviewCount,
           brand: 'Tenunan Songket',
           category: product.category,
           colors: productColors.map((pc) => pc.color.name),
@@ -207,12 +207,16 @@ export default async function ProductDetailPage({
 
             {/* Rating & Sold */}
             <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-1">
-                <Star className="h-4 w-4 fill-gold text-gold" />
-                <span className="font-medium">{product.rating.toFixed(1)}</span>
-                <span className="text-muted-foreground">(128 ulasan)</span>
-              </div>
-              <span className="text-muted-foreground">•</span>
+              {product.rating > 0 ? (
+                <div className="flex items-center gap-1">
+                  <Star className="h-4 w-4 fill-gold text-gold" />
+                  <span className="font-medium">{product.rating.toFixed(1)}</span>
+                  <span className="text-muted-foreground">({product.reviewCount} ulasan)</span>
+                </div>
+              ) : (
+                <span className="text-muted-foreground">Belum ada ulasan</span>
+              )}
+              <span className="text-muted-foreground">&bull;</span>
               <span className="text-muted-foreground">
                 {product.sold} terjual
               </span>
@@ -313,7 +317,7 @@ export default async function ProductDetailPage({
           <ProductReviews 
             productId={product.id} 
             productRating={product.rating} 
-            totalReviews={product.sold > 0 ? Math.floor(product.sold * 0.3) : 0} 
+            totalReviews={product.reviewCount} 
           />
         </div>
 

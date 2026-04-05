@@ -328,6 +328,51 @@ export async function cancelOrder(orderId: string): Promise<boolean> {
   return true
 }
 
+export async function confirmDelivery(orderId: string): Promise<boolean> {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) return false
+
+  // Get order — must belong to user and be in 'shipped' status
+  const { data: order } = await supabase
+    .from('orders')
+    .select('id, status, order_number')
+    .eq('id', orderId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!order || order.status !== 'shipped') {
+    console.error('Order not found or not in shipped status')
+    return false
+  }
+
+  const { error } = await supabase
+    .from('orders')
+    .update({
+      status: 'delivered',
+      delivered_at: new Date().toISOString(),
+    })
+    .eq('id', orderId)
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('Error confirming delivery:', error)
+    return false
+  }
+
+  // Notify user
+  await createNotification(
+    user.id,
+    'order_delivered',
+    'Pesanan Diterima',
+    `Pesanan ${order.order_number} telah dikonfirmasi diterima. Terima kasih! Anda sekarang dapat memberikan ulasan.`,
+    { order_id: orderId, order_number: order.order_number }
+  )
+
+  return true
+}
+
 export async function getOrderStats(): Promise<{
   total: number
   pending: number

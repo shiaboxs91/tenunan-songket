@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Package, Truck, MapPin, CreditCard, Loader2, ShoppingBag, X } from "lucide-react";
+import { ArrowLeft, Package, Truck, MapPin, CreditCard, Loader2, ShoppingBag, X, CheckCircle, Star, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +20,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { createClient } from "@/lib/supabase/client";
-import { getOrderById, getOrderItems, cancelOrder, type Order, type OrderItem } from "@/lib/supabase/orders";
+import { getOrderById, getOrderItems, cancelOrder, confirmDelivery, type Order, type OrderItem } from "@/lib/supabase/orders";
+import { canReviewProduct } from "@/lib/supabase/reviews";
+import { ReviewForm } from "@/components/review/ReviewForm";
 import { OrderStatus } from "@/components/order/OrderStatus";
 
 const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -73,6 +75,11 @@ export default function OrderDetailPage() {
   const [items, setItems] = useState<OrderItem[]>([]);
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [reviewableItems, setReviewableItems] = useState<Set<string>>(new Set());
+  const [reviewingProductId, setReviewingProductId] = useState<string | null>(null);
+  const [reviewedProducts, setReviewedProducts] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function loadOrder() {
@@ -102,6 +109,20 @@ export default function OrderDetailPage() {
     loadOrder();
   }, [orderId, router]);
 
+  useEffect(() => {
+    async function checkReviewable() {
+      if (!order || !['delivered', 'completed'].includes(order.status || '')) return;
+
+      const reviewable = new Set<string>();
+      for (const item of items) {
+        const canReview = await canReviewProduct(item.product_id);
+        if (canReview) reviewable.add(item.product_id);
+      }
+      setReviewableItems(reviewable);
+    }
+    checkReviewable();
+  }, [order, items]);
+
   const handleCancelOrder = async () => {
     setIsCancelling(true);
     const success = await cancelOrder(orderId);
@@ -112,6 +133,18 @@ export default function OrderDetailPage() {
     
     setIsCancelling(false);
     setShowCancelDialog(false);
+  };
+
+  const handleConfirmDelivery = async () => {
+    setIsConfirming(true);
+    const success = await confirmDelivery(orderId);
+
+    if (success) {
+      setOrder(prev => prev ? { ...prev, status: 'delivered' } : null);
+    }
+
+    setIsConfirming(false);
+    setShowConfirmDialog(false);
   };
 
   if (isLoading) {
@@ -129,6 +162,8 @@ export default function OrderDetailPage() {
   const status = STATUS_MAP[order.status || 'pending'];
   const shippingAddress = order.shipping_address as unknown as ShippingAddress;
   const canCancel = order.status === 'pending';
+  const canConfirmDelivery = order.status === 'shipped';
+  const canReview = ['delivered', 'completed'].includes(order.status || '');
 
   return (
     <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
@@ -234,6 +269,75 @@ export default function OrderDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Review Section */}
+          {canReview && items.some(item => reviewableItems.has(item.product_id) && !reviewedProducts.has(item.product_id)) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="h-5 w-5" />
+                  Beri Ulasan
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Bagikan pengalaman Anda dengan produk yang telah dibeli
+                </p>
+                <div className="space-y-4">
+                  {items.filter(item => reviewableItems.has(item.product_id) && !reviewedProducts.has(item.product_id)).map((item) => (
+                    <div key={item.id} className="border rounded-lg p-4">
+                      <div className="flex gap-4 items-center mb-3">
+                        <div className="h-16 w-16 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                          {item.product_image ? (
+                            <Image
+                              src={item.product_image}
+                              alt={item.product_title}
+                              width={64}
+                              height={64}
+                              className="object-cover w-full h-full"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <ShoppingBag className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{item.product_title}</p>
+                        </div>
+                        {reviewingProductId !== item.product_id && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setReviewingProductId(item.product_id)}
+                          >
+                            <MessageSquare className="mr-2 h-4 w-4" />
+                            Tulis Ulasan
+                          </Button>
+                        )}
+                      </div>
+                      {reviewingProductId === item.product_id && (
+                        <ReviewForm
+                          productId={item.product_id}
+                          orderId={orderId}
+                          onSuccess={() => {
+                            setReviewingProductId(null);
+                            setReviewedProducts(prev => new Set(Array.from(prev).concat(item.product_id)));
+                            setReviewableItems(prev => {
+                              const next = new Set(Array.from(prev));
+                              next.delete(item.product_id);
+                              return next;
+                            });
+                          }}
+                          onCancel={() => setReviewingProductId(null)}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Sidebar */}
@@ -268,6 +372,34 @@ export default function OrderDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Confirm Delivery Button */}
+          {canConfirmDelivery && (
+            <Card>
+              <CardContent className="pt-6">
+                <Button
+                  className="w-full"
+                  onClick={() => setShowConfirmDialog(true)}
+                  disabled={isConfirming}
+                >
+                  {isConfirming ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Mengkonfirmasi...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Konfirmasi Diterima
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-muted-foreground mt-2 text-center">
+                  Konfirmasi bahwa Anda telah menerima pesanan ini
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Actions */}
           {canCancel && (
@@ -328,6 +460,24 @@ export default function OrderDetailPage() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Ya, Batalkan
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirm Delivery Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Penerimaan?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin telah menerima pesanan ini? Setelah dikonfirmasi, Anda dapat memberikan ulasan untuk produk yang dibeli.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Belum</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelivery}>
+              Ya, Sudah Diterima
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -71,13 +71,17 @@ export function QuickViewModal({
 
             {/* Rating & Sold */}
             <div className="flex items-center gap-3 text-sm text-muted-foreground mb-3">
-              <div className="flex items-center gap-1">
-                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                <span className="font-medium text-foreground">
-                  {product.rating.toFixed(1)}
-                </span>
-              </div>
-              <span className="text-muted-foreground/50">|</span>
+              {product.rating > 0 && (
+                <>
+                  <div className="flex items-center gap-1">
+                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                    <span className="font-medium text-foreground">
+                      {product.rating.toFixed(1)}
+                    </span>
+                  </div>
+                  <span className="text-muted-foreground/50">|</span>
+                </>
+              )}
               <span>{product.sold} terjual</span>
             </div>
 

@@ -34,6 +34,7 @@ import { createProduct, updateProduct, deleteProduct, type Product } from '@/lib
 import { getCategories, type Category } from '@/lib/supabase/categories-client'
 import { getColorsClient, getProductColorsClient, setProductColors } from '@/lib/supabase/colors.client'
 import { uploadFile, generateFilePath, deleteFile } from '@/lib/supabase/storage'
+import { compressImage, formatFileSize } from '@/lib/image-compression'
 import { createClient } from '@/lib/supabase/client'
 import type { Color } from '@/lib/supabase/types'
 
@@ -181,7 +182,18 @@ const loadCategories = async () => {
       const newImages: ProductImage[] = []
       
       for (let i = 0; i < files.length; i++) {
-        const file = files[i]
+        const originalFile = files[i]
+        const originalSize = originalFile.size
+
+        // Compress image before upload
+        const file = await compressImage(originalFile, 'product')
+        
+        if (file.size < originalSize) {
+          toast.info(
+            `${originalFile.name}: ${formatFileSize(originalSize)} → ${formatFileSize(file.size)}`
+          )
+        }
+
         const filePath = generateFilePath(user.id, file.name, 'products')
         
         const result = await uploadFile({

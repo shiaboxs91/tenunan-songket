@@ -28,12 +28,12 @@ export async function uploadFile({
   const supabase = createClient()
 
   try {
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024 // 5MB
+    // Validate file size (max 20MB raw — images should be compressed before calling this)
+    const maxSize = 20 * 1024 * 1024
     if (file.size > maxSize) {
       return {
         success: false,
-        error: 'File size exceeds 5MB limit'
+        error: 'Ukuran file melebihi 20MB'
       }
     }
 
@@ -42,15 +42,15 @@ export async function uploadFile({
     if (!allowedTypes.includes(file.type)) {
       return {
         success: false,
-        error: `Invalid file type. Allowed types: ${allowedTypes.join(', ')}`
+        error: `Tipe file tidak diizinkan. Tipe yang diperbolehkan: ${allowedTypes.join(', ')}`
       }
     }
 
-    // Upload file
+    // Upload file (1 year cache — filenames contain unique timestamps)
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(path, file, {
-        cacheControl: '3600',
+        cacheControl: '31536000',
         upsert
       })
 

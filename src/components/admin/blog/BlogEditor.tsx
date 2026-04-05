@@ -37,6 +37,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
+import { compressImage } from '@/lib/image-compression'
 
 interface BlogEditorProps {
   content: string
@@ -151,7 +152,9 @@ export function BlogEditor({ content, onChange, placeholder = "Mulai menulis art
     setImageDialogOpen(false)
   }, [editor, imageUrl, imageAlt])
 
-  const handleImageUpload = useCallback(async (file: File) => {
+  const handleImageUpload = useCallback(async (originalFile: File) => {
+    const file = await compressImage(originalFile, 'blog')
+
     const formData = new FormData()
     formData.append('file', file)
     formData.append('folder', 'blog')

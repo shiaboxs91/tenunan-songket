@@ -38,6 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { compressImage } from '@/lib/image-compression'
 import type { BlogCategory } from '@/lib/supabase/blog'
 
 export default function BlogCategoriesPage() {
@@ -115,8 +116,10 @@ export default function BlogCategoriesPage() {
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const originalFile = e.target.files?.[0]
+    if (!originalFile) return
+
+    const file = await compressImage(originalFile, 'blog')
 
     const formData = new FormData()
     formData.append('file', file)

@@ -128,7 +128,7 @@ export async function uploadLogo(file: File): Promise<string | null> {
   const { error: uploadError } = await supabase.storage
     .from('public')
     .upload(filePath, file, {
-      cacheControl: '3600',
+      cacheControl: '31536000',
       upsert: true
     })
   
@@ -155,7 +155,7 @@ export async function uploadFavicon(file: File): Promise<string | null> {
   const { error: uploadError } = await supabase.storage
     .from('public')
     .upload(filePath, file, {
-      cacheControl: '3600',
+      cacheControl: '31536000',
       upsert: true
     })
   

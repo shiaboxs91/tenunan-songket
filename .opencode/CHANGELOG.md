@@ -1,5 +1,99 @@
 # Changelog
 
+## v1.5.0 (2026-04-05) - Kategori Warna & Optimasi Upload Gambar
+
+### Fitur Baru: Kategori Warna (Color Category)
+
+Sistem kategori warna untuk produk songket. Produk boleh mempunyai pelbagai warna yang digunakan sebagai filter pencarian.
+
+**Database & Backend:**
+- Tabel `colors` (id, name, slug, hex_code, display_order) dengan RLS & indexes
+- Tabel `product_colors` (many-to-many) dengan RLS & indexes
+- 15 warna default diseeded (Merah, Emas, Hitam, Putih, Biru, Hijau, dll.)
+- Service functions: `getColors()`, `getProductColors()`, `setProductColors()`
+- `unstable_cache` pada `getColors()` dengan TTL 10 minit
+- Filter warna pada `getProducts()` dengan logik OR (`?colors=merah,emas`)
+
+**Admin Panel:**
+- Halaman CRUD `/admin/colors` — tambah, edit, padam, reorder warna
+- Multi-select warna pada `ProductForm` dengan color picker
+- Menu "Warna" pada sidebar admin (desktop & mobile)
+
+**Filter & UI Pelanggan:**
+- `ColorFilter` component — bulatan warna clickable dengan badges aktif
+- Integrasi pada `ProductFilters` (desktop) & `MobileFilterSheet` (mobile)
+- URL sync: `?colors=merah,emas` — deeplink & back/forward support
+- `ColorDots` component pada `ProductCard` & halaman detail produk
+
+**SEO:**
+- JSON-LD `color` property pada structured data produk
+- Meta keywords dengan nama warna
+
+**Fail Baru:**
+- `src/lib/supabase/colors.server.ts`
+- `src/lib/supabase/colors.client.ts`
+- `src/lib/supabase/colors.ts`
+- `src/app/admin/colors/page.tsx`
+- `src/components/admin/ColorManagement.tsx`
+- `src/components/product/ColorFilter.tsx`
+- `src/components/product/ColorDots.tsx`
+
+**Fail Diubah:**
+- `src/lib/supabase/types.ts` — Color, ProductColor types
+- `src/lib/supabase/products.ts` — color slug filtering
+- `src/lib/types.ts` — FilterState.colors, ProductFilters.colors
+- `src/hooks/useProductFilters.ts` — toggleColor(), URL sync
+- `src/app/api/products/route.ts` — colors query param parsing
+- `src/components/product/ProductFilters.tsx` — color filter section
+- `src/components/product/MobileFilterSheet.tsx` — color filter section
+- `src/components/product/ProductCard.tsx` — ColorDots display
+- `src/components/product/ProductGrid.tsx` — productColors map passthrough
+- `src/app/(store)/products/page.tsx` — fetch colors & product colors
+- `src/app/(store)/products/[slug]/page.tsx` — server-side color display + SEO
+- `src/components/seo/ProductJsonLd.tsx` — colors prop
+- `src/components/admin/AdminSidebar.tsx` — menu Warna
+- `src/components/admin/MobileSidebar.tsx` — menu Warna
+- `src/components/admin/ProductForm.tsx` — color multi-select
+
+---
+
+### Fitur Baru: Optimasi Upload Gambar (Image Upload Optimization)
+
+Kompresi gambar automatik sebelum upload ke Supabase Storage menggunakan `browser-image-compression`. Tiada lagi hard reject — gambar dikompresi secara pintar.
+
+**Perubahan Utama:**
+- Kompresi client-side automatik sebelum upload (menggunakan Web Workers)
+- Hard limit 5MB dibuang → safety limit 20MB (gambar dikompresi sebelum upload)
+- Hard limit 2MB avatar dibuang → kompresi automatik ke ~300KB
+- `cacheControl` dinaikkan dari `3600` (1 jam) ke `31536000` (1 tahun) pada semua upload
+- Preset kompresi: `product` (2048px, 1MB), `avatar` (512px, 300KB), `logo` (1024px, 500KB), `blog` (2048px, 1MB)
+- GIF & fail <200KB dilangkau (tidak perlu kompresi)
+- Fallback ke fail asal jika kompresi gagal atau hasilnya lebih besar
+
+**Bug Fix:**
+- Cipta `/api/upload` route yang hilang — blog editor image upload kini berfungsi
+- Blog new, blog edit, blog categories, BlogEditor kini boleh upload gambar
+
+**Fail Baru:**
+- `src/lib/image-compression.ts` — utility kompresi dengan presets
+- `src/app/api/upload/route.ts` — server-side upload route untuk blog
+
+**Fail Diubah:**
+- `src/lib/supabase/storage.ts` — buang 5MB limit, cacheControl 1 tahun
+- `src/components/admin/ProductForm.tsx` — kompresi sebelum upload + toast info saiz
+- `src/components/profile/ProfileForm.tsx` — buang 2MB limit, kompresi avatar
+- `src/lib/supabase/profiles.ts` — cacheControl 1 tahun
+- `src/lib/supabase/settings.ts` — cacheControl 1 tahun pada logo & favicon
+- `src/app/admin/blog/new/page.tsx` — kompresi sebelum upload
+- `src/app/admin/blog/[id]/edit/page.tsx` — kompresi sebelum upload
+- `src/app/admin/blog/categories/page.tsx` — kompresi sebelum upload
+- `src/components/admin/blog/BlogEditor.tsx` — kompresi sebelum upload
+
+**Dependencies:**
+- Tambah `browser-image-compression` ^2.x
+
+---
+
 ## 2026-04-03 - Fix next-intl TimeZone Warning
 
 ### Summary

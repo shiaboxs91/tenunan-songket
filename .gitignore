@@ -47,3 +47,4 @@ next-env.d.ts
 # Audit reports (generated files)
 audit-report.json
 audit-desktop-ux-report.json
+nul

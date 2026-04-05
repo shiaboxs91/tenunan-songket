@@ -36,6 +36,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { BlogEditor } from '@/components/admin/blog/BlogEditor'
+import { compressImage } from '@/lib/image-compression'
 import type { BlogCategory, BlogTag } from '@/lib/supabase/blog'
 
 interface Product {
@@ -124,8 +125,10 @@ export default function NewBlogPostPage() {
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const originalFile = e.target.files?.[0]
+    if (!originalFile) return
+
+    const file = await compressImage(originalFile, 'blog')
 
     const formData = new FormData()
     formData.append('file', file)

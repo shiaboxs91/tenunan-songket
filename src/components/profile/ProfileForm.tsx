@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateProfile, uploadAvatar, type Profile } from "@/lib/supabase/profiles";
+import { compressImage } from "@/lib/image-compression";
 
 interface ProfileFormProps {
   profile: Profile;
@@ -55,17 +56,11 @@ export function ProfileForm({ profile, onUpdate }: ProfileFormProps) {
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const originalFile = e.target.files?.[0];
+    if (!originalFile) return;
 
-    // Validate file
-    if (!file.type.startsWith("image/")) {
+    if (!originalFile.type.startsWith("image/")) {
       setError("File harus berupa gambar");
-      return;
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-      setError("Ukuran file maksimal 2MB");
       return;
     }
 
@@ -73,6 +68,7 @@ export function ProfileForm({ profile, onUpdate }: ProfileFormProps) {
     setError(null);
 
     try {
+      const file = await compressImage(originalFile, 'avatar');
       const url = await uploadAvatar(file);
       if (url) {
         setAvatarUrl(url);

@@ -41,19 +41,65 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
   return data
 }
 
-async function fetchCategoriesWithProductCount(): Promise<(Category & { product_count: number })[]> {
+// Type for the RPC function result
+export interface CategoryWithCount {
+  id: string
+  name: string
+  slug: string
+  image_url: string | null
+  display_order: number
+  product_count: number
+}
+
+// Type for RPC response row (before transformation)
+interface RpcCategoryRow {
+  id: string
+  name: string
+  slug: string
+  image_url: string | null
+  display_order: number
+  product_count: number | string // bigint comes as string from PostgreSQL
+}
+
+async function fetchCategoriesWithProductCount(): Promise<CategoryWithCount[]> {
   const supabase = createAnonClient()
 
-  // Execute both queries in parallel - 2 queries total instead of N+1
+  // Use database function for optimal performance - single query with JOIN and COUNT
+  // This replaces the previous 2-query approach with a single RPC call
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any).rpc('get_categories_with_count')
+
+  if (error) {
+    console.error('Error fetching categories with count:', error)
+    // Fallback to legacy approach if RPC fails
+    return fetchCategoriesWithProductCountFallback()
+  }
+
+  if (!data || !Array.isArray(data)) {
+    return []
+  }
+
+  return (data as RpcCategoryRow[]).map((row) => ({
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    image_url: row.image_url,
+    display_order: row.display_order,
+    product_count: Number(row.product_count) || 0
+  }))
+}
+
+// Fallback function if RPC is not available
+async function fetchCategoriesWithProductCountFallback(): Promise<CategoryWithCount[]> {
+  const supabase = createAnonClient()
+
   const [categoriesResult, productCountsResult] = await Promise.all([
-    // Query 1: Get all active categories
     supabase
       .from('categories')
-      .select('*')
+      .select('id, name, slug, image_url, display_order')
       .eq('is_active', true)
       .order('display_order', { ascending: true }),
     
-    // Query 2: Get product counts grouped by category using raw count
     supabase
       .from('products')
       .select('category_id')
@@ -66,7 +112,6 @@ async function fetchCategoriesWithProductCount(): Promise<(Category & { product_
     return []
   }
 
-  // Build count map from products
   const countMap = new Map<string, number>()
   if (productCountsResult.data) {
     for (const product of productCountsResult.data) {
@@ -76,13 +121,14 @@ async function fetchCategoriesWithProductCount(): Promise<(Category & { product_
     }
   }
 
-  // Merge counts with categories
-  const categoriesWithCount = categoriesResult.data.map((category) => ({
-    ...category,
+  return categoriesResult.data.map((category) => ({
+    id: category.id,
+    name: category.name,
+    slug: category.slug,
+    image_url: category.image_url,
+    display_order: category.display_order ?? 0,
     product_count: countMap.get(category.id) || 0
   }))
-
-  return categoriesWithCount
 }
 
 export const getCategoriesWithProductCount = unstable_cache(

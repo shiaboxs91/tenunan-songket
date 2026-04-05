@@ -1,302 +1,100 @@
-"use client";
+import { Suspense } from "react";
+import { Metadata } from "next";
+import { ProductsClient } from "./ProductsClient";
+import { getProducts } from "@/lib/supabase/products";
+import { getCategoriesWithProductCount } from "@/lib/supabase/categories";
+import { getColors } from "@/lib/supabase/colors.server";
+import { toFrontendProducts } from "@/lib/supabase/adapters";
+import ProductsLoading from "./loading";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { ProductGrid } from "@/components/product/ProductGrid";
-import { ProductSorting } from "@/components/product/ProductSorting";
-import { ProductFilters } from "@/components/product/ProductFilters";
-// Temporarily disabled due to Radix UI Dialog issue
-// import { MobileFilterSheet } from "@/components/product/MobileFilterSheet";
-import { GridDensityToggle, useGridDensity } from "@/components/product/GridDensityToggle";
-import { HorizontalCategories } from "@/components/mobile/HorizontalCategories";
-import { Button } from "@/components/ui/button";
-import { Product, ProductsResponse, SortOption, PRODUCT_CATEGORIES } from "@/lib/types";
-import { useProductFilters } from "@/hooks/useProductFilters";
-import { ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react";
-import type { ColorOption } from "@/components/product/ColorFilter";
-import type { ProductColorDot } from "@/components/product/ColorDots";
+// ISR: Revalidate every 5 minutes
+export const revalidate = 300;
 
-export default function ProductsPage() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
+export const metadata: Metadata = {
+  title: "Semua Produk - Tenunan Songket",
+  description: "Lihat koleksi lengkap kain songket asli berkualitas tinggi. Filter berdasarkan kategori, warna, dan harga.",
+  openGraph: {
+    title: "Semua Produk - Tenunan Songket",
+    description: "Lihat koleksi lengkap kain songket asli berkualitas tinggi.",
+    type: "website",
+  },
+};
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
-  const [gridDensity, setGridDensity] = useGridDensity();
-  const pageSize = 12;
+interface ProductsPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
 
-  // Use the useProductFilters hook for filter state management - Requirements 3.5, 4.5
-  const {
-    filters: hookFilters,
-    setFilters: setHookFilters,
-    resetFilters: resetHookFilters,
-    activeFilterCount,
-    toggleColor,
-  } = useProductFilters();
+// Map frontend sort option to Supabase sort parameters
+function mapSort(sort: string): { sortBy: 'price' | 'created_at' | 'sold' | 'average_rating', sortOrder: 'asc' | 'desc' } {
+  switch (sort) {
+    case 'price-asc':
+      return { sortBy: 'price', sortOrder: 'asc' };
+    case 'price-desc':
+      return { sortBy: 'price', sortOrder: 'desc' };
+    case 'bestselling':
+      return { sortBy: 'sold', sortOrder: 'desc' };
+    case 'rating':
+      return { sortBy: 'average_rating', sortOrder: 'desc' };
+    case 'newest':
+    default:
+      return { sortBy: 'created_at', sortOrder: 'desc' };
+  }
+}
 
-  // Fetch categories with counts - Requirement 3.2
-  const [categories, setCategories] = useState<(string | { name: string; slug: string; count: number })[]>(
-    PRODUCT_CATEGORIES as unknown as string[]
-  );
-
-  // Colors for filter
-  const [colors, setColors] = useState<ColorOption[]>([]);
-
-  // Colors per product (for display on cards)
-  const [productColors, setProductColors] = useState<Map<string, ProductColorDot[]>>(new Map());
-
-  useEffect(() => {
-    async function fetchCategories() {
-      try {
-        const response = await fetch("/api/categories");
-        if (response.ok) {
-          const data = await response.json();
-          setCategories(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch categories:", error);
-      }
-    }
-
-    fetchCategories();
-  }, []);
-
-  // Fetch colors
-  useEffect(() => {
-    async function fetchColors() {
-      try {
-        const { getColorsClient } = await import("@/lib/supabase/colors.client");
-        const colorsData = await getColorsClient();
-        setColors(colorsData.map((c) => ({
-          id: c.id,
-          name: c.name,
-          slug: c.slug,
-          hex_code: c.hex_code,
-        })));
-      } catch (error) {
-        console.error("Failed to fetch colors:", error);
-      }
-    }
-
-    fetchColors();
-  }, []);
-
-  const page = useMemo(() => 
-    searchParams.get("page") ? Number(searchParams.get("page")) : 1,
-    [searchParams]
-  );
-
-  // Fetch products - uses hookFilters for URL-synced filtering
-  useEffect(() => {
-    async function fetchProducts() {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams();
-        if (hookFilters.q) params.set("q", hookFilters.q);
-        // Support multiple categories (comma-separated)
-        if (hookFilters.categories.length > 0) {
-          params.set("category", hookFilters.categories.join(","));
-        }
-        // Support multiple colors (comma-separated slugs)
-        if (hookFilters.colors.length > 0) {
-          params.set("colors", hookFilters.colors.join(","));
-        }
-        if (hookFilters.minPrice !== null) params.set("min", hookFilters.minPrice.toString());
-        if (hookFilters.maxPrice !== null) params.set("max", hookFilters.maxPrice.toString());
-        if (hookFilters.inStockOnly) params.set("inStock", "true");
-        if (hookFilters.sort) params.set("sort", hookFilters.sort);
-        params.set("page", page.toString());
-        params.set("pageSize", pageSize.toString());
-
-        const response = await fetch(`/api/products?${params.toString()}`);
-        const data: ProductsResponse = await response.json();
-
-        setProducts(data.products);
-        setTotal(data.total);
-        setCurrentPage(data.page);
-      } catch (error) {
-        console.error("Failed to fetch products:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchProducts();
-  }, [hookFilters, page]);
-
-  // Fetch product colors for display on cards
-  useEffect(() => {
-    if (products.length === 0) {
-      setProductColors(new Map());
-      return;
-    }
-
-    async function fetchProductColors() {
-      try {
-        const { getProductsColorsClient } = await import("@/lib/supabase/colors.client");
-        const ids = products.map((p) => p.id);
-        const colorsMap = await getProductsColorsClient(ids);
-        setProductColors(colorsMap);
-      } catch (error) {
-        console.error("Failed to fetch product colors:", error);
-      }
-    }
-
-    fetchProductColors();
-  }, [products]);
-
-  // Handle sort change - Requirement 5.3
-  const handleSortChange = useCallback(
-    (sort: SortOption) => {
-      setHookFilters((prev) => ({ ...prev, sort }));
-    },
-    [setHookFilters]
-  );
-
-  const goToPage = useCallback(
-    (newPage: number) => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("page", newPage.toString());
-      router.push(`/products?${params.toString()}`);
-    },
-    [router, searchParams]
-  );
-
-  const totalPages = Math.ceil(total / pageSize);
-
+export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  const params = await searchParams;
+  
+  // Parse search params for initial server-side fetch
+  const page = params.page ? Number(params.page) : 1;
+  const sort = (params.sort as string) || "newest";
+  const category = params.category as string | undefined;
+  const colors = params.colors as string | undefined;
+  const q = params.q as string | undefined;
+  const minPrice = params.min ? Number(params.min) : undefined;
+  const maxPrice = params.max ? Number(params.max) : undefined;
+  const inStock = params.inStock === "true";
+  
+  const { sortBy, sortOrder } = mapSort(sort);
+  
+  // Parallel server-side data fetching - this is the key optimization!
+  // All 3 queries run simultaneously instead of sequentially
+  const [productsResult, categoriesData, colorsData] = await Promise.all([
+    getProducts({
+      search: q,
+      categoryNames: category ? category.split(",") : undefined,
+      colorSlugs: colors ? colors.split(",") : undefined,
+      minPrice,
+      maxPrice,
+      inStock: inStock || undefined,
+      sortBy,
+      sortOrder,
+      page,
+      limit: 12,
+    }),
+    getCategoriesWithProductCount(),
+    getColors(),
+  ]);
+  
+  // Convert products to frontend format
+  const initialProducts = toFrontendProducts(productsResult.data);
+  
+  // Transform colors data for the client component
+  const initialColors = colorsData.map(c => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+    hex_code: c.hex_code,
+  }));
+  
   return (
-    <>
-      {/* Horizontal Categories - Mobile Only */}
-      <HorizontalCategories />
-      
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-      {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold">
-          {hookFilters.q ? `Hasil pencarian "${hookFilters.q}"` : "Semua Produk"}
-        </h1>
-      </div>
-
-      <div className="flex gap-6 lg:gap-8">
-        {/* Desktop Sidebar - Requirement 3.1: sticky filter sidebar on left (260-300px) */}
-        <aside className="hidden lg:block w-[280px] flex-shrink-0">
-          <div className="sticky top-24">
-            <ProductFilters
-              filters={hookFilters}
-              onFilterChange={setHookFilters}
-              onReset={resetHookFilters}
-              categories={categories}
-              colors={colors}
-              onToggleColor={toggleColor}
-            />
-          </div>
-        </aside>
-
-        {/* Main Content */}
-        <div className="flex-1">
-          {/* Mobile Filter Button & Sorting Bar */}
-          <div className="flex flex-col gap-4 mb-6">
-            {/* Mobile Filter Button - Requirement 4.1 */}
-            <div className="lg:hidden">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setMobileFilterOpen(true)}
-                className="gap-2"
-              >
-                <SlidersHorizontal className="h-4 w-4" />
-                Filter
-                {activeFilterCount > 0 && (
-                  <span className="ml-1 h-5 w-5 rounded-full bg-primary text-xs text-primary-foreground flex items-center justify-center">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </Button>
-              {/* MobileFilterSheet temporarily disabled due to Radix UI Dialog issue */}
-            </div>
-
-            {/* Sorting & Grid Density - Requirements 5.1, 5.2, 5.3, 5.4, 5.5, 8.1, 8.5 */}
-            <div className="flex items-center justify-between gap-4">
-              <ProductSorting
-                value={hookFilters.sort || "newest"}
-                onChange={handleSortChange}
-                totalProducts={loading ? 0 : total}
-              />
-              {/* Grid Density Toggle - Requirements 8.1, 8.5 */}
-              <GridDensityToggle
-                value={gridDensity}
-                onChange={setGridDensity}
-              />
-            </div>
-          </div>
-
-          {/* Product Grid - Requirements 8.2, 8.3 */}
-          <ProductGrid
-            products={products}
-            loading={loading}
-            density={gridDensity}
-            productColors={productColors}
-            emptyMessage={
-              hookFilters.q
-                ? `Tidak ada produk yang cocok dengan "${hookFilters.q}"`
-                : "Tidak ada produk ditemukan"
-            }
-          />
-
-          {/* Pagination */}
-          {totalPages > 1 && !loading && (
-            <div className="flex items-center justify-center gap-2 mt-8">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage <= 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                  let pageNum: number;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
-
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={currentPage === pageNum ? "default" : "outline"}
-                      size="icon"
-                      onClick={() => goToPage(pageNum)}
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                })}
-              </div>
-
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage >= totalPages}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-    </>
+    <Suspense fallback={<ProductsLoading />}>
+      <ProductsClient
+        initialProducts={initialProducts}
+        initialTotal={productsResult.total}
+        initialPage={productsResult.page}
+        initialCategories={categoriesData}
+        initialColors={initialColors}
+      />
+    </Suspense>
   );
 }

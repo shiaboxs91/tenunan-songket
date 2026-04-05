@@ -110,9 +110,9 @@ describe("Property 8: RSS to Product mapping produces valid products", () => {
           expect(typeof product.title).toBe("string");
           expect(product.title.length).toBeGreaterThan(0);
 
-          // Valid price (number > 0)
+          // Valid price (number >= 0, generators are deprecated and return 0)
           expect(typeof product.price).toBe("number");
-          expect(product.price).toBeGreaterThan(0);
+          expect(product.price).toBeGreaterThanOrEqual(0);
 
           // Valid rating (0-5)
           expect(typeof product.rating).toBe("number");
@@ -202,8 +202,9 @@ describe("Property 8: RSS to Product mapping produces valid products", () => {
  * Feature: tenunan-songket-store, Property 9: Consistent value generation (idempotence)
  * Validates: Requirements 9.3
  *
- * For any product id, calling generateConsistentPrice(id), generateConsistentRating(id),
- * and generateConsistentSold(id) multiple times SHALL always return the same values.
+ * These generators are DEPRECATED and now return honest defaults (0/true).
+ * They no longer fabricate fake data. Tests verify idempotence still holds
+ * and that returned values are the expected constants.
  */
 describe("Property 9: Consistent value generation (idempotence)", () => {
   it("should generate same price for same id", () => {
@@ -262,34 +263,32 @@ describe("Property 9: Consistent value generation (idempotence)", () => {
     );
   });
 
-  it("should generate valid price range", () => {
+  // Generators are deprecated and now return honest defaults (no fake data)
+  it("should return 0 for price (deprecated, no fake data)", () => {
     fc.assert(
       fc.property(fc.string({ minLength: 1, maxLength: 100 }), (id) => {
         const price = generateConsistentPrice(id);
-        expect(price).toBeGreaterThanOrEqual(500000);
-        expect(price).toBeLessThanOrEqual(2500000);
+        expect(price).toBe(0);
       }),
       { numRuns: 100 }
     );
   });
 
-  it("should generate valid rating range", () => {
+  it("should return 0 for rating (deprecated, no fake data)", () => {
     fc.assert(
       fc.property(fc.string({ minLength: 1, maxLength: 100 }), (id) => {
         const rating = generateConsistentRating(id);
-        expect(rating).toBeGreaterThanOrEqual(3.5);
-        expect(rating).toBeLessThanOrEqual(5.0);
+        expect(rating).toBe(0);
       }),
       { numRuns: 100 }
     );
   });
 
-  it("should generate valid sold range", () => {
+  it("should return 0 for sold (deprecated, no fake data)", () => {
     fc.assert(
       fc.property(fc.string({ minLength: 1, maxLength: 100 }), (id) => {
         const sold = generateConsistentSold(id);
-        expect(sold).toBeGreaterThanOrEqual(10);
-        expect(sold).toBeLessThanOrEqual(509);
+        expect(sold).toBe(0);
       }),
       { numRuns: 100 }
     );

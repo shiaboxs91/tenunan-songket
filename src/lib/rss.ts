@@ -4,52 +4,38 @@ import { slugify } from "./utils";
 const RSS_FEED_URL = "https://tenunansongket.com/feed/";
 const PLACEHOLDER_IMAGE = "/images/placeholder-product.jpg";
 
-/**
- * Generate a consistent hash from a string for seeding random values
- */
+// Legacy stub functions -- kept for test compatibility but return honest defaults.
+// These were previously used to fabricate fake ratings/sold counts from RSS data.
+// Now all real product data comes from the database.
+
 function hashString(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
     hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32bit integer
+    hash = hash & hash;
   }
   return Math.abs(hash);
 }
 
-/**
- * Generate consistent price based on product id (seeded random)
- */
-export function generateConsistentPrice(id: string): number {
-  const hash = hashString(id);
-  const basePrice = 500000; // 500k IDR base
-  const variation = (hash % 20) * 100000; // 0-2M variation
-  return basePrice + variation;
+/** @deprecated RSS products no longer have real prices -- use DB */
+export function generateConsistentPrice(_id: string): number {
+  return 0;
 }
 
-/**
- * Generate consistent rating based on product id (seeded random)
- */
-export function generateConsistentRating(id: string): number {
-  const hash = hashString(id);
-  const rating = 3.5 + (hash % 16) / 10; // 3.5 - 5.0
-  return Math.round(rating * 10) / 10;
+/** @deprecated Always returns 0 -- real ratings come from reviews table */
+export function generateConsistentRating(_id: string): number {
+  return 0;
 }
 
-/**
- * Generate consistent sold count based on product id (seeded random)
- */
-export function generateConsistentSold(id: string): number {
-  const hash = hashString(id);
-  return (hash % 500) + 10; // 10 - 509
+/** @deprecated Always returns 0 -- real sold counts come from orders */
+export function generateConsistentSold(_id: string): number {
+  return 0;
 }
 
-/**
- * Generate consistent stock status based on product id (seeded random)
- */
-export function generateConsistentInStock(id: string): boolean {
-  const hash = hashString(id);
-  return hash % 10 !== 0; // 90% in stock
+/** @deprecated Always returns true -- real stock comes from DB */
+export function generateConsistentInStock(_id: string): boolean {
+  return true;
 }
 
 /**

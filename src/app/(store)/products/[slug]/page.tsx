@@ -216,10 +216,14 @@ export default async function ProductDetailPage({
               ) : (
                 <span className="text-muted-foreground">Belum ada ulasan</span>
               )}
-              <span className="text-muted-foreground">&bull;</span>
-              <span className="text-muted-foreground">
-                {product.sold} terjual
-              </span>
+              {product.sold > 0 && (
+                <>
+                  <span className="text-muted-foreground">&bull;</span>
+                  <span className="text-muted-foreground">
+                    {product.sold} terjual
+                  </span>
+                </>
+              )}
             </div>
 
             {/* Price */}
@@ -270,11 +274,8 @@ export default async function ProductDetailPage({
               </div>
             )}
 
-            {/* Product Actions (Variant + Cart) */}
-            <ProductActions 
-              product={product} 
-              variants={["Original", "Lepus", "Nago Besaung", "Bungo Mawar"]} 
-            />
+            {/* Product Actions */}
+            <ProductActions product={product} />
 
             {/* Trust Badges */}
             <div className="grid grid-cols-3 gap-4 pt-4">
@@ -301,13 +302,11 @@ export default async function ProductDetailPage({
             <p className="text-muted-foreground leading-relaxed">
               {product.description}
             </p>
-            <h4 className="font-semibold mt-4 mb-2">Spesifikasi:</h4>
-            <ul className="text-muted-foreground space-y-1">
-              <li>Bahan: Sutra dan benang emas</li>
-              <li>Ukuran: 200cm x 100cm (dapat disesuaikan)</li>
-              <li>Asal: {product.category.replace("Songket ", "")}</li>
-              <li>Teknik: Tenun tradisional</li>
-            </ul>
+            {product.category && (
+              <p className="text-muted-foreground mt-4">
+                <span className="font-semibold text-foreground">Kategori:</span> {product.category}
+              </p>
+            )}
           </div>
         </div>
 

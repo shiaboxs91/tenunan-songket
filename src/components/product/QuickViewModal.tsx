@@ -70,20 +70,22 @@ export function QuickViewModal({
             </DialogHeader>
 
             {/* Rating & Sold */}
-            <div className="flex items-center gap-3 text-sm text-muted-foreground mb-3">
-              {product.rating > 0 && (
-                <>
+            {(product.rating > 0 || product.sold > 0) && (
+              <div className="flex items-center gap-3 text-sm text-muted-foreground mb-3">
+                {product.rating > 0 && (
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                     <span className="font-medium text-foreground">
                       {product.rating.toFixed(1)}
                     </span>
                   </div>
+                )}
+                {product.rating > 0 && product.sold > 0 && (
                   <span className="text-muted-foreground/50">|</span>
-                </>
-              )}
-              <span>{product.sold} terjual</span>
-            </div>
+                )}
+                {product.sold > 0 && <span>{product.sold} terjual</span>}
+              </div>
+            )}
 
             {/* Price */}
             <p className="text-2xl font-bold text-primary mb-4">
@@ -92,7 +94,7 @@ export function QuickViewModal({
 
             {/* Short Description */}
             <DialogDescription className="text-sm text-muted-foreground line-clamp-3 mb-6 flex-grow">
-              {product.description || "Produk tenun berkualitas tinggi dengan motif tradisional yang indah."}
+              {product.description || ""}
             </DialogDescription>
 
             {/* Actions */}

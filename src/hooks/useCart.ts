@@ -581,7 +581,7 @@ function convertLocalCartToSupabaseFormat(localCart: LocalCartState): CartWithIt
         description: item.product.description,
         price: item.product.price,
         sale_price: null,
-        stock: item.product.inStock ? 10 : 0,
+        stock: (item.product as any).stock || 0,
         reserved_stock: 0,
         sold: item.product.sold,
         weight: (item.product as any).weight || 0.5, // Use stored weight

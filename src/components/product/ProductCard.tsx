@@ -161,12 +161,12 @@ export function ProductCard({ product, density = "comfortable", colors, onQuickV
         </h3>
 
         {/* Rating & Sold - compact */}
-        <div className={cn(
-          "flex items-center gap-1.5 text-muted-foreground",
-          isCompact ? "text-[9px] mb-1" : "text-[11px] mb-1.5"
-        )}>
-          {product.rating > 0 && (
-            <>
+        {(product.rating > 0 || product.sold > 0) && (
+          <div className={cn(
+            "flex items-center gap-1.5 text-muted-foreground",
+            isCompact ? "text-[9px] mb-1" : "text-[11px] mb-1.5"
+          )}>
+            {product.rating > 0 && (
               <div className="flex items-center gap-0.5">
                 <Star className={cn(
                   "fill-amber-400 text-amber-400",
@@ -174,11 +174,13 @@ export function ProductCard({ product, density = "comfortable", colors, onQuickV
                 )} />
                 <span className="font-medium text-foreground">{product.rating.toFixed(1)}</span>
               </div>
+            )}
+            {product.rating > 0 && product.sold > 0 && (
               <span className="text-muted-foreground/50">|</span>
-            </>
-          )}
-          <span>{product.sold} terjual</span>
-        </div>
+            )}
+            {product.sold > 0 && <span>{product.sold} terjual</span>}
+          </div>
+        )}
 
         {/* Color Dots */}
         {colors && colors.length > 0 && (

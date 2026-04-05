@@ -62,7 +62,7 @@ export interface ProductsResponse {
   total: number;
   page: number;
   pageSize: number;
-  source: "rss" | "snapshot" | "database";
+  source: "rss" | "database";
 }
 
 export interface ProductFilters {

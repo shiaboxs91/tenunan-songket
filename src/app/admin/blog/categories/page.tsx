@@ -105,7 +105,7 @@ export default function BlogCategoriesPage() {
     setImageUrl(category.image_url || '')
     setMetaTitle(category.meta_title || '')
     setMetaDescription(category.meta_description || '')
-    setIsActive(category.is_active)
+    setIsActive(category.is_active ?? true)
     setDialogOpen(true)
   }
 
@@ -368,13 +368,13 @@ export default function BlogCategoriesPage() {
         if (!open) resetForm()
         setDialogOpen(open)
       }}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>
               {editingCategory ? 'Edit Kategori' : 'Tambah Kategori Baru'}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto flex-1 pr-2">
             {/* Image */}
             <div>
               <Label>Gambar Kategori</Label>

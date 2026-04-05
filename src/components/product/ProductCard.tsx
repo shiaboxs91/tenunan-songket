@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/components/cart/CartProvider";
 import { cn } from "@/lib/utils";
 import { GridDensity } from "./GridDensityToggle";
+import { ColorDots, type ProductColorDot } from "./ColorDots";
 
 // Elegant wood carving corner ornament SVG
 const CornerOrnament = ({ className, flip = false }: { className?: string; flip?: boolean }) => (
@@ -41,10 +42,11 @@ const CornerOrnament = ({ className, flip = false }: { className?: string; flip?
 interface ProductCardProps {
   product: Product;
   density?: GridDensity;
+  colors?: ProductColorDot[];
   onQuickView?: (product: Product) => void;
 }
 
-export function ProductCard({ product, density = "comfortable", onQuickView }: ProductCardProps) {
+export function ProductCard({ product, density = "comfortable", colors, onQuickView }: ProductCardProps) {
   const { addItem } = useCart();
   const router = useRouter();
   const isCompact = density === "compact";
@@ -173,6 +175,16 @@ export function ProductCard({ product, density = "comfortable", onQuickView }: P
           <span className="text-muted-foreground/50">|</span>
           <span>{product.sold} terjual</span>
         </div>
+
+        {/* Color Dots */}
+        {colors && colors.length > 0 && (
+          <ColorDots
+            colors={colors}
+            maxVisible={isCompact ? 4 : 5}
+            size={isCompact ? "sm" : "sm"}
+            className={isCompact ? "mb-0.5" : "mb-1"}
+          />
+        )}
 
         {/* Price */}
         <p className={cn(

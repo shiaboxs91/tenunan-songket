@@ -9,6 +9,7 @@ import { ProductActions } from "@/components/product/ProductActions";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils";
 import { getProductBySlug, getProductsByCategory } from "@/lib/supabase/products";
+import { getProductColors } from "@/lib/supabase/colors.server";
 import { toFrontendProduct, toFrontendProducts } from "@/lib/supabase/adapters";
 import { Product } from "@/lib/types";
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo";
@@ -47,6 +48,10 @@ export async function generateMetadata({
     || supabaseProduct.description?.slice(0, 155) 
     || `Beli ${supabaseProduct.title} asli berkualiti tinggi. Kain tenunan tradisional Melayu dengan benang emas, 100% handmade. Penghantaran ke Brunei, Malaysia, Singapura.`;
   
+  // Get product colors for metadata
+  const colorData = await getProductColors(supabaseProduct.id);
+  const colorNames = colorData.map((pc) => pc.color.name);
+
   const productUrl = `https://tenunansongket.com/products/${decodedSlug}`;
   
   return {
@@ -61,6 +66,7 @@ export async function generateMetadata({
       'benang emas',
       'handmade',
       supabaseProduct.title,
+      ...colorNames,
     ].join(', '),
     openGraph: {
       title,
@@ -130,6 +136,15 @@ export default async function ProductDetailPage({
     notFound();
   }
 
+  // Fetch product colors
+  const productColorData = await getProductColors(product.id);
+  const productColors = productColorData
+    .sort((a, b) => {
+      if (a.is_primary && !b.is_primary) return -1;
+      if (!a.is_primary && b.is_primary) return 1;
+      return a.color.name.localeCompare(b.color.name);
+    });
+
   // Get category slug from product category name for recommendations
   const categorySlug = product.category.toLowerCase().replace(/\s+/g, '-');
   const recommendations = await getRecommendations(categorySlug, product.id);
@@ -156,6 +171,7 @@ export default async function ProductDetailPage({
           reviewCount: product.sold > 0 ? Math.floor(product.sold * 0.3) : 0,
           brand: 'Tenunan Songket',
           category: product.category,
+          colors: productColors.map((pc) => pc.color.name),
         }}
       />
       
@@ -219,6 +235,34 @@ export default async function ProductDetailPage({
               <div className="flex items-center gap-2 text-red-600">
                 <div className="h-2 w-2 rounded-full bg-red-600" />
                 <span className="text-sm font-medium">Stok habis</span>
+              </div>
+            )}
+
+            {/* Product Colors */}
+            {productColors.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Warna</p>
+                <div className="flex flex-wrap gap-2">
+                  {productColors.map((pc) => (
+                    <div
+                      key={pc.color_id}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm ${
+                        pc.is_primary
+                          ? "border-amber-400 bg-amber-50 dark:bg-amber-950/20"
+                          : "border-gray-200 dark:border-gray-700"
+                      }`}
+                    >
+                      <span
+                        className="w-4 h-4 rounded-full border border-gray-300/60 flex-shrink-0"
+                        style={{ backgroundColor: pc.color.hex_code || "#808080" }}
+                      />
+                      <span>{pc.color.name}</span>
+                      {pc.is_primary && (
+                        <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">Utama</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 

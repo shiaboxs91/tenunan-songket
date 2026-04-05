@@ -14,6 +14,7 @@ interface ProductJsonLdProps {
     reviewCount?: number
     brand?: string
     category?: string
+    colors?: string[]
   }
 }
 
@@ -32,6 +33,9 @@ export function ProductJsonLd({ product }: ProductJsonLdProps) {
     },
     ...(product.category && {
       category: product.category,
+    }),
+    ...(product.colors && product.colors.length > 0 && {
+      color: product.colors.join(', '),
     }),
     offers: {
       '@type': 'Offer',

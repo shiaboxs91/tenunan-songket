@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { SlidersHorizontal, X, RotateCcw } from "lucide-react";
+import { SlidersHorizontal, X, RotateCcw, Check } from "lucide-react";
 import { FilterState, PRODUCT_CATEGORIES } from "@/lib/types";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ import {
   SheetFooter,
   SheetClose,
 } from "@/components/ui/sheet";
+import type { ColorOption } from "./ColorFilter";
 
 interface MobileFilterSheetProps {
   open: boolean;
@@ -25,6 +26,7 @@ interface MobileFilterSheetProps {
   onApply: (filters: FilterState) => void;
   onReset: () => void;
   categories?: string[];
+  colors?: ColorOption[];
 }
 
 /**
@@ -44,6 +46,7 @@ export function MobileFilterSheet({
   onApply,
   onReset,
   categories = PRODUCT_CATEGORIES as unknown as string[],
+  colors = [],
 }: MobileFilterSheetProps) {
   // Local state for filters (only applied when "Terapkan" is clicked)
   const [localFilters, setLocalFilters] = useState<FilterState>(filters);
@@ -66,6 +69,7 @@ export function MobileFilterSheet({
   // Count active filters in local state
   const activeFilterCount =
     localFilters.categories.length +
+    (localFilters.colors?.length || 0) +
     (localFilters.minPrice !== null ? 1 : 0) +
     (localFilters.maxPrice !== null ? 1 : 0) +
     (localFilters.inStockOnly ? 1 : 0);
@@ -79,6 +83,19 @@ export function MobileFilterSheet({
     setLocalFilters({
       ...localFilters,
       categories: newCategories,
+    });
+  };
+
+  // Handle color toggle
+  const handleColorToggle = (colorSlug: string) => {
+    const currentColors = localFilters.colors || [];
+    const newColors = currentColors.includes(colorSlug)
+      ? currentColors.filter((c) => c !== colorSlug)
+      : [...currentColors, colorSlug];
+
+    setLocalFilters({
+      ...localFilters,
+      colors: newColors,
     });
   };
 
@@ -126,6 +143,7 @@ export function MobileFilterSheet({
     setLocalFilters({
       ...localFilters,
       categories: [],
+      colors: [],
       minPrice: null,
       maxPrice: null,
       inStockOnly: false,
@@ -136,6 +154,15 @@ export function MobileFilterSheet({
   const handleResetAndClose = () => {
     onReset();
     onOpenChange(false);
+  };
+
+  const isLightColor = (hexColor: string): boolean => {
+    const hex = hexColor.replace("#", "");
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.5;
   };
 
   return (
@@ -184,6 +211,49 @@ export function MobileFilterSheet({
               ))}
             </div>
           </div>
+
+          {/* Color Filter */}
+          {colors.length > 0 && (
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Warna</Label>
+              <div className="flex flex-wrap gap-2">
+                {colors.map((color) => {
+                  const isSelected = (localFilters.colors || []).includes(color.slug);
+                  const hexCode = color.hex_code || "#808080";
+                  const isLight = isLightColor(hexCode);
+
+                  return (
+                    <button
+                      key={color.id}
+                      type="button"
+                      onClick={() => handleColorToggle(color.slug)}
+                      title={color.name}
+                      className={cn(
+                        "relative w-10 h-10 rounded-full border-2 transition-all duration-200",
+                        "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500",
+                        isSelected
+                          ? "border-amber-500 ring-2 ring-amber-500/30"
+                          : "border-gray-300"
+                      )}
+                      style={{ backgroundColor: hexCode }}
+                      aria-label={`Filter warna ${color.name}`}
+                      aria-pressed={isSelected}
+                    >
+                      {isSelected && (
+                        <Check
+                          className={cn(
+                            "absolute inset-0 m-auto h-5 w-5",
+                            isLight ? "text-gray-800" : "text-white"
+                          )}
+                          strokeWidth={3}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Price Range Filter - Requirement 4.3 */}
           <div className="space-y-3">
@@ -280,6 +350,29 @@ export function MobileFilterSheet({
                     </button>
                   </Badge>
                 )}
+                {(localFilters.colors || []).map((colorSlug) => {
+                  const color = colors.find((c) => c.slug === colorSlug);
+                  if (!color) return null;
+                  return (
+                    <Badge
+                      key={colorSlug}
+                      variant="outline"
+                      className="gap-1 pr-1"
+                    >
+                      <span
+                        className="inline-block w-2.5 h-2.5 rounded-full border border-gray-300"
+                        style={{ backgroundColor: color.hex_code || "#808080" }}
+                      />
+                      {color.name}
+                      <button
+                        onClick={() => handleColorToggle(colorSlug)}
+                        className="ml-1 hover:bg-muted rounded-full p-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  );
+                })}
                 {localFilters.inStockOnly && (
                   <Badge variant="outline" className="gap-1 pr-1">
                     Tersedia

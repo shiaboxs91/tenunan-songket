@@ -3,13 +3,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { ArrowLeft, Upload, X, Trash2, Loader2, Star } from 'lucide-react'
+import { ArrowLeft, Upload, X, Trash2, Loader2, Star, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
 import { 
   Select,
   SelectContent,
@@ -31,8 +32,10 @@ import {
 import { toast } from 'sonner'
 import { createProduct, updateProduct, deleteProduct, type Product } from '@/lib/supabase/products-client'
 import { getCategories, type Category } from '@/lib/supabase/categories-client'
+import { getColorsClient, getProductColorsClient, setProductColors } from '@/lib/supabase/colors.client'
 import { uploadFile, generateFilePath, deleteFile } from '@/lib/supabase/storage'
 import { createClient } from '@/lib/supabase/client'
+import type { Color } from '@/lib/supabase/types'
 
 interface ProductImage {
   id?: string
@@ -63,6 +66,9 @@ export function ProductForm({ product }: ProductFormProps) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [categories, setCategories] = useState<Category[]>([])
+  const [colors, setColors] = useState<Color[]>([])
+  const [selectedColorIds, setSelectedColorIds] = useState<string[]>([])
+  const [primaryColorId, setPrimaryColorId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -90,7 +96,63 @@ export function ProductForm({ product }: ProductFormProps) {
 
   useEffect(() => {
     loadCategories()
+    loadColors()
+    if (product) {
+      loadProductColors()
+    }
   }, [])
+
+  const loadProductColors = async () => {
+    if (!product) return
+    try {
+      const productColors = await getProductColorsClient(product.id)
+      const colorIds = productColors.map(pc => pc.color_id)
+      setSelectedColorIds(colorIds)
+      const primary = productColors.find(pc => pc.is_primary)
+      if (primary) {
+        setPrimaryColorId(primary.color_id)
+      }
+    } catch (error) {
+      console.error('Error loading product colors:', error)
+    }
+  }
+
+  const loadColors = async () => {
+    try {
+      const data = await getColorsClient()
+      setColors(data)
+    } catch (error) {
+      console.error('Error loading colors:', error)
+    }
+  }
+
+  const toggleColor = (colorId: string) => {
+    setSelectedColorIds(prev => {
+      if (prev.includes(colorId)) {
+        // Remove color
+        const newIds = prev.filter(id => id !== colorId)
+        // If removed color was primary, clear primary
+        if (primaryColorId === colorId) {
+          setPrimaryColorId(newIds.length > 0 ? newIds[0] : null)
+        }
+        return newIds
+      } else {
+        // Add color
+        const newIds = [...prev, colorId]
+        // If no primary set, make this the primary
+        if (!primaryColorId) {
+          setPrimaryColorId(colorId)
+        }
+        return newIds
+      }
+    })
+  }
+
+  const handleSetPrimaryColor = (colorId: string) => {
+    if (selectedColorIds.includes(colorId)) {
+      setPrimaryColorId(colorId)
+    }
+  }
 
 const loadCategories = async () => {
     try {
@@ -228,12 +290,24 @@ const handleSubmit = async (e: React.FormEvent) => {
         }))
       }
 
+      let savedProductId: string
+
       if (product) {
         await updateProduct(product.id, productData)
+        savedProductId = product.id
         toast.success('Produk berhasil diperbarui')
       } else {
-        await createProduct(productData)
+        const newProduct = await createProduct(productData)
+        savedProductId = newProduct.id
         toast.success('Produk berhasil ditambahkan')
+      }
+
+      // Save product colors
+      if (selectedColorIds.length > 0) {
+        await setProductColors(savedProductId, selectedColorIds, primaryColorId || undefined)
+      } else if (product) {
+        // Clear colors if none selected (only for existing products)
+        await setProductColors(savedProductId, [], undefined)
       }
 
       router.push('/admin/products')
@@ -411,7 +485,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          <Card>
+<Card>
             <CardHeader>
               <CardTitle>Pengaturan</CardTitle>
             </CardHeader>
@@ -445,6 +519,90 @@ const handleSubmit = async (e: React.FormEvent) => {
                 />
                 <Label htmlFor="is_active">Produk Aktif</Label>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Color Selection Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Warna Produk</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Pilih warna yang ada pada produk ini
+              </p>
+              
+              {/* Selected Colors */}
+              {selectedColorIds.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {selectedColorIds.map(colorId => {
+                    const color = colors.find(c => c.id === colorId)
+                    if (!color) return null
+                    return (
+                      <Badge 
+                        key={colorId} 
+                        variant={primaryColorId === colorId ? "default" : "secondary"}
+                        className="flex items-center gap-1.5 pr-1 cursor-pointer"
+                        onClick={() => handleSetPrimaryColor(colorId)}
+                      >
+                        <span 
+                          className="w-3 h-3 rounded-full border border-white/30"
+                          style={{ backgroundColor: color.hex_code || '#ccc' }}
+                        />
+                        {color.name}
+                        {primaryColorId === colorId && (
+                          <Star className="h-3 w-3 ml-1 fill-current" />
+                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleColor(colorId)
+                          }}
+                          className="ml-1 p-0.5 hover:bg-black/20 rounded"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* Color Grid */}
+              <div className="grid grid-cols-5 gap-2">
+                {colors.map(color => {
+                  const isSelected = selectedColorIds.includes(color.id)
+                  return (
+                    <button
+                      key={color.id}
+                      type="button"
+                      onClick={() => toggleColor(color.id)}
+                      className={`
+                        relative w-full aspect-square rounded-lg border-2 transition-all
+                        ${isSelected 
+                          ? 'border-primary ring-2 ring-primary/30' 
+                          : 'border-slate-200 dark:border-slate-700 hover:border-slate-400'
+                        }
+                      `}
+                      style={{ backgroundColor: color.hex_code || '#ccc' }}
+                      title={color.name}
+                    >
+                      {isSelected && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
+                          <Check className="h-5 w-5 text-white" />
+                        </div>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {selectedColorIds.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Klik badge warna untuk set sebagai warna utama
+                </p>
+              )}
             </CardContent>
           </Card>
 

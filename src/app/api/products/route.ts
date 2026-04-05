@@ -38,6 +38,12 @@ export async function GET(request: NextRequest) {
     ? categoryParam.split(",").filter(Boolean) 
     : [];
 
+  // Parse colors parameter (supports comma-separated slugs)
+  const colorsParam = searchParams.get("colors");
+  const colors = colorsParam 
+    ? colorsParam.split(",").filter(Boolean) 
+    : [];
+
   // Parse sort option with validation
   const sortParam = searchParams.get("sort");
   const sort: SortOption = sortParam && isValidSortOption(sortParam) ? sortParam : "newest";
@@ -55,6 +61,7 @@ export async function GET(request: NextRequest) {
     
     const supabaseResult = await getSupabaseProducts({
       categoryNames: categories.length > 0 ? categories : undefined,
+      colorSlugs: colors.length > 0 ? colors : undefined,
       minPrice,
       maxPrice,
       inStock: inStock || undefined,

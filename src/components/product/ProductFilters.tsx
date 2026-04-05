@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { ColorFilter, ColorOption } from "./ColorFilter";
 
 export interface CategoryWithCount {
   name: string;
@@ -21,6 +22,8 @@ interface ProductFiltersProps {
   onFilterChange: (filters: FilterState) => void;
   onReset: () => void;
   categories?: (string | CategoryWithCount)[];
+  colors?: ColorOption[];
+  onToggleColor?: (colorSlug: string) => void;
 }
 
 /**
@@ -39,6 +42,8 @@ export function ProductFilters({
   onFilterChange,
   onReset,
   categories = PRODUCT_CATEGORIES as unknown as string[],
+  colors = [],
+  onToggleColor,
 }: ProductFiltersProps) {
   // Local state for price inputs (to avoid updating URL on every keystroke)
   const [minPriceInput, setMinPriceInput] = useState(
@@ -51,6 +56,7 @@ export function ProductFilters({
   // Count active filters - Requirement 3.7
   const activeFilterCount = 
     filters.categories.length +
+    (filters.colors?.length || 0) +
     (filters.minPrice !== null ? 1 : 0) +
     (filters.maxPrice !== null ? 1 : 0) +
     (filters.inStockOnly ? 1 : 0);
@@ -147,6 +153,25 @@ export function ProductFilters({
               <X className="h-3 w-3" />
             </Badge>
           ))}
+          {filters.colors?.map((colorSlug) => {
+            const color = colors.find((c) => c.slug === colorSlug);
+            if (!color) return null;
+            return (
+              <Badge
+                key={colorSlug}
+                variant="outline"
+                className="gap-1 pr-1 cursor-pointer hover:bg-destructive/10"
+                onClick={() => onToggleColor?.(colorSlug)}
+              >
+                <span
+                  className="w-3 h-3 rounded-full border border-gray-300"
+                  style={{ backgroundColor: color.hex_code || "#808080" }}
+                />
+                {color.name}
+                <X className="h-3 w-3" />
+              </Badge>
+            );
+          })}
           {filters.minPrice !== null && (
             <Badge
               variant="outline"
@@ -212,6 +237,15 @@ export function ProductFilters({
           })}
         </div>
       </div>
+
+      {/* Color Filter */}
+      {colors.length > 0 && onToggleColor && (
+        <ColorFilter
+          colors={colors}
+          selectedColors={filters.colors || []}
+          onToggleColor={onToggleColor}
+        />
+      )}
 
       {/* Price Range Filter - Requirement 3.3 */}
       <div className="space-y-3">

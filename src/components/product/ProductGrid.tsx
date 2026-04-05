@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Product } from "@/lib/types";
 import { ProductCard } from "./ProductCard";
+import type { ProductColorDot } from "./ColorDots";
 // Temporarily disabled due to Radix UI Dialog issue
 // import { QuickViewModal } from "./QuickViewModal";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,6 +17,7 @@ interface ProductGridProps {
   loading?: boolean;
   emptyMessage?: string;
   density?: GridDensity;
+  productColors?: Map<string, ProductColorDot[]>;
 }
 
 // Grid classes based on density
@@ -31,6 +33,7 @@ export function ProductGrid({
   loading = false,
   emptyMessage = "Tidak ada produk ditemukan",
   density = "comfortable",
+  productColors,
 }: ProductGridProps) {
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [quickViewOpen, setQuickViewOpen] = useState(false);
@@ -66,6 +69,7 @@ export function ProductGrid({
             key={product.id}
             product={product}
             density={density}
+            colors={productColors?.get(product.id)}
             onQuickView={handleQuickView}
           />
         ))}

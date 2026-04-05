@@ -12,6 +12,7 @@ export interface ProductFilters {
   category?: string          // category_id (UUID)
   categoryName?: string      // category name (for frontend filter)
   categoryNames?: string[]   // multiple category names
+  colorSlugs?: string[]      // color slugs for filtering
   minPrice?: number
   maxPrice?: number
   inStock?: boolean
@@ -30,6 +31,7 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Paginat
     category,
     categoryName,
     categoryNames,
+    colorSlugs,
     minPrice,
     maxPrice,
     inStock,
@@ -63,6 +65,39 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Paginat
     }
   }
 
+  // If filtering by color slugs, get product IDs that have those colors
+  let productIdsWithColors: string[] | null = null
+  if (colorSlugs && colorSlugs.length > 0) {
+    // First get color IDs from slugs
+    const { data: colorData } = await (supabase as any)
+      .from('colors')
+      .select('id')
+      .in('slug', colorSlugs)
+      .eq('is_active', true)
+    
+    if (colorData && colorData.length > 0) {
+      const colorIds = colorData.map((c: { id: string }) => c.id)
+      
+      // Get product IDs that have any of these colors (OR logic)
+      const { data: productColorData } = await (supabase as any)
+        .from('product_colors')
+        .select('product_id')
+        .in('color_id', colorIds)
+      
+      if (productColorData && productColorData.length > 0) {
+        // Get unique product IDs
+        const uniqueIds = new Set<string>(productColorData.map((pc: { product_id: string }) => pc.product_id))
+        productIdsWithColors = Array.from(uniqueIds)
+      } else {
+        // No products match these colors, return empty
+        return { data: [], total: 0, page, limit, totalPages: 0 }
+      }
+    } else {
+      // Color slugs don't exist, return empty
+      return { data: [], total: 0, page, limit, totalPages: 0 }
+    }
+  }
+
   let query = supabase
     .from('products')
     .select(`
@@ -72,6 +107,11 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Paginat
     `, { count: 'exact' })
     .eq('is_active', true)
     .eq('is_deleted', false)
+
+  // Apply color filter (product IDs)
+  if (productIdsWithColors !== null) {
+    query = query.in('id', productIdsWithColors)
+  }
 
   // Apply filters
   if (category) {

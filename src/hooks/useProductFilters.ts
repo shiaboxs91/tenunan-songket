@@ -9,6 +9,7 @@ import { FilterState, SortOption } from "@/lib/types";
  */
 export const DEFAULT_FILTER_STATE: FilterState = {
   categories: [],
+  colors: [],
   minPrice: null,
   maxPrice: null,
   inStockOnly: false,
@@ -25,6 +26,11 @@ export function parseFiltersFromURL(searchParams: URLSearchParams): FilterState 
     ? categoryParam.split(",").filter(Boolean) 
     : [];
 
+  const colorParam = searchParams.get("colors");
+  const colors = colorParam 
+    ? colorParam.split(",").filter(Boolean) 
+    : [];
+
   const minPriceParam = searchParams.get("minPrice");
   const maxPriceParam = searchParams.get("maxPrice");
   const sortParam = searchParams.get("sort") as SortOption | null;
@@ -32,6 +38,7 @@ export function parseFiltersFromURL(searchParams: URLSearchParams): FilterState 
 
   return {
     categories,
+    colors,
     minPrice: minPriceParam ? Number(minPriceParam) : null,
     maxPrice: maxPriceParam ? Number(maxPriceParam) : null,
     inStockOnly: inStockParam === "true",
@@ -52,6 +59,10 @@ export function filtersToURLParams(filters: FilterState): URLSearchParams {
 
   if (filters.categories.length > 0) {
     params.set("category", filters.categories.join(","));
+  }
+
+  if (filters.colors.length > 0) {
+    params.set("colors", filters.colors.join(","));
   }
 
   if (filters.minPrice !== null) {
@@ -101,6 +112,7 @@ export function useProductFilters() {
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (filters.categories.length > 0) count += filters.categories.length;
+    if (filters.colors.length > 0) count += filters.colors.length;
     if (filters.minPrice !== null) count++;
     if (filters.maxPrice !== null) count++;
     if (filters.inStockOnly) count++;
@@ -139,6 +151,19 @@ export function useProductFilters() {
           ? prev.categories.filter((c) => c !== category)
           : [...prev.categories, category];
         return { ...prev, categories };
+      });
+    },
+    [setFilters]
+  );
+
+  // Toggle color in filter
+  const toggleColor = useCallback(
+    (colorSlug: string) => {
+      setFilters((prev) => {
+        const colors = prev.colors.includes(colorSlug)
+          ? prev.colors.filter((c) => c !== colorSlug)
+          : [...prev.colors, colorSlug];
+        return { ...prev, colors };
       });
     },
     [setFilters]
@@ -190,6 +215,7 @@ export function useProductFilters() {
     setFilters,
     updateFilter,
     toggleCategory,
+    toggleColor,
     setSort,
     setPriceRange,
     toggleInStock,

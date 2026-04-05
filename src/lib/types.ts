@@ -67,6 +67,7 @@ export interface ProductsResponse {
 export interface ProductFilters {
   q?: string;
   category?: string;
+  colors?: string[];  // color slugs for filtering
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
@@ -98,6 +99,7 @@ export type SortOption =
 // Filter State for URL-based hook (useProductFilters)
 export interface FilterState {
   categories: string[];
+  colors: string[];  // color slugs for filtering
   minPrice: number | null;
   maxPrice: number | null;
   inStockOnly: boolean;

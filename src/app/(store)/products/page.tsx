@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Product, ProductsResponse, SortOption, PRODUCT_CATEGORIES } from "@/lib/types";
 import { useProductFilters } from "@/hooks/useProductFilters";
 import { ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react";
+import type { ColorOption } from "@/components/product/ColorFilter";
+import type { ProductColorDot } from "@/components/product/ColorDots";
 
 export default function ProductsPage() {
   const searchParams = useSearchParams();
@@ -32,12 +34,19 @@ export default function ProductsPage() {
     setFilters: setHookFilters,
     resetFilters: resetHookFilters,
     activeFilterCount,
+    toggleColor,
   } = useProductFilters();
 
   // Fetch categories with counts - Requirement 3.2
   const [categories, setCategories] = useState<(string | { name: string; slug: string; count: number })[]>(
     PRODUCT_CATEGORIES as unknown as string[]
   );
+
+  // Colors for filter
+  const [colors, setColors] = useState<ColorOption[]>([]);
+
+  // Colors per product (for display on cards)
+  const [productColors, setProductColors] = useState<Map<string, ProductColorDot[]>>(new Map());
 
   useEffect(() => {
     async function fetchCategories() {
@@ -55,6 +64,26 @@ export default function ProductsPage() {
     fetchCategories();
   }, []);
 
+  // Fetch colors
+  useEffect(() => {
+    async function fetchColors() {
+      try {
+        const { getColorsClient } = await import("@/lib/supabase/colors.client");
+        const colorsData = await getColorsClient();
+        setColors(colorsData.map((c) => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          hex_code: c.hex_code,
+        })));
+      } catch (error) {
+        console.error("Failed to fetch colors:", error);
+      }
+    }
+
+    fetchColors();
+  }, []);
+
   const page = useMemo(() => 
     searchParams.get("page") ? Number(searchParams.get("page")) : 1,
     [searchParams]
@@ -69,11 +98,11 @@ export default function ProductsPage() {
         if (hookFilters.q) params.set("q", hookFilters.q);
         // Support multiple categories (comma-separated)
         if (hookFilters.categories.length > 0) {
-          // If we have category objects, we might need to map them back to slugs or names depending on what filters.categories stores.
-          // Currently filters.categories stores names (e.g. "Si Pugut").
-          // The API expects slugs usually, but currently the frontend uses names. 
-          // Let's assume names are consistent.
           params.set("category", hookFilters.categories.join(","));
+        }
+        // Support multiple colors (comma-separated slugs)
+        if (hookFilters.colors.length > 0) {
+          params.set("colors", hookFilters.colors.join(","));
         }
         if (hookFilters.minPrice !== null) params.set("min", hookFilters.minPrice.toString());
         if (hookFilters.maxPrice !== null) params.set("max", hookFilters.maxPrice.toString());
@@ -97,6 +126,27 @@ export default function ProductsPage() {
 
     fetchProducts();
   }, [hookFilters, page]);
+
+  // Fetch product colors for display on cards
+  useEffect(() => {
+    if (products.length === 0) {
+      setProductColors(new Map());
+      return;
+    }
+
+    async function fetchProductColors() {
+      try {
+        const { getProductsColorsClient } = await import("@/lib/supabase/colors.client");
+        const ids = products.map((p) => p.id);
+        const colorsMap = await getProductsColorsClient(ids);
+        setProductColors(colorsMap);
+      } catch (error) {
+        console.error("Failed to fetch product colors:", error);
+      }
+    }
+
+    fetchProductColors();
+  }, [products]);
 
   // Handle sort change - Requirement 5.3
   const handleSortChange = useCallback(
@@ -139,6 +189,8 @@ export default function ProductsPage() {
               onFilterChange={setHookFilters}
               onReset={resetHookFilters}
               categories={categories}
+              colors={colors}
+              onToggleColor={toggleColor}
             />
           </div>
         </aside>
@@ -186,6 +238,7 @@ export default function ProductsPage() {
             products={products}
             loading={loading}
             density={gridDensity}
+            productColors={productColors}
             emptyMessage={
               hookFilters.q
                 ? `Tidak ada produk yang cocok dengan "${hookFilters.q}"`

@@ -18,6 +18,7 @@ import {
   Shield,
   LogOut,
   Menu,
+  Palette,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -37,6 +38,7 @@ const menuItems: MenuItem[] = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Produk', href: '/admin/products', icon: Package },
   { name: 'Kategori', href: '/admin/categories', icon: FolderTree },
+  { name: 'Warna', href: '/admin/colors', icon: Palette },
   { name: 'Pesanan', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Kupon', href: '/admin/coupons', icon: Tag },
   { name: 'Admin', href: '/admin/users/admins', icon: Shield },

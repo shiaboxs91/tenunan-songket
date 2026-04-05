@@ -31,12 +31,16 @@ export async function createProduct(productData: {
   is_active?: boolean
   meta_title?: string | null
   meta_description?: string | null
+  images?: ProductImageInput[]
 }): Promise<Product> {
   const supabase = createClient()
+  
+  // Separate images from product data
+  const { images, ...productFields } = productData
 
   const { data, error } = await supabase
     .from('products')
-    .insert([productData])
+    .insert([productFields])
     .select()
     .single()
 
@@ -44,24 +48,94 @@ export async function createProduct(productData: {
     throw new Error(`Failed to create product: ${error.message}`)
   }
 
+  // Insert images if provided
+  if (images && images.length > 0) {
+    const imageRecords = images.map((img, idx) => ({
+      product_id: data.id,
+      url: img.url,
+      is_primary: img.is_primary,
+      display_order: idx
+    }))
+
+    const { error: imgError } = await supabase
+      .from('product_images')
+      .insert(imageRecords)
+
+    if (imgError) {
+      console.error('Error inserting images:', imgError)
+    }
+  }
+
   return data as Product
+}
+
+export interface ProductImageInput {
+  url: string
+  is_primary: boolean
+  display_order: number
+}
+
+export interface ProductUpdateData {
+  title?: string
+  slug?: string
+  description?: string
+  price?: number
+  sale_price?: number | null
+  stock?: number
+  weight?: number
+  category_id?: string | null
+  is_active?: boolean
+  meta_title?: string | null
+  meta_description?: string | null
+  images?: ProductImageInput[]
 }
 
 export async function updateProduct(
   productId: string,
-  productData: Partial<Product>
+  productData: ProductUpdateData
 ): Promise<Product> {
   const supabase = createClient()
+  
+  // Separate images from product data
+  const { images, ...productFields } = productData
 
+  // Update product fields
   const { data, error } = await supabase
     .from('products')
-    .update(productData)
+    .update(productFields)
     .eq('id', productId)
     .select()
     .single()
 
   if (error) {
     throw new Error(`Failed to update product: ${error.message}`)
+  }
+
+  // Update images if provided
+  if (images !== undefined) {
+    // Delete existing images
+    await supabase
+      .from('product_images')
+      .delete()
+      .eq('product_id', productId)
+
+    // Insert new images
+    if (images.length > 0) {
+      const imageRecords = images.map((img, idx) => ({
+        product_id: productId,
+        url: img.url,
+        is_primary: img.is_primary,
+        display_order: idx
+      }))
+
+      const { error: imgError } = await supabase
+        .from('product_images')
+        .insert(imageRecords)
+
+      if (imgError) {
+        console.error('Error updating images:', imgError)
+      }
+    }
   }
 
   return data as Product

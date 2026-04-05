@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Upload, X, Trash2 } from 'lucide-react'
+import Image from 'next/image'
+import { ArrowLeft, Upload, X, Trash2, Loader2, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -30,6 +31,15 @@ import {
 import { toast } from 'sonner'
 import { createProduct, updateProduct, deleteProduct, type Product } from '@/lib/supabase/products-client'
 import { getCategories, type Category } from '@/lib/supabase/categories-client'
+import { uploadFile, generateFilePath, deleteFile } from '@/lib/supabase/storage'
+import { createClient } from '@/lib/supabase/client'
+
+interface ProductImage {
+  id?: string
+  url: string
+  is_primary: boolean
+  display_order: number
+}
 
 interface ProductFormProps {
   product?: Product
@@ -51,9 +61,19 @@ interface ProductFormData {
 
 export function ProductForm({ product }: ProductFormProps) {
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [images, setImages] = useState<ProductImage[]>(
+    product?.images?.map((img, idx) => ({
+      id: img.id,
+      url: img.url,
+      is_primary: img.is_primary ?? idx === 0,
+      display_order: img.display_order ?? idx
+    })) || []
+  )
   const [formData, setFormData] = useState<ProductFormData>({
     title: product?.title || '',
     slug: product?.slug || '',
@@ -72,13 +92,99 @@ export function ProductForm({ product }: ProductFormProps) {
     loadCategories()
   }, [])
 
-  const loadCategories = async () => {
+const loadCategories = async () => {
     try {
       const data = await getCategories()
       setCategories(data)
     } catch (error) {
       console.error('Error loading categories:', error)
     }
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setUploading(true)
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      toast.error('Anda harus login untuk upload gambar')
+      setUploading(false)
+      return
+    }
+
+    try {
+      const newImages: ProductImage[] = []
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        const filePath = generateFilePath(user.id, file.name, 'products')
+        
+        const result = await uploadFile({
+          bucket: 'products',
+          path: filePath,
+          file,
+          upsert: false
+        })
+
+        if (result.success && result.url) {
+          newImages.push({
+            url: result.url,
+            is_primary: images.length === 0 && i === 0,
+            display_order: images.length + i
+          })
+        } else {
+          toast.error(`Gagal upload ${file.name}: ${result.error}`)
+        }
+      }
+
+      if (newImages.length > 0) {
+        setImages(prev => [...prev, ...newImages])
+        toast.success(`${newImages.length} gambar berhasil diupload`)
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+      toast.error('Gagal upload gambar')
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
+  const handleRemoveImage = async (index: number) => {
+    const imageToRemove = images[index]
+    
+    // Try to delete from storage if it's a new upload (no id means not saved to DB yet)
+    if (!imageToRemove.id && imageToRemove.url.includes('supabase')) {
+      try {
+        const urlParts = imageToRemove.url.split('/products/')
+        if (urlParts[1]) {
+          await deleteFile('products', urlParts[1])
+        }
+      } catch (error) {
+        console.error('Error deleting file from storage:', error)
+      }
+    }
+
+    setImages(prev => {
+      const newImages = prev.filter((_, i) => i !== index)
+      // If removed image was primary, set first remaining as primary
+      if (imageToRemove.is_primary && newImages.length > 0) {
+        newImages[0].is_primary = true
+      }
+      return newImages.map((img, i) => ({ ...img, display_order: i }))
+    })
+  }
+
+  const handleSetPrimary = (index: number) => {
+    setImages(prev => prev.map((img, i) => ({
+      ...img,
+      is_primary: i === index
+    })))
   }
 
   const generateSlug = (title: string) => {
@@ -98,7 +204,7 @@ export function ProductForm({ product }: ProductFormProps) {
     }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
@@ -114,7 +220,12 @@ export function ProductForm({ product }: ProductFormProps) {
         category_id: formData.category_id || null,
         is_active: formData.is_active,
         meta_title: formData.meta_title || null,
-        meta_description: formData.meta_description || null
+        meta_description: formData.meta_description || null,
+        images: images.map((img, idx) => ({
+          url: img.url,
+          is_primary: img.is_primary,
+          display_order: idx
+        }))
       }
 
       if (product) {
@@ -337,40 +448,82 @@ export function ProductForm({ product }: ProductFormProps) {
             </CardContent>
           </Card>
 
-          <Card>
+<Card>
             <CardHeader>
               <CardTitle>Gambar Produk</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-                <Upload className="mx-auto h-12 w-12 text-muted-foreground/50" />
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Upload gambar produk
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  PNG, JPG hingga 10MB
-                </p>
-                <Button type="button" variant="outline" className="mt-4">
-                  Pilih File
-                </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                multiple
+                className="hidden"
+                onChange={handleImageUpload}
+              />
+              <div 
+                className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="mx-auto h-12 w-12 text-primary animate-spin" />
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Mengupload gambar...
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Klik untuk upload gambar
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      PNG, JPG, WEBP hingga 5MB
+                    </p>
+                  </>
+                )}
               </div>
               
-              {product?.images && product.images.length > 0 && (
+              {images.length > 0 && (
                 <div className="mt-4 space-y-2">
-                  <Label>Gambar Saat Ini:</Label>
+                  <Label>Gambar ({images.length}):</Label>
                   <div className="grid grid-cols-2 gap-2">
-                    {product.images.map((image, index) => (
-                      <div key={index} className="relative aspect-square bg-muted rounded-lg overflow-hidden">
-                        <img
+                    {images.map((image, index) => (
+                      <div key={index} className="relative aspect-square bg-muted rounded-lg overflow-hidden group">
+                        <Image
                           src={image.url}
                           alt={`Product image ${index + 1}`}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="150px"
                         />
                         {image.is_primary && (
-                          <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-xs px-1 rounded">
+                          <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
+                            <Star className="h-3 w-3" />
                             Utama
                           </div>
                         )}
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                          {!image.is_primary && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => handleSetPrimary(index)}
+                            >
+                              <Star className="h-3 w-3" />
+                            </Button>
+                          )}
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleRemoveImage(index)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>

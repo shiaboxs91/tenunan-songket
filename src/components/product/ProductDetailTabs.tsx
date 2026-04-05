@@ -26,96 +26,84 @@ export function ProductDetailTabs({
   details,
 }: ProductDetailTabsProps) {
   return (
-    <Tabs.Root defaultValue="description" className="mt-12 mb-4">
-      {/* Tab List */}
-      <Tabs.List className="flex border-b border-border overflow-x-auto scrollbar-none -mb-px sticky top-[61px] bg-background z-10">
-        {/* Deskripsi */}
-        <Tabs.Trigger
+    <div>
+      {/* ===== TABS: Deskripsi + Ulasan ===== */}
+      <Tabs.Root defaultValue="description" className="mt-12 mb-4">
+        {/* Tab List */}
+        <Tabs.List className="flex border-b border-border overflow-x-auto scrollbar-none -mb-px sticky top-[61px] bg-background z-10">
+          {/* Deskripsi */}
+          <Tabs.Trigger
+            value="description"
+            className="
+              flex items-center gap-2 px-4 sm:px-6 py-3 text-sm font-medium whitespace-nowrap
+              text-muted-foreground border-b-2 border-transparent
+              hover:text-foreground hover:border-muted-foreground/40
+              data-[state=active]:text-primary data-[state=active]:border-primary
+              transition-colors duration-200 focus-visible:outline-none
+            "
+          >
+            <FileText className="h-4 w-4 flex-shrink-0" />
+            <span>Deskripsi</span>
+          </Tabs.Trigger>
+
+          {/* Ulasan */}
+          <Tabs.Trigger
+            value="reviews"
+            className="
+              flex items-center gap-2 px-4 sm:px-6 py-3 text-sm font-medium whitespace-nowrap
+              text-muted-foreground border-b-2 border-transparent
+              hover:text-foreground hover:border-muted-foreground/40
+              data-[state=active]:text-primary data-[state=active]:border-primary
+              transition-colors duration-200 focus-visible:outline-none
+            "
+          >
+            <Star className="h-4 w-4 flex-shrink-0" />
+            <span>Ulasan</span>
+            {totalReviews > 0 && (
+              <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                {totalReviews}
+              </span>
+            )}
+          </Tabs.Trigger>
+        </Tabs.List>
+
+        {/* Tab Content: Deskripsi */}
+        <Tabs.Content
           value="description"
-          className="
-            flex items-center gap-2 px-4 sm:px-6 py-3 text-sm font-medium whitespace-nowrap
-            text-muted-foreground border-b-2 border-transparent
-            hover:text-foreground hover:border-muted-foreground/40
-            data-[state=active]:text-primary data-[state=active]:border-primary
-            transition-colors duration-200 focus-visible:outline-none
-          "
+          className="pt-6 pb-4 focus-visible:outline-none"
         >
-          <FileText className="h-4 w-4 flex-shrink-0" />
-          <span>Deskripsi</span>
-        </Tabs.Trigger>
-
-        {/* Ulasan */}
-        <Tabs.Trigger
-          value="reviews"
-          className="
-            flex items-center gap-2 px-4 sm:px-6 py-3 text-sm font-medium whitespace-nowrap
-            text-muted-foreground border-b-2 border-transparent
-            hover:text-foreground hover:border-muted-foreground/40
-            data-[state=active]:text-primary data-[state=active]:border-primary
-            transition-colors duration-200 focus-visible:outline-none
-          "
-        >
-          <Star className="h-4 w-4 flex-shrink-0" />
-          <span>Ulasan</span>
-          {totalReviews > 0 && (
-            <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold">
-              {totalReviews}
-            </span>
-          )}
-        </Tabs.Trigger>
-
-        {/* Detail Produk */}
-        <Tabs.Trigger
-          value="details"
-          className="
-            flex items-center gap-2 px-4 sm:px-6 py-3 text-sm font-medium whitespace-nowrap
-            text-muted-foreground border-b-2 border-transparent
-            hover:text-foreground hover:border-muted-foreground/40
-            data-[state=active]:text-primary data-[state=active]:border-primary
-            transition-colors duration-200 focus-visible:outline-none
-          "
-        >
-          <Package className="h-4 w-4 flex-shrink-0" />
-          <span className="hidden sm:inline">Detail Produk</span>
-          <span className="sm:hidden">Detail</span>
-        </Tabs.Trigger>
-      </Tabs.List>
-
-      {/* Tab Content: Deskripsi */}
-      <Tabs.Content
-        value="description"
-        className="pt-6 pb-4 focus-visible:outline-none"
-      >
-        <div className="prose prose-sm max-w-none">
-          <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
-            {description || "Tidak ada deskripsi untuk produk ini."}
-          </p>
-          {category && (
-            <p className="text-muted-foreground mt-4">
-              <span className="font-semibold text-foreground">Kategori:</span>{" "}
-              {category}
+          <div className="prose prose-sm max-w-none">
+            <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
+              {description || "Tidak ada deskripsi untuk produk ini."}
             </p>
-          )}
+            {category && (
+              <p className="text-muted-foreground mt-4">
+                <span className="font-semibold text-foreground">Kategori:</span>{" "}
+                {category}
+              </p>
+            )}
+          </div>
+        </Tabs.Content>
+
+        {/* Tab Content: Ulasan */}
+        <Tabs.Content
+          value="reviews"
+          className="pt-6 pb-4 focus-visible:outline-none"
+        >
+          <ProductReviews
+            productId={productId}
+            productRating={productRating}
+            totalReviews={totalReviews}
+          />
+        </Tabs.Content>
+      </Tabs.Root>
+
+      {/* ===== DETAIL PRODUK (di luar tab, section tersendiri) ===== */}
+      <div className="mt-10 pt-8 border-t border-border">
+        <div className="flex items-center gap-2 mb-6">
+          <Package className="h-5 w-5 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">Detail Produk</h2>
         </div>
-      </Tabs.Content>
-
-      {/* Tab Content: Ulasan */}
-      <Tabs.Content
-        value="reviews"
-        className="pt-6 pb-4 focus-visible:outline-none"
-      >
-        <ProductReviews
-          productId={productId}
-          productRating={productRating}
-          totalReviews={totalReviews}
-        />
-      </Tabs.Content>
-
-      {/* Tab Content: Detail Produk */}
-      <Tabs.Content
-        value="details"
-        className="pt-6 pb-4 focus-visible:outline-none"
-      >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-3">
             <div className="flex justify-between py-2 border-b border-border/50">
@@ -156,7 +144,7 @@ export function ProductDetailTabs({
             </div>
           </div>
         </div>
-      </Tabs.Content>
-    </Tabs.Root>
+      </div>
+    </div>
   );
 }

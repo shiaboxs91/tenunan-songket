@@ -789,6 +789,54 @@ export type Database = {
         }
         Relationships: []
       }
+      colors: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          hex_code: string | null
+          display_order: number | null
+          is_active: boolean | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          hex_code?: string | null
+          display_order?: number | null
+          is_active?: boolean | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          hex_code?: string | null
+          display_order?: number | null
+          is_active?: boolean | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      product_colors: {
+        Row: {
+          product_id: string
+          color_id: string
+          is_primary: boolean | null
+        }
+        Insert: {
+          product_id: string
+          color_id: string
+          is_primary?: boolean | null
+        }
+        Update: {
+          product_id?: string
+          color_id?: string
+          is_primary?: boolean | null
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           id: string
@@ -1288,4 +1336,47 @@ export interface CustomerWithStats {
   created_at: string | null
   total_orders: number
   total_spent: number
+}
+
+// ============================================
+// Color Types
+// ============================================
+
+export interface Color {
+  id: string
+  name: string
+  slug: string
+  hex_code: string | null
+  display_order: number | null
+  is_active: boolean | null
+  created_at: string | null
+}
+
+export interface ColorCreate {
+  name: string
+  slug: string
+  hex_code?: string | null
+  display_order?: number | null
+  is_active?: boolean | null
+}
+
+export interface ColorUpdate {
+  name?: string
+  slug?: string
+  hex_code?: string | null
+  display_order?: number | null
+  is_active?: boolean | null
+}
+
+export interface ProductColor {
+  product_id: string
+  color_id: string
+  is_primary: boolean | null
+  color?: Color
+}
+
+export interface ProductWithColors {
+  id: string
+  title: string
+  colors: (ProductColor & { color: Color })[]
 }

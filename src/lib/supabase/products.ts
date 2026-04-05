@@ -25,7 +25,7 @@ export interface ProductFilters {
 
 // Server-side functions (for server components)
 export async function getProducts(filters: ProductFilters = {}): Promise<PaginatedResponse<Product>> {
-  const supabase = await createClient()
+  const supabase = createAnonClient()
   
   const {
     category,

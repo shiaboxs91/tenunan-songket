@@ -57,7 +57,7 @@ export function StickyProductCTA({ product }: StickyProductCTAProps) {
   return (
     <div
       className={cn(
-        "fixed bottom-20 left-0 right-0 z-40 md:hidden",
+        "fixed bottom-0 left-0 right-0 z-40 md:hidden",
         "transition-all duration-300 ease-out",
         isVisible 
           ? "translate-y-0 opacity-100" 

@@ -76,7 +76,8 @@ export function ProductDetailTabs({
           "
         >
           <Package className="h-4 w-4 flex-shrink-0" />
-          <span>Detail Produk</span>
+          <span className="hidden sm:inline">Detail Produk</span>
+          <span className="sm:hidden">Detail</span>
         </Tabs.Trigger>
       </Tabs.List>
 

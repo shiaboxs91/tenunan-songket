@@ -30,10 +30,7 @@ export async function getProductReviews(
 
   const { data, error, count } = await supabase
     .from('reviews')
-    .select(`
-      *,
-      profile:profiles(full_name, avatar_url)
-    `, { count: 'exact' })
+    .select('*', { count: 'exact' })
     .eq('product_id', productId)
     .eq('is_published', true)
     .order('created_at', { ascending: false })

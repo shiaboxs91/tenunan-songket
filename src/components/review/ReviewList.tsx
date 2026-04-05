@@ -116,7 +116,7 @@ export function ReviewList({ productId, initialReviews }: ReviewListProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">
-                    {review.profile?.full_name || "Pengguna"}
+                    {review.profile?.full_name || "Pembeli Terverifikasi"}
                   </p>
                   <div className="flex items-center gap-2 mt-1">
                     <StarRating rating={review.rating} size="sm" />

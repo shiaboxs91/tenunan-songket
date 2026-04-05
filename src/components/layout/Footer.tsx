@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronDown, Mail } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { getClientCurrentVersion } from "@/lib/supabase/version-client";
 
 // Social icons as simple SVG components (lucide deprecated these)
 const InstagramIcon = ({ className }: { className?: string }) => (
@@ -78,6 +79,11 @@ export function Footer() {
   const t = useTranslations("footer");
   const tCommon = useTranslations("common");
   const tNav = useTranslations("nav");
+  const [appVersion, setAppVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    getClientCurrentVersion().then(setAppVersion);
+  }, []);
 
   const footerLinks = {
     shop: [
@@ -275,7 +281,7 @@ export function Footer() {
               © {new Date().getFullYear()} TenunanSongket. {t("copyright")}
             </p>
             <p className="text-[10px] md:text-xs text-slate-400">
-              v1.2.0
+              {appVersion ? `v${appVersion}` : ''}
             </p>
           </div>
         </div>

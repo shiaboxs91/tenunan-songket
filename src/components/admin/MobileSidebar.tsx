@@ -130,7 +130,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
           <div className="p-4 border-t border-amber-700/50">
             <div className="mb-3 px-3">
               <p className="text-xs text-amber-400">Versi Aplikasi</p>
-              <p className="text-sm text-amber-200 font-medium">v1.0.0</p>
+              <p className="text-sm text-amber-200 font-medium">v{process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0"}</p>
             </div>
             
             <button

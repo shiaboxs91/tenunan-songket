@@ -1,9 +1,13 @@
 import createNextIntlPlugin from 'next-intl/plugin';
+import packageJson from './package.json' assert { type: 'json' };
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    NEXT_PUBLIC_APP_VERSION: packageJson.version,
+  },
   // Enable React strict mode for better development
   reactStrictMode: true,
 

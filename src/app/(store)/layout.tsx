@@ -34,7 +34,7 @@ export default function StoreLayout({
           <MobileBottomNav />
           <WhatsAppButton phoneNumber="6281234567890" message="Halo, saya tertarik dengan produk songket di website Anda" />
           <InstallPrompt />
-          <VersionChecker clientVersion="1.0.0" />
+          <VersionChecker clientVersion={process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0"} />
         </div>
       </ToastProvider>
     </CartProvider>

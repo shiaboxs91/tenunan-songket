@@ -29,11 +29,11 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import Image from 'next/image'
 import {
   Sheet,
   SheetContent,
   SheetHeader,
-  SheetTitle,
 } from "@/components/ui/sheet"
 
 interface MenuItem {
@@ -175,14 +175,16 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
         <div className="flex flex-col h-full w-full bg-gradient-to-b from-amber-900 via-amber-800 to-amber-900">
 
           {/* Header */}
-          <SheetHeader className="p-4 border-b border-amber-700/50 text-left">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">TS</span>
-              </div>
-              <div>
-                <SheetTitle className="text-lg font-bold text-white">Tenunan Songket</SheetTitle>
-                <p className="text-xs text-amber-300">Panel Admin</p>
+          <SheetHeader className="p-4 border-b border-amber-700/50">
+            <div className="flex items-center justify-center py-2">
+              <div className="relative w-40 h-10">
+                <Image
+                  src="https://tenunansongket.com/wp-content/uploads/2020/08/ts-4.png"
+                  alt="TenunanSongket Admin Logo"
+                  fill
+                  className="object-contain filter brightness-0 invert"
+                  sizes="160px"
+                />
               </div>
             </div>
           </SheetHeader>
@@ -295,11 +297,16 @@ export function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
         <Menu className="h-6 w-6" />
       </button>
 
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center">
-          <span className="text-white font-bold text-sm">TS</span>
+      <div className="flex flex-1 justify-center items-center">
+        <div className="relative w-32 h-8">
+          <Image
+            src="https://tenunansongket.com/wp-content/uploads/2020/08/ts-4.png"
+            alt="TenunanSongket Admin Logo"
+            fill
+            className="object-contain filter brightness-0 invert"
+            sizes="128px"
+          />
         </div>
-        <span className="font-semibold">Admin Panel</span>
       </div>
 
       <div className="w-10" aria-hidden="true" />

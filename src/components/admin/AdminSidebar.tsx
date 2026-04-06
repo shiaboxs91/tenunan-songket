@@ -25,8 +25,9 @@ import {
   Palette,
   MessageSquare
 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
 
 interface MenuItem {
@@ -151,13 +152,15 @@ export function AdminSidebar() {
     <div className="w-72 bg-slate-900 min-h-screen flex flex-col border-r border-slate-800">
       {/* Logo Header */}
       <div className="p-6 border-b border-slate-800">
-        <Link href="/admin" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
-            <Sparkles className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-white tracking-tight">Tenunan</h1>
-            <p className="text-xs text-slate-400 font-medium">Admin Panel</p>
+        <Link href="/admin" className="flex items-center justify-center">
+          <div className="relative w-48 h-12">
+            <Image
+              src="https://tenunansongket.com/wp-content/uploads/2020/08/ts-4.png"
+              alt="TenunanSongket Admin Logo"
+              fill
+              className="object-contain"
+              sizes="192px"
+            />
           </div>
         </Link>
       </div>

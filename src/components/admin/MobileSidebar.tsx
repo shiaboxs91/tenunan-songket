@@ -20,6 +20,9 @@ import {
   Menu,
   Palette,
   MessageSquare,
+  FileText,
+  Store,
+  Images,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -37,18 +40,22 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { name: 'Produk', href: '/admin/products', icon: Package },
+  { name: 'Semua Produk', href: '/admin/products', icon: Package },
   { name: 'Kategori', href: '/admin/categories', icon: FolderTree },
   { name: 'Warna', href: '/admin/colors', icon: Palette },
+  { name: 'Semua Artikel', href: '/admin/blog', icon: FileText },
+  { name: 'Kategori Blog', href: '/admin/blog/categories', icon: FolderTree },
   { name: 'Pesanan', href: '/admin/orders', icon: ShoppingCart },
-  { name: 'Kupon', href: '/admin/coupons', icon: Tag },
+  { name: 'Kupon & Promo', href: '/admin/coupons', icon: Tag },
   { name: 'Ulasan', href: '/admin/reviews', icon: MessageSquare },
-  { name: 'Admin', href: '/admin/users/admins', icon: Shield },
   { name: 'Pelanggan', href: '/admin/users', icon: Users },
-  { name: 'Ekspedisi', href: '/admin/settings/shipping', icon: Truck },
+  { name: 'Administrator', href: '/admin/users/admins', icon: Shield },
+  { name: 'Facebook Shop', href: '/admin/facebook-shop', icon: Store },
+  { name: 'Pengaturan Umum', href: '/admin/settings', icon: Settings },
+  { name: 'Pengiriman', href: '/admin/settings/shipping', icon: Truck },
   { name: 'Pembayaran', href: '/admin/settings/payments', icon: CreditCard },
-  { name: 'Situs', href: '/admin/settings', icon: Settings },
-  { name: 'Versi', href: '/admin/settings/version', icon: GitBranch }
+  { name: 'Hero Slider', href: '/admin/settings/hero', icon: Images },
+  { name: 'Versi & Info', href: '/admin/settings/version', icon: GitBranch }
 ]
 
 interface MobileSidebarProps {

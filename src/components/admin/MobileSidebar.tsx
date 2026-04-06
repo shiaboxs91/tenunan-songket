@@ -4,12 +4,12 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation'
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  Users, 
-  Tag, 
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Users,
+  Tag,
   FolderTree,
   Truck,
   CreditCard,
@@ -19,6 +19,7 @@ import {
   LogOut,
   Menu,
   Palette,
+  MessageSquare,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -41,6 +42,7 @@ const menuItems: MenuItem[] = [
   { name: 'Warna', href: '/admin/colors', icon: Palette },
   { name: 'Pesanan', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Kupon', href: '/admin/coupons', icon: Tag },
+  { name: 'Ulasan', href: '/admin/reviews', icon: MessageSquare },
   { name: 'Admin', href: '/admin/users/admins', icon: Shield },
   { name: 'Pelanggan', href: '/admin/users', icon: Users },
   { name: 'Ekspedisi', href: '/admin/settings/shipping', icon: Truck },
@@ -82,10 +84,10 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <SheetContent side="left" className="w-72 p-0 border-r-0 bg-transparent shadow-none border-none">
-        
+
         {/* Sidebar Container with Gradient */}
         <div className="flex flex-col h-full w-full bg-gradient-to-b from-amber-900 via-amber-800 to-amber-900">
-          
+
           {/* Header */}
           <SheetHeader className="p-4 border-b border-amber-700/50 text-left">
             <div className="flex items-center gap-3">
@@ -112,8 +114,8 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
                     className={`
                       flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium
                       transition-all duration-200
-                      ${active 
-                        ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30' 
+                      ${active
+                        ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
                         : 'text-amber-100 hover:bg-amber-700/50 hover:text-white'
                       }
                     `}
@@ -132,7 +134,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
               <p className="text-xs text-amber-400">Versi Aplikasi</p>
               <p className="text-sm text-amber-200 font-medium">v{process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0"}</p>
             </div>
-            
+
             <button
               type="button"
               onClick={handleSignOut}
@@ -161,14 +163,14 @@ export function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
       >
         <Menu className="h-6 w-6" />
       </button>
-      
+
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center">
           <span className="text-white font-bold text-sm">TS</span>
         </div>
         <span className="font-semibold">Admin Panel</span>
       </div>
-      
+
       <div className="w-10" aria-hidden="true" />
     </div>
   )

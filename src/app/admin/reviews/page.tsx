@@ -187,7 +187,7 @@ export default function AdminReviewsPage() {
                     <div className="text-sm">
                       <span className="text-muted-foreground">Oleh: </span>
                       <span className="font-medium">
-                        {review.profile?.full_name || 'Anonim'}
+                        {(review as any).profiles?.full_name || review.profile?.full_name || 'Anonim'}
                       </span>
                     </div>
 

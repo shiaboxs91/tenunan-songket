@@ -25,16 +25,7 @@ interface BlogPostPageProps {
   params: Promise<{ slug: string }>
 }
 
-export async function generateStaticParams() {
-  try {
-    const posts = await getAllPublishedPostSlugs()
-    return posts.map((post) => ({
-      slug: post.slug,
-    }))
-  } catch {
-    return []
-  }
-}
+export const revalidate = 0 // Disable static generation (make it fully dynamic SSR)
 
 export async function generateMetadata({
   params,

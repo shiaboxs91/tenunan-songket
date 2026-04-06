@@ -351,7 +351,7 @@ export async function getAllReviews(
     .from('reviews')
     .select(`
       *,
-      profiles(full_name, avatar_url),
+      profile:profiles!reviews_profile_fkey(full_name, avatar_url),
       product:products(id, title, slug)
     `, { count: 'exact' })
     .order('created_at', { ascending: false })

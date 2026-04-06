@@ -30,6 +30,7 @@ export function Header() {
   const navigation = [
     { name: t("common.home"), href: "/", icon: Home },
     { name: t("common.products"), href: "/products", icon: Grid3X3 },
+    { name: "Blog & Panduan", href: "/blog", icon: ClipboardList },
     { name: t("common.about"), href: "/tentang-kami", icon: Info },
     { name: t("common.howToOrder"), href: "/cara-order", icon: ClipboardList },
     { name: t("common.faq"), href: "/faq", icon: HelpCircle },

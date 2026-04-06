@@ -95,6 +95,7 @@ export function Footer() {
     ],
     info: [
       { nameKey: "howToOrder", name: "", href: "/cara-order" },
+      { nameKey: "", name: "Panduan & Blog", href: "/blog" },
       { nameKey: "about", name: "", href: "/tentang-kami" },
       { nameKey: "faq", name: "", href: "/faq" },
     ],

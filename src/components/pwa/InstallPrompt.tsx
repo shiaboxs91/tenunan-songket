@@ -29,8 +29,8 @@ export function InstallPrompt() {
     const dismissed = localStorage.getItem("pwa-install-dismissed");
     if (dismissed) {
       const dismissedTime = parseInt(dismissed);
-      // Show again after 3 days
-      if (Date.now() - dismissedTime < 3 * 24 * 60 * 60 * 1000) {
+      // Show again after 2 days (48 hours)
+      if (Date.now() - dismissedTime < 2 * 24 * 60 * 60 * 1000) {
         return;
       }
     }
@@ -94,11 +94,11 @@ export function InstallPrompt() {
             {/* App Icon */}
             <div className="w-20 h-20 mx-auto mb-3 rounded-2xl bg-white shadow-lg flex items-center justify-center overflow-hidden">
               <Image
-                src="/icon.svg"
+                src="https://tenunansongket.com/wp-content/uploads/2020/08/ts-4.png"
                 alt="Tenunan Songket"
-                width={60}
-                height={60}
-                className="object-contain"
+                width={70}
+                height={70}
+                className="object-contain p-1"
               />
             </div>
             

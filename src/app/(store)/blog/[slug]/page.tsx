@@ -44,14 +44,19 @@ export async function generateMetadata({
 
     const title = post.meta_title || `${post.title} - Blog Tenunan Songket`
     const description =
-      post.meta_description || post.excerpt || post.content.slice(0, 155)
+      post.meta_description || post.excerpt || post.content.replace(/<[^>]*>?/gm, '').slice(0, 155) + '...'
     const url = `${SITE_URL}/blog/${post.slug}`
     const image = post.og_image_url || post.featured_image_url || `${SITE_URL}/images/default-blog.jpg`
+    
+    // Tembak keywords dari database + default high-value SEO keywords
+    const postTags = post.tags?.map((t) => t.name) || []
+    const defaultKeywords = ['tenunan songket', 'kain tenunan songket', 'tenunan berkualiti', 'tenun sambas', 'tenun malaysia', 'baju melayu', 'busana tradisional']
+    const keywords = [...new Set([...postTags, ...defaultKeywords])].join(', ')
 
     return {
       title,
       description,
-      keywords: post.tags?.map((t) => t.name).join(', '),
+      keywords,
       authors: post.author ? [{ name: post.author.full_name || 'Tenunan Songket' }] : undefined,
       openGraph: {
         title,
@@ -60,16 +65,17 @@ export async function generateMetadata({
         type: 'article',
         siteName: 'Tenunan Songket',
         locale: 'ms_MY',
+        alternateLocale: ['id_ID', 'en_US'],
         publishedTime: post.published_at || undefined,
         modifiedTime: post.updated_at,
         section: post.category?.name,
-        tags: post.tags?.map((t) => t.name),
+        tags: postTags,
         images: [
           {
             url: image,
             width: 1200,
             height: 630,
-            alt: post.title,
+            alt: title,
           },
         ],
       },
@@ -312,7 +318,18 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
               {/* Article Content */}
               <div
-                className="prose prose-stone max-w-none dark:prose-invert prose-headings:scroll-mt-24 prose-headings:font-bold prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-amber-600 prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-pre:bg-stone-900"
+                className="prose prose-stone prose-lg md:prose-xl max-w-none dark:prose-invert 
+                           prose-headings:scroll-mt-24 prose-headings:font-bold prose-headings:tracking-tight 
+                           prose-h2:text-2xl md:prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6 
+                           prose-h3:text-xl md:prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-4 
+                           prose-p:leading-relaxed prose-p:mb-6 prose-p:text-stone-700 dark:prose-p:text-stone-300
+                           prose-a:text-amber-600 prose-a:font-semibold prose-a:no-underline hover:prose-a:underline hover:prose-a:text-amber-700
+                           prose-img:rounded-2xl prose-img:shadow-lg prose-img:my-10 prose-img:w-full prose-img:mx-auto prose-img:border prose-img:border-stone-100 dark:prose-img:border-stone-800
+                           prose-li:my-2 prose-ul:my-6 prose-ol:my-6 prose-li:text-stone-700 dark:prose-li:text-stone-300
+                           prose-strong:text-stone-900 dark:prose-strong:text-stone-100 prose-strong:font-bold
+                           prose-pre:bg-stone-900 prose-pre:rounded-xl prose-pre:shadow-md
+                           prose-blockquote:border-l-4 prose-blockquote:border-amber-500 prose-blockquote:bg-amber-50 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-lg prose-blockquote:font-medium prose-blockquote:text-stone-800 prose-blockquote:not-italic
+                           marker:text-amber-500"
                 dangerouslySetInnerHTML={{ __html: post.content }}
               />
 

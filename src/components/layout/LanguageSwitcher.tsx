@@ -63,7 +63,7 @@ export function LanguageSwitcher({ currentLocale, variant = "desktop" }: Languag
         setIsOpen(false);
     }
     // Refresh the page to apply new locale
-    router.refresh();
+    window.location.reload();
   };
 
   const getFlag = (locale: Locale, className: string = "w-6 h-6 rounded-sm shadow-sm object-cover") => {

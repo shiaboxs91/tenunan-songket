@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, use } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -12,8 +12,7 @@ import {
   X, 
   Plus,
   Search,
-  Loader2,
-  Trash2
+  Loader2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,6 +21,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
   SelectContent,
@@ -35,19 +35,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { BlogEditor } from '@/components/admin/blog/BlogEditor'
 import { compressImage } from '@/lib/image-compression'
-import type { BlogCategory, BlogTag, BlogPost } from '@/lib/supabase/blog'
+import type { BlogCategory, BlogTag } from '@/lib/supabase/blog'
 
 interface Product {
   id: string
@@ -57,16 +47,11 @@ interface Product {
   image_url?: string
 }
 
-interface EditBlogPostPageProps {
-  params: Promise<{ id: string }>
-}
-
-export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
-  const { id } = use(params)
+export default function EditBlogPostPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
+  const [postId, setPostId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [categories, setCategories] = useState<BlogCategory[]>([])
   const [tags, setTags] = useState<BlogTag[]>([])
   const [products, setProducts] = useState<Product[]>([])
@@ -76,6 +61,7 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
   // Form state
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false)
   const [excerpt, setExcerpt] = useState('')
   const [content, setContent] = useState('')
   const [featuredImage, setFeaturedImage] = useState('')
@@ -86,45 +72,55 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
   const [metaDescription, setMetaDescription] = useState('')
   const [canonicalUrl, setCanonicalUrl] = useState('')
   const [isFeatured, setIsFeatured] = useState(false)
-  const [status, setStatus] = useState<'draft' | 'published' | 'archived'>('draft')
+  const [status, setStatus] = useState<'draft' | 'published'>('draft')
 
   useEffect(() => {
+    async function loadData() {
+      const resolvedParams = await params
+      setPostId(resolvedParams.id)
+      
+      await loadFormData()
+      await loadPost(resolvedParams.id)
+      setLoading(false)
+    }
     loadData()
-  }, [id])
+  }, [params])
 
-  const loadData = async () => {
-    setLoading(true)
+  const loadPost = async (id: string) => {
     try {
-      const [postRes, categoriesRes, tagsRes, productsRes] = await Promise.all([
-        fetch(`/api/admin/blog/${id}`),
+      const res = await fetch(`/api/admin/blog/${id}`)
+      if (!res.ok) throw new Error('Failed to load post')
+      
+      const post = await res.json()
+      setTitle(post.title || '')
+      setSlug(post.slug || '')
+      setSlugManuallyEdited(true)
+      setExcerpt(post.excerpt || '')
+      setContent(post.content || '')
+      setFeaturedImage(post.featured_image_url || '')
+      setCategoryId(post.category_id || '')
+      setMetaTitle(post.meta_title || '')
+      setMetaDesc(post.meta_description || '')
+      setCanonicalUrl(post.canonical_url || '')
+      setOgImage(post.og_image_url || '')
+      setReadingTime(post.reading_time_minutes?.toString() || '')
+      setIsFeatured(post.is_featured || false)
+      setAllowComments(post.allow_comments || false)
+      
+      // Note: tags and related products loading are omitted for MVP edit implementation
+    } catch (error) {
+      console.error('Error loading post:', error)
+      alert('Gagal memuat data artikel')
+    }
+  }
+
+  const loadFormData = async () => {
+    try {
+      const [categoriesRes, tagsRes, productsRes] = await Promise.all([
         fetch('/api/admin/blog/categories'),
         fetch('/api/admin/blog/tags'),
         fetch('/api/admin/products?limit=100')
       ])
-
-      if (postRes.ok) {
-        const post = await postRes.json()
-        setTitle(post.title || '')
-        setSlug(post.slug || '')
-        setExcerpt(post.excerpt || '')
-        setContent(post.content || '')
-        setFeaturedImage(post.featured_image_url || '')
-        setCategoryId(post.category_id || '')
-        setSelectedTags(post.tag_ids || [])
-        setMetaTitle(post.meta_title || '')
-        setMetaDescription(post.meta_description || '')
-        setCanonicalUrl(post.canonical_url || '')
-        setIsFeatured(post.is_featured || false)
-        setStatus(post.status || 'draft')
-        
-        // Load related products
-        if (post.product_ids?.length) {
-          const productsData = await fetch('/api/admin/products?limit=100').then(r => r.json())
-          const relatedProducts = (productsData.products || productsData || [])
-            .filter((p: Product) => post.product_ids.includes(p.id))
-          setSelectedProducts(relatedProducts)
-        }
-      }
 
       if (categoriesRes.ok) {
         const data = await categoriesRes.json()
@@ -141,9 +137,7 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
         setProducts(data.products || data || [])
       }
     } catch (error) {
-      console.error('Error loading data:', error)
-    } finally {
-      setLoading(false)
+      console.error('Error loading form data:', error)
     }
   }
 
@@ -155,6 +149,18 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
       .replace(/-+/g, '-')
       .trim()
   }, [])
+
+  const handleTitleChange = (value: string) => {
+    setTitle(value)
+    if (!slugManuallyEdited) {
+      setSlug(generateSlug(value))
+    }
+  }
+
+  const handleSlugChange = (value: string) => {
+    setSlugManuallyEdited(true)
+    setSlug(generateSlug(value))
+  }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const originalFile = e.target.files?.[0]
@@ -199,7 +205,7 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
     setSelectedProducts(prev => prev.filter(p => p.id !== productId))
   }
 
-  const handleSave = async (newStatus?: 'draft' | 'published' | 'archived') => {
+  const handleSave = async (publishStatus: 'draft' | 'published') => {
     if (!title.trim()) {
       alert('Judul artikel harus diisi')
       return
@@ -208,29 +214,41 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
     setSaving(true)
 
     try {
-      const res = await fetch(`/api/admin/blog/${id}`, {
+      const res = await fetch(`/api/admin/blog/${postId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
-          slug: slug || generateSlug(title),
+          slug: slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
           excerpt,
           content,
           featured_image_url: featuredImage || null,
           category_id: categoryId || null,
-          status: newStatus || status,
+          status: publishStatus,
           meta_title: metaTitle || null,
-          meta_description: metaDescription || null,
+          meta_description: metaDesc || null,
           canonical_url: canonicalUrl || null,
+          og_image_url: ogImage || null,
+          reading_time_minutes: readingTime ? parseInt(readingTime) : null,
           is_featured: isFeatured,
-          tag_ids: selectedTags,
-          product_ids: selectedProducts.map(p => p.id)
+          allow_comments: allowComments
         })
       })
 
       if (res.ok) {
-        if (newStatus) setStatus(newStatus)
-        alert('Artikel berhasil disimpan')
+        router.push('/admin/blog')
+        router.refresh()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Gagal mengupdate artikel')
+      }
+    } catch (error) {
+      console.error('Error saving post:', error)
+      alert('Terjadi kesalahan saat menyimpan')
+    } finally {
+      setSaving(false)
+    }
+  }
       } else {
         const error = await res.json()
         alert(error.message || 'Gagal menyimpan artikel')
@@ -240,23 +258,6 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
       alert('Gagal menyimpan artikel')
     } finally {
       setSaving(false)
-    }
-  }
-
-  const handleDelete = async () => {
-    try {
-      const res = await fetch(`/api/admin/blog/${id}`, {
-        method: 'DELETE'
-      })
-
-      if (res.ok) {
-        router.push('/admin/blog')
-      } else {
-        alert('Gagal menghapus artikel')
-      }
-    } catch (error) {
-      console.error('Error deleting post:', error)
-      alert('Gagal menghapus artikel')
     }
   }
 
@@ -273,14 +274,7 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="mt-2 text-muted-foreground">Memuat artikel...</p>
-        </div>
-      </div>
-    )
+    return <div className="p-8 text-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-amber-600" /></div>
   }
 
   return (
@@ -295,35 +289,24 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
           </Button>
           <div>
             <h1 className="text-2xl font-bold">Edit Artikel</h1>
-            <p className="text-muted-foreground text-sm">
-              {status === 'published' ? 'Dipublikasikan' : status === 'archived' ? 'Diarsipkan' : 'Draft'}
-            </p>
+            <p className="text-muted-foreground text-sm">Perbarui konten artikel blog</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
-            onClick={() => handleSave()}
+            onClick={() => handleSave('draft')}
             disabled={saving}
           >
             {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-            Simpan
+            Simpan Draft
           </Button>
-          {status !== 'published' && (
-            <Button 
-              onClick={() => handleSave('published')}
-              disabled={saving}
-            >
-              {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
-              Publikasikan
-            </Button>
-          )}
           <Button 
-            variant="destructive" 
-            size="icon"
-            onClick={() => setDeleteDialogOpen(true)}
+            onClick={() => handleSave('published')}
+            disabled={saving}
           >
-            <Trash2 className="h-4 w-4" />
+            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+            Publikasikan
           </Button>
         </div>
       </div>
@@ -340,7 +323,7 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
                   <Input
                     id="title"
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(e) => handleTitleChange(e.target.value)}
                     placeholder="Masukkan judul artikel..."
                     className="mt-1.5 text-lg font-medium"
                   />
@@ -352,7 +335,7 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
                     <Input
                       id="slug"
                       value={slug}
-                      onChange={(e) => setSlug(generateSlug(e.target.value))}
+                      onChange={(e) => handleSlugChange(e.target.value)}
                       placeholder="url-artikel"
                       className="flex-1"
                     />
@@ -443,25 +426,6 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Status */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Select value={status} onValueChange={(v: 'draft' | 'published' | 'archived') => setStatus(v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="published">Dipublikasikan</SelectItem>
-                  <SelectItem value="archived">Diarsipkan</SelectItem>
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
-
           {/* Featured Image */}
           <Card>
             <CardHeader>
@@ -670,24 +634,6 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Artikel?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tindakan ini tidak dapat dibatalkan. Artikel akan dihapus secara permanen.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
-              Hapus
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }

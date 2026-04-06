@@ -1,5 +1,5 @@
 import createNextIntlPlugin from 'next-intl/plugin';
-import packageJson from './package.json' assert { type: 'json' };
+import packageJson from './package.json' with { type: 'json' };
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 

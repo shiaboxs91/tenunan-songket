@@ -249,17 +249,6 @@ export default function EditBlogPostPage({ params }: { params: Promise<{ id: str
       setSaving(false)
     }
   }
-      } else {
-        const error = await res.json()
-        alert(error.message || 'Gagal menyimpan artikel')
-      }
-    } catch (error) {
-      console.error('Error saving post:', error)
-      alert('Gagal menyimpan artikel')
-    } finally {
-      setSaving(false)
-    }
-  }
 
   const filteredProducts = products.filter(p => 
     p.title.toLowerCase().includes(productSearch.toLowerCase())

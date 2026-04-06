@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation'
@@ -23,8 +23,12 @@ import {
   FileText,
   Store,
   Images,
+  BarChart3,
+  Sparkles,
+  ChevronRight,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { cn } from '@/lib/utils'
 import {
   Sheet,
   SheetContent,
@@ -36,26 +40,84 @@ interface MenuItem {
   name: string
   href: string
   icon: React.ElementType
+  badge?: number
+  exactMatch?: boolean
 }
 
-const menuItems: MenuItem[] = [
-  { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { name: 'Semua Produk', href: '/admin/products', icon: Package },
-  { name: 'Kategori', href: '/admin/categories', icon: FolderTree },
-  { name: 'Warna', href: '/admin/colors', icon: Palette },
-  { name: 'Semua Artikel', href: '/admin/blog', icon: FileText },
-  { name: 'Kategori Blog', href: '/admin/blog/categories', icon: FolderTree },
-  { name: 'Pesanan', href: '/admin/orders', icon: ShoppingCart },
-  { name: 'Kupon & Promo', href: '/admin/coupons', icon: Tag },
-  { name: 'Ulasan', href: '/admin/reviews', icon: MessageSquare },
-  { name: 'Pelanggan', href: '/admin/users', icon: Users },
-  { name: 'Administrator', href: '/admin/users/admins', icon: Shield },
-  { name: 'Facebook Shop', href: '/admin/facebook-shop', icon: Store },
-  { name: 'Pengaturan Umum', href: '/admin/settings', icon: Settings },
-  { name: 'Pengiriman', href: '/admin/settings/shipping', icon: Truck },
-  { name: 'Pembayaran', href: '/admin/settings/payments', icon: CreditCard },
-  { name: 'Hero Slider', href: '/admin/settings/hero', icon: Images },
-  { name: 'Versi & Info', href: '/admin/settings/version', icon: GitBranch }
+interface MenuGroup {
+  title: string
+  icon: React.ElementType
+  items: MenuItem[]
+  defaultOpen?: boolean
+}
+
+const menuGroups: MenuGroup[] = [
+  {
+    title: 'Overview',
+    icon: BarChart3,
+    defaultOpen: true,
+    items: [
+      { name: 'Dashboard', href: '/admin', icon: LayoutDashboard, exactMatch: true }
+    ]
+  },
+  {
+    title: 'Katalog',
+    icon: Package,
+    defaultOpen: true,
+    items: [
+      { name: 'Semua Produk', href: '/admin/products', icon: Package },
+      { name: 'Kategori', href: '/admin/categories', icon: FolderTree },
+      { name: 'Warna', href: '/admin/colors', icon: Palette }
+    ]
+  },
+  {
+    title: 'Blog',
+    icon: FileText,
+    defaultOpen: false,
+    items: [
+      { name: 'Semua Artikel', href: '/admin/blog', icon: FileText },
+      { name: 'Kategori Blog', href: '/admin/blog/categories', icon: FolderTree }
+    ]
+  },
+  {
+    title: 'Penjualan',
+    icon: ShoppingCart,
+    defaultOpen: true,
+    items: [
+      { name: 'Pesanan', href: '/admin/orders', icon: ShoppingCart },
+      { name: 'Kupon & Promo', href: '/admin/coupons', icon: Tag },
+      { name: 'Ulasan', href: '/admin/reviews', icon: MessageSquare }
+    ]
+  },
+  {
+    title: 'Pengguna',
+    icon: Users,
+    defaultOpen: false,
+    items: [
+      { name: 'Pelanggan', href: '/admin/users', icon: Users },
+      { name: 'Administrator', href: '/admin/users/admins', icon: Shield }
+    ]
+  },
+  {
+    title: 'Integrasi',
+    icon: Store,
+    defaultOpen: false,
+    items: [
+      { name: 'Facebook Shop', href: '/admin/facebook-shop', icon: Store }
+    ]
+  },
+  {
+    title: 'Pengaturan',
+    icon: Settings,
+    defaultOpen: false,
+    items: [
+      { name: 'Umum', href: '/admin/settings', icon: Settings, exactMatch: true },
+      { name: 'Pengiriman', href: '/admin/settings/shipping', icon: Truck },
+      { name: 'Pembayaran', href: '/admin/settings/payments', icon: CreditCard },
+      { name: 'Hero Slider', href: '/admin/settings/hero', icon: Images },
+      { name: 'Versi & Info', href: '/admin/settings/version', icon: GitBranch }
+    ]
+  }
 ]
 
 interface MobileSidebarProps {
@@ -67,6 +129,9 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(
+    menuGroups.filter(g => g.defaultOpen).map(g => g.title)
+  )
 
   // Close sidebar when route changes
   useEffect(() => {
@@ -81,11 +146,25 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
     router.push('/login')
   }
 
-  const isActive = (href: string) => {
-    if (href === '/admin') {
-      return pathname === '/admin'
+  const toggleGroup = (title: string) => {
+    setExpandedGroups(prev => 
+      prev.includes(title) 
+        ? prev.filter(t => t !== title)
+        : [...prev, title]
+    )
+  }
+
+  const isActive = (item: MenuItem) => {
+    if (item.exactMatch) {
+      return pathname === item.href
     }
-    return pathname.startsWith(href)
+    if (pathname === item.href) return true
+    if (pathname.startsWith(`${item.href}/`)) return true
+    return false
+  }
+
+  const isGroupActive = (group: MenuGroup) => {
+    return group.items.some(item => isActive(item))
   }
 
   return (
@@ -110,26 +189,71 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
 
           {/* Navigation */}
           <nav className="flex-1 py-4 overflow-y-auto">
-            <div className="space-y-1 px-3">
-              {menuItems.map((item) => {
-                const active = isActive(item.href)
+            <div className="space-y-2 px-3">
+              {menuGroups.map((group) => {
+                const isExpanded = expandedGroups.includes(group.title)
+                const groupActive = isGroupActive(group)
+                
                 return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={onClose}
-                    className={`
-                      flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium
-                      transition-all duration-200
-                      ${active
-                        ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
-                        : 'text-amber-100 hover:bg-amber-700/50 hover:text-white'
-                      }
-                    `}
-                  >
-                    <item.icon className={`h-5 w-5 ${active ? 'text-white' : 'text-amber-400'}`} />
-                    <span>{item.name}</span>
-                  </Link>
+                  <div key={group.title}>
+                    {/* Group Header */}
+                    <button
+                      onClick={() => toggleGroup(group.title)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                        groupActive 
+                          ? "text-amber-400" 
+                          : "text-amber-100 hover:text-white"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <group.icon className="w-4 h-4" />
+                        <span>{group.title}</span>
+                      </div>
+                      <ChevronRight 
+                        className={cn(
+                          "w-4 h-4 transition-transform duration-200",
+                          isExpanded && "rotate-90"
+                        )} 
+                      />
+                    </button>
+                    
+                    {/* Group Items */}
+                    <div className={cn(
+                      "overflow-hidden transition-all duration-200",
+                      isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                    )}>
+                      <div className="mt-1 ml-4 pl-4 border-l border-amber-700/50 space-y-1">
+                        {group.items.map((item) => {
+                          const active = isActive(item)
+                          return (
+                            <Link
+                              key={item.name}
+                              href={item.href}
+                              onClick={onClose}
+                              className={cn(
+                                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group",
+                                active 
+                                  ? "bg-gradient-to-r from-amber-500/20 to-amber-600/10 text-amber-400 border-l-2 border-amber-400 -ml-[1px]" 
+                                  : "text-amber-200 hover:text-white hover:bg-amber-800/50"
+                              )}
+                            >
+                              <item.icon className={cn(
+                                "h-4 w-4 transition-colors",
+                                active ? "text-amber-400" : "text-amber-300 group-hover:text-amber-100"
+                              )} />
+                              <span>{item.name}</span>
+                              {item.badge && item.badge > 0 && (
+                                <span className="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
+                                  {item.badge}
+                                </span>
+                              )}
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
                 )
               })}
             </div>

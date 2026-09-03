@@ -27,7 +27,6 @@ export {
   bruneiConfig,
   malaysiaConfig,
   singaporeConfig,
-  indonesiaConfig,
   countryConfigs,
   getCountryConfig,
   getFieldLabel,

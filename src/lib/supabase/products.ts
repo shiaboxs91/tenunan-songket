@@ -253,6 +253,9 @@ async function fetchPopularProducts(limit = 4): Promise<Product[]> {
     .eq('is_active', true)
     .eq('is_deleted', false)
     .order('sold', { ascending: false })
+    .order('average_rating', { ascending: false })
+    .order('review_count', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(limit)
 
   if (error) {

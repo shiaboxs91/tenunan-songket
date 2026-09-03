@@ -301,7 +301,7 @@
 4. Fix P0-1: Restrict RLS guest order — butuh diskusi arsitektur guest checkout
 
 ### Sprint 2 — Production Stability
-5. Fix P1-1: Update env vars Vercel production
+5. ✅ Fix P1-1: Update 6 env vars Vercel production via REST API + redeploy — **DONE 2026-09-03**
 6. Fix P1-2: Fix 2 TSC error nyata di `src/`, set `ignoreBuildErrors: false`
 7. Fix P1-3: Fallback sort "Produk Populer"
 8. Fix P2-4: Stripe webhook fallback anon key

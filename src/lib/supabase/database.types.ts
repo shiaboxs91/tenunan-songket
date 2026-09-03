@@ -902,7 +902,7 @@ export type Database = {
           id?: string
           insurance_cost?: number | null
           notes?: string | null
-          order_number: string
+          order_number?: string
           paid_at?: string | null
           shipped_at?: string | null
           shipping_address: Json

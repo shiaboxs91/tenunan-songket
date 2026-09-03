@@ -7,8 +7,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     
     // Check admin session
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -60,9 +60,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user } } = await supabase.auth.getUser()
     
-    if (!session) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
       content: body.content,
       featured_image_url: body.featured_image_url || null,
       category_id: body.category_id || null,
-      author_id: session.user.id, // Set the current user as author
+      author_id: user.id, // Set the current user as author
       status: body.status || 'draft',
       meta_title: body.meta_title || null,
       meta_description: body.meta_description || null,

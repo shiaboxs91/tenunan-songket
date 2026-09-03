@@ -302,8 +302,8 @@
 
 ### Sprint 2 — Production Stability
 5. ✅ Fix P1-1: Update 6 env vars Vercel production via REST API + redeploy — **DONE 2026-09-03**
-6. Fix P1-2: Fix 2 TSC error nyata di `src/`, set `ignoreBuildErrors: false`
-7. Fix P1-3: Fallback sort "Produk Populer"
+6. ✅ Fix P1-2: Hapus `indonesiaConfig` dari validation/index.ts, mark `order_number` optional di database.types.ts — **DONE 2026-09-03**
+7. ✅ Fix P1-3: Tambah fallback sort `getPopularProducts`: sold DESC, average_rating DESC, review_count DESC, created_at DESC — **DONE 2026-09-03**
 8. Fix P2-4: Stripe webhook fallback anon key
 9. Fix P2-5: `order_number` missing di guest order insert
 

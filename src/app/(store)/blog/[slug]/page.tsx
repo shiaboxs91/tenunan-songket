@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import DOMPurify from 'isomorphic-dompurify'
 import { Calendar, Clock, Eye, Tag, User, ArrowLeft } from 'lucide-react'
 import {
   getBlogPostBySlug,
@@ -330,7 +331,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                            prose-pre:bg-stone-900 prose-pre:rounded-xl prose-pre:shadow-md
                            prose-blockquote:border-l-4 prose-blockquote:border-amber-500 prose-blockquote:bg-amber-50 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-lg prose-blockquote:font-medium prose-blockquote:text-stone-800 prose-blockquote:not-italic
                            marker:text-amber-500"
-                dangerouslySetInnerHTML={{ __html: post.content }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
               />
 
               {/* Tags */}

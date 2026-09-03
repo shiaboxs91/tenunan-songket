@@ -5,7 +5,19 @@ type RouteContext = {
   params: Promise<{ id: string }>
 }
 
+async function requireAdmin() {
+  const supabase = await createClient()
+  const { data: { user }, error } = await supabase.auth.getUser()
+  if (error || !user) return { authError: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
+  const { data: profile } = await supabase.from('profiles').select('role').eq('user_id', user.id).single()
+  if (!profile || profile.role !== 'admin') return { authError: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) }
+  return { authError: null }
+}
+
 export async function PATCH(request: NextRequest, context: RouteContext) {
+  const { authError } = await requireAdmin()
+  if (authError) return authError
+
   try {
     const { id } = await context.params
     const supabase = await createClient()
@@ -64,6 +76,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 }
 
 export async function DELETE(request: NextRequest, context: RouteContext) {
+  const { authError } = await requireAdmin()
+  if (authError) return authError
+
   try {
     const { id } = await context.params
     const supabase = await createClient()

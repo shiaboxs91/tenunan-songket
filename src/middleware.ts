@@ -48,7 +48,6 @@ export async function middleware(request: NextRequest) {
   const excludedPaths = [
     "/server-expired",
     "/maintenance",
-    "/atur-server",
     "/api",
     "/_next",
     "/favicon.ico",

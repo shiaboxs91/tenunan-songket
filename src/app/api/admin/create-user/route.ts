@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient as createServerClient } from '@/lib/supabase/server'
 
 // Use service role key for admin operations
 const supabaseAdmin = createClient(
@@ -13,8 +14,33 @@ const supabaseAdmin = createClient(
   }
 )
 
+// Helper: verifikasi caller adalah admin yang sudah login
+async function requireAdmin(): Promise<{ error: NextResponse } | { userId: string }> {
+  const supabase = await createServerClient()
+  const { data: { user }, error } = await supabase.auth.getUser()
+
+  if (error || !user) {
+    return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!profile || profile.role !== 'admin') {
+    return { error: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) }
+  }
+
+  return { userId: user.id }
+}
+
 // PUT - Update admin (name and/or password)
 export async function PUT(request: NextRequest) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return auth.error
+
   try {
     const { user_id, full_name, new_password } = await request.json()
 
@@ -76,6 +102,9 @@ export async function PUT(request: NextRequest) {
 
 // POST - Create new admin
 export async function POST(request: NextRequest) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return auth.error
+
   try {
     const { email, password, full_name } = await request.json()
 

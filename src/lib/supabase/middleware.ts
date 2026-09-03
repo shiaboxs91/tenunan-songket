@@ -55,6 +55,7 @@ export const PROTECTED_ROUTES = [
  */
 export const ADMIN_ROUTES = [
   '/admin',
+  '/atur-server',
 ]
 
 /**
